@@ -1,12 +1,20 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw, Filter } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import ProductCard from "@/components/ProductCard";
+import ChatModal from "@/components/ChatModal";
 import { Button } from "@/components/ui/button";
 import type { Listing, Category } from "@shared/schema";
 
 export default function Home() {
+  const [chatModal, setChatModal] = useState<{
+    isOpen: boolean;
+    listing: Listing | null;
+    sellerId: string;
+  }>({ isOpen: false, listing: null, sellerId: '' });
+
   const { data: listings = [], isLoading: listingsLoading } = useQuery<Listing[]>({
     queryKey: ['/api/listings'],
     retry: false,
@@ -74,7 +82,17 @@ export default function Home() {
               </div>
             ) : (
               listings.map((listing) => (
-                <ProductCard key={listing.id} listing={listing} />
+                <ProductCard 
+                  key={listing.id} 
+                  listing={listing}
+                  onContactSeller={(listing) => {
+                    setChatModal({
+                      isOpen: true,
+                      listing,
+                      sellerId: listing.userId
+                    });
+                  }}
+                />
               ))
             )}
           </div>
@@ -123,6 +141,14 @@ export default function Home() {
       </main>
 
       <BottomNavigation />
+
+      {/* Chat Modal */}
+      <ChatModal
+        isOpen={chatModal.isOpen}
+        onClose={() => setChatModal({ isOpen: false, listing: null, sellerId: '' })}
+        listing={chatModal.listing}
+        sellerId={chatModal.sellerId}
+      />
 
       {/* Footer */}
       <footer className="bg-white border-t border-border py-4 text-center">

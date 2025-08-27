@@ -1,15 +1,19 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Heart, Share2, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Eye, Heart, Share2, MapPin, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { Listing } from "@shared/schema";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProductCardProps {
   listing: Listing;
   onClick?: () => void;
+  onContactSeller?: (listing: Listing) => void;
 }
 
-export default function ProductCard({ listing, onClick }: ProductCardProps) {
+export default function ProductCard({ listing, onClick, onContactSeller }: ProductCardProps) {
+  const { user, isAuthenticated } = useAuth();
   const formatPrice = (price: string | null) => {
     if (!price || Number(price) === 0) return "Gratuit";
     return `${Number(price).toLocaleString()} TND`;
@@ -90,6 +94,25 @@ export default function ProductCard({ listing, onClick }: ProductCardProps) {
             </span>
           </div>
         </div>
+        
+        {/* Contact Seller Button */}
+        {isAuthenticated && user?.id !== listing.userId && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onContactSeller?.(listing);
+              }}
+              variant="outline" 
+              size="sm" 
+              className="w-full bg-primary/5 hover:bg-primary hover:text-white border-primary text-primary"
+              data-testid={`button-contact-${listing.id}`}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Contacter le vendeur
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

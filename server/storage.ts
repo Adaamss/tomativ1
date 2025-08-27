@@ -16,7 +16,7 @@ import {
   type InsertConversation,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, sql } from "drizzle-orm";
+import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -184,7 +184,9 @@ export class DatabaseStorage implements IStorage {
             and(eq(messages.senderId, conversation.user1Id), eq(messages.receiverId, conversation.user2Id)),
             and(eq(messages.senderId, conversation.user2Id), eq(messages.receiverId, conversation.user1Id))
           ),
-          eq(messages.listingId, conversation.listingId)
+          conversation.listingId 
+            ? eq(messages.listingId, conversation.listingId)
+            : isNull(messages.listingId)
         )
       )
       .orderBy(messages.createdAt);

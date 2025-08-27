@@ -1,17 +1,47 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { ArrowLeft, Mail, User, Check } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar } from "lucide-react";
+import type { Listing } from "@shared/schema";
+
+const profileSchema = z.object({
+  displayName: z.string().min(2, "Le nom doit contenir au moins 2 caractères").optional(),
+  bio: z.string().max(500, "La bio ne peut pas dépasser 500 caractères").optional(),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function Profile() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
+  const { isConnected } = useWebSocket();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      displayName: user?.displayName || "",
+      bio: user?.bio || "",
+    },
+  });
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -82,7 +112,7 @@ export default function Profile() {
                     {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </span>
                 )}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${isConnected ? 'bg-green-500' : 'bg-red-500'} rounded-full flex items-center justify-center`}>
                   <Check className="w-3 h-3 text-white" />
                 </div>
               </div>
@@ -90,14 +120,75 @@ export default function Profile() {
                 <h3 className="text-lg font-medium text-foreground" data-testid="text-username">
                   {user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur'}
                 </h3>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-1"
-                  data-testid="button-edit-profile"
-                >
-                  Modifier
-                </Button>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className={`text-xs px-2 py-1 rounded-full ${isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {isConnected ? 'En ligne' : 'Hors ligne'}
+                  </span>
+                  <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        data-testid="button-edit-profile"
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Modifier
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Modifier le profil</DialogTitle>
+                      </DialogHeader>
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(() => {})} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="displayName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nom d'affichage</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Votre nom" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="bio"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Bio</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Parlez-nous de vous..."
+                                    rows={3}
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => setEditModalOpen(false)}
+                            >
+                              Annuler
+                            </Button>
+                            <Button type="submit" className="bg-primary hover:bg-red-600">
+                              <Save className="w-4 h-4 mr-2" />
+                              Enregistrer
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </div>
             

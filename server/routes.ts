@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertListingSchema } from "@shared/schema";
@@ -281,6 +282,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Messages API
+  app.get("/api/messages/:sellerId/:listingId?", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    const { sellerId, listingId } = req.params;
+
+    try {
+      const conversation = await storage.getConversation(userId, sellerId, listingId);
+      if (!conversation) {
+        return res.json([]);
+      }
+      const messages = await storage.getMessagesByConversation(conversation.id);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Get conversations for current user
+  app.get("/api/conversations", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    try {
+      const conversations = await storage.getConversationsByUser(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ error: "Failed to fetch conversations" });
+    }
+  });
+
+  // User profile routes
+  app.put("/api/profile", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    const { displayName, bio } = req.body;
+
+    try {
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        displayName,
+        bio,
+        updatedAt: new Date(),
+      });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Get user's listings
+  app.get("/api/listings/user/:userId", isAuthenticated, async (req: any, res) => {
+    const currentUserId = req.user?.claims?.sub;
+    const { userId } = req.params;
+
+    // Users can only see their own listings (for privacy)
+    if (currentUserId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    try {
+      const listings = await storage.getListingsByUser(userId);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching user listings:", error);
+      res.status(500).json({ error: "Failed to fetch listings" });
+    }
+  });
+
   const httpServer = createServer(app);
+
+  // WebSocket server for real-time messaging
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  // Store active connections by user ID
+  const userConnections = new Map<string, WebSocket>();
+
+  wss.on('connection', (ws, req) => {
+    let userId: string | null = null;
+
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        if (data.type === 'auth') {
+          userId = data.userId;
+          if (userId) {
+            userConnections.set(userId, ws);
+            ws.send(JSON.stringify({ type: 'auth_success', userId }));
+          }
+        } else if (data.type === 'send_message' && userId) {
+          // Create message in database
+          const messageData = {
+            senderId: userId,
+            receiverId: data.receiverId,
+            listingId: data.listingId || null,
+            content: data.content,
+          };
+
+          const message = await storage.createMessage(messageData);
+          
+          // Send to recipient if connected
+          const recipientWs = userConnections.get(data.receiverId);
+          if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {
+            recipientWs.send(JSON.stringify({
+              type: 'new_message',
+              message: message
+            }));
+          }
+
+          // Send confirmation to sender
+          ws.send(JSON.stringify({
+            type: 'message_sent',
+            message: message
+          }));
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+        ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+      }
+    });
+
+    ws.on('close', () => {
+      if (userId) {
+        userConnections.delete(userId);
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      if (userId) {
+        userConnections.delete(userId);
+      }
+    });
+  });
+
   return httpServer;
 }
