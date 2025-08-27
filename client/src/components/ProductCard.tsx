@@ -96,7 +96,7 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
         </div>
         
         {/* Contact Seller Button */}
-        {isAuthenticated && user?.id !== listing.userId && (
+        {isAuthenticated && (user as any)?.id !== listing.userId && (
           <div className="mt-3 pt-3 border-t border-border">
             <Button 
               onClick={(e) => {
