@@ -71,11 +71,19 @@ export default function CreateListing() {
   const createListingMutation = useMutation({
     mutationFn: async (data: CarListingFormData) => {
       const payload = {
-        ...data,
-        price: parseFloat(data.price),
-        year: parseInt(data.year),
-        mileage: parseInt(data.mileage),
+        title: data.title || '',
+        description: data.description || '',
+        price: data.price ? parseFloat(data.price) : null,
+        year: data.year ? parseInt(data.year) : null,
+        mileage: data.mileage ? parseInt(data.mileage) : null,
         currency: 'TND',
+        categoryId: carCategory?.id || '',
+        location: data.location || '',
+        brand: data.brand || '',
+        model: data.model || '',
+        fuelType: data.fuelType || null,
+        transmission: data.transmission || null,
+        condition: data.condition || null,
         images: uploadedImages,
       };
       
@@ -188,11 +196,7 @@ export default function CreateListing() {
       setStep(3);
     } else if (step === 3) {
       if (validateStep3(data)) {
-        const finalData = {
-          ...data,
-          categoryId: carCategory?.id || '',
-        };
-        createListingMutation.mutate(finalData);
+        createListingMutation.mutate(data);
       }
     }
   };
