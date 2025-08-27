@@ -108,11 +108,22 @@ export const conversations = pgTable("conversations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const userLikes = pgTable("user_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  listingId: varchar("listing_id").notNull().references(() => listings.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_user_likes_user_id").on(table.userId),
+  index("idx_user_likes_listing_id").on(table.listingId),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   listings: many(listings),
   sentMessages: many(messages, { relationName: "sender" }),
   receivedMessages: many(messages, { relationName: "receiver" }),
+  userLikes: many(userLikes),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -129,6 +140,18 @@ export const listingsRelations = relations(listings, ({ one, many }) => ({
     references: [users.id],
   }),
   messages: many(messages),
+  userLikes: many(userLikes),
+}));
+
+export const userLikesRelations = relations(userLikes, ({ one }) => ({
+  user: one(users, {
+    fields: [userLikes.userId],
+    references: [users.id],
+  }),
+  listing: one(listings, {
+    fields: [userLikes.listingId],
+    references: [listings.id],
+  }),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -201,6 +224,11 @@ export const insertConversationSchema = createInsertSchema(conversations).omit({
   updatedAt: true,
 });
 
+export const insertUserLikeSchema = createInsertSchema(userLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -212,3 +240,5 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Conversation = typeof conversations.$inferSelect;
+export type InsertUserLike = z.infer<typeof insertUserLikeSchema>;
+export type UserLike = typeof userLikes.$inferSelect;

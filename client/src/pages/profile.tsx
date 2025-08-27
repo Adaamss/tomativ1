@@ -17,8 +17,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar, Heart, Eye } from "lucide-react";
 import type { Listing } from "@shared/schema";
+import ProductCard from "@/components/ProductCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUserLikes } from "@/hooks/useLikes";
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Le nom doit contenir au moins 2 caractères").optional(),
@@ -34,6 +37,15 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+  // Fetch user's listings
+  const { data: userListings = [] } = useQuery<Listing[]>({
+    queryKey: ['/api/listings/user', (user as any)?.id],
+    enabled: !!user,
+  });
+
+  // Fetch user's liked listings
+  const { data: likedListings = [] } = useUserLikes((user as any)?.id || '');
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -209,46 +221,132 @@ export default function Profile() {
             </div>
           </div>
           
-          {/* Account Information */}
+          {/* Profile Sections */}
           <div className="p-4">
-            <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
-              <User className="w-5 h-5 mr-2" />
-              Informations du compte
-            </h3>
-            
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Email</p>
-                  <p className="text-sm text-muted-foreground" data-testid="text-email">
-                    {(user as any).email || 'Non renseigné'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
-                <User className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Membre depuis</p>
-                  <p className="text-sm text-muted-foreground" data-testid="text-member-since">
-                    {(user as any).createdAt ? new Date((user as any).createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <Tabs defaultValue="account" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="account">Compte</TabsTrigger>
+                <TabsTrigger value="products">Mes Produits</TabsTrigger>
+                <TabsTrigger value="favorites">Mes Favoris</TabsTrigger>
+              </TabsList>
 
-            {/* Logout Button */}
-            <div className="mt-6 pt-6 border-t border-border">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => window.location.href = '/api/logout'}
-                data-testid="button-logout"
-              >
-                Se déconnecter
-              </Button>
-            </div>
+              {/* Account Information Tab */}
+              <TabsContent value="account" className="mt-4">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
+                    <User className="w-5 h-5 mr-2" />
+                    Informations du compte
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
+                      <Mail className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Email</p>
+                        <p className="text-sm text-muted-foreground" data-testid="text-email">
+                          {(user as any).email || 'Non renseigné'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
+                      <User className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Membre depuis</p>
+                        <p className="text-sm text-muted-foreground" data-testid="text-member-since">
+                          {(user as any).createdAt ? new Date((user as any).createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => window.location.href = '/api/logout'}
+                      data-testid="button-logout"
+                    >
+                      Se déconnecter
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* User Products Tab */}
+              <TabsContent value="products" className="mt-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-foreground flex items-center">
+                      <Car className="w-5 h-5 mr-2" />
+                      Mes Produits
+                    </h3>
+                    <Badge variant="secondary" data-testid="badge-product-count">
+                      {userListings.length} produit{userListings.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  
+                  {userListings.length > 0 ? (
+                    <div className="grid gap-4">
+                      {userListings.map((listing) => (
+                        <ProductCard
+                          key={listing.id}
+                          listing={listing}
+                          onClick={() => setLocation(`/product/${listing.id}`)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Vous n'avez publié aucun produit</p>
+                      <Button 
+                        className="mt-4" 
+                        onClick={() => setLocation('/create')}
+                        data-testid="button-create-listing"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Publier une annonce
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* User Favorites Tab */}
+              <TabsContent value="favorites" className="mt-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-foreground flex items-center">
+                      <Heart className="w-5 h-5 mr-2" />
+                      Mes Favoris
+                    </h3>
+                    <Badge variant="secondary" data-testid="badge-favorite-count">
+                      {likedListings.length} favori{likedListings.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  
+                  {likedListings.length > 0 ? (
+                    <div className="grid gap-4">
+                      {likedListings.map((listing) => (
+                        <ProductCard
+                          key={listing.id}
+                          listing={listing}
+                          onClick={() => setLocation(`/product/${listing.id}`)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Heart className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Vous n'avez aucun produit en favori</p>
+                      <p className="text-sm mt-2">Appuyez sur ❤️ sur les produits qui vous intéressent</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </main>

@@ -4,6 +4,7 @@ import {
   listings,
   messages,
   conversations,
+  userLikes,
   type User,
   type UpsertUser,
   type Category,
@@ -14,6 +15,8 @@ import {
   type InsertMessage,
   type Conversation,
   type InsertConversation,
+  type UserLike,
+  type InsertUserLike,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
@@ -37,7 +40,11 @@ export interface IStorage {
   createListing(listing: InsertListing): Promise<Listing>;
   updateListing(id: string, listing: Partial<InsertListing>): Promise<Listing | undefined>;
   incrementListingViews(id: string): Promise<void>;
-  incrementListingLikes(id: string): Promise<void>;
+  
+  // Like operations
+  toggleUserLike(userId: string, listingId: string): Promise<{ liked: boolean; likesCount: number }>;
+  isUserLikedListing(userId: string, listingId: string): Promise<boolean>;
+  getUserLikedListings(userId: string): Promise<Listing[]>;
   
   // Message operations
   getConversationsByUser(userId: string): Promise<Conversation[]>;
@@ -150,11 +157,106 @@ export class DatabaseStorage implements IStorage {
       .where(eq(listings.id, id));
   }
 
-  async incrementListingLikes(id: string): Promise<void> {
-    await db
-      .update(listings)
-      .set({ likes: sql`${listings.likes} + 1` })
-      .where(eq(listings.id, id));
+  // Like operations
+  async toggleUserLike(userId: string, listingId: string): Promise<{ liked: boolean; likesCount: number }> {
+    // Check if user already liked this listing
+    const [existingLike] = await db
+      .select()
+      .from(userLikes)
+      .where(and(eq(userLikes.userId, userId), eq(userLikes.listingId, listingId)));
+
+    if (existingLike) {
+      // Unlike: remove the like record and decrement likes count
+      await db
+        .delete(userLikes)
+        .where(and(eq(userLikes.userId, userId), eq(userLikes.listingId, listingId)));
+      
+      await db
+        .update(listings)
+        .set({ 
+          likes: sql`GREATEST(${listings.likes} - 1, 0)`
+        })
+        .where(eq(listings.id, listingId));
+      
+      const [updatedListing] = await db
+        .select({ likes: listings.likes })
+        .from(listings)
+        .where(eq(listings.id, listingId));
+      
+      return { liked: false, likesCount: updatedListing?.likes || 0 };
+    } else {
+      // Like: add like record and increment likes count
+      await db
+        .insert(userLikes)
+        .values({ userId, listingId });
+      
+      await db
+        .update(listings)
+        .set({ 
+          likes: sql`${listings.likes} + 1`
+        })
+        .where(eq(listings.id, listingId));
+      
+      const [updatedListing] = await db
+        .select({ likes: listings.likes })
+        .from(listings)
+        .where(eq(listings.id, listingId));
+      
+      return { liked: true, likesCount: updatedListing?.likes || 0 };
+    }
+  }
+
+  async isUserLikedListing(userId: string, listingId: string): Promise<boolean> {
+    const [like] = await db
+      .select()
+      .from(userLikes)
+      .where(and(eq(userLikes.userId, userId), eq(userLikes.listingId, listingId)));
+    
+    return !!like;
+  }
+
+  async getUserLikedListings(userId: string): Promise<Listing[]> {
+    return await db
+      .select({
+        id: listings.id,
+        title: listings.title,
+        description: listings.description,
+        price: listings.price,
+        currency: listings.currency,
+        categoryId: listings.categoryId,
+        userId: listings.userId,
+        location: listings.location,
+        latitude: listings.latitude,
+        longitude: listings.longitude,
+        images: listings.images,
+        brand: listings.brand,
+        model: listings.model,
+        year: listings.year,
+        mileage: listings.mileage,
+        fuelType: listings.fuelType,
+        transmission: listings.transmission,
+        propertyType: listings.propertyType,
+        surface: listings.surface,
+        rooms: listings.rooms,
+        bedrooms: listings.bedrooms,
+        bathrooms: listings.bathrooms,
+        floor: listings.floor,
+        jobType: listings.jobType,
+        experience: listings.experience,
+        salary: listings.salary,
+        sector: listings.sector,
+        condition: listings.condition,
+        features: listings.features,
+        views: listings.views,
+        likes: listings.likes,
+        isActive: listings.isActive,
+        createdAt: listings.createdAt,
+        updatedAt: listings.updatedAt,
+      })
+      .from(userLikes)
+      .innerJoin(listings, eq(userLikes.listingId, listings.id))
+      .where(and(eq(userLikes.userId, userId), eq(listings.isActive, 1)))
+      .orderBy(desc(userLikes.createdAt));
   }
 
   // Message operations

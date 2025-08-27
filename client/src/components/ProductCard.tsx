@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { Listing } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { useLikes } from "@/hooks/useLikes";
 
 interface ProductCardProps {
   listing: Listing;
@@ -14,9 +15,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ listing, onClick, onContactSeller }: ProductCardProps) {
   const { user, isAuthenticated } = useAuth();
+  const { isLiked, toggleLike, isToggling } = useLikes(listing.id);
+  
   const formatPrice = (price: string | null) => {
     if (!price || Number(price) === 0) return "Gratuit";
     return `${Number(price).toLocaleString()} TND`;
+  };
+
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isAuthenticated) {
+      toggleLike();
+    }
   };
 
   const formatTimeAgo = (date: Date | null) => {
@@ -91,22 +101,41 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
           </div>
         </div>
         
-        {/* Contact Seller Button */}
-        {isAuthenticated && (user as any)?.id !== listing.userId && (
-          <div className="mt-4">
+        {/* Action Buttons */}
+        <div className="mt-4 flex items-center space-x-2">
+          {/* Like Button */}
+          {isAuthenticated && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className={`transition-colors duration-200 ${
+                isLiked 
+                  ? 'text-red-500 bg-red-50 hover:bg-red-100' 
+                  : 'text-gray-600 hover:text-red-500 hover:bg-red-50'
+              }`}
+              onClick={handleLikeClick}
+              disabled={isToggling}
+              data-testid={`button-like-${listing.id}`}
+            >
+              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+            </Button>
+          )}
+
+          {/* Contact Seller Button */}
+          {isAuthenticated && (user as any)?.id !== listing.userId && (
             <Button 
               onClick={(e) => {
                 e.stopPropagation();
                 onContactSeller?.(listing);
               }}
-              className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               data-testid={`button-contact-${listing.id}`}
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               Contacter le vendeur
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

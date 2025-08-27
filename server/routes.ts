@@ -350,6 +350,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle like/unlike a listing
+  app.post("/api/listings/:id/like", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    const { id: listingId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    try {
+      const result = await storage.toggleUserLike(userId, listingId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      res.status(500).json({ error: "Failed to toggle like" });
+    }
+  });
+
+  // Check if user liked a listing
+  app.get("/api/listings/:id/like", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    const { id: listingId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    try {
+      const liked = await storage.isUserLikedListing(userId, listingId);
+      res.json({ liked });
+    } catch (error) {
+      console.error("Error checking like status:", error);
+      res.status(500).json({ error: "Failed to check like status" });
+    }
+  });
+
+  // Get user's liked listings
+  app.get("/api/likes/user/:userId", isAuthenticated, async (req: any, res) => {
+    const currentUserId = req.user?.claims?.sub;
+    const { userId } = req.params;
+
+    // Users can only see their own liked listings
+    if (currentUserId !== userId) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    try {
+      const likedListings = await storage.getUserLikedListings(userId);
+      res.json(likedListings);
+    } catch (error) {
+      console.error("Error fetching liked listings:", error);
+      res.status(500).json({ error: "Failed to fetch liked listings" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket server for real-time messaging

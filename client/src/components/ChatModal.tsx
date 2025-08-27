@@ -32,7 +32,7 @@ export default function ChatModal({ isOpen, onClose, listing, sellerId }: ChatMo
 
   // Combine chat history with new WebSocket messages
   const allMessages = [...chatHistory, ...messages].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
   );
 
   // Auto scroll to bottom
@@ -129,14 +129,14 @@ export default function ChatModal({ isOpen, onClose, listing, sellerId }: ChatMo
               <p className="text-sm mt-1">Envoyez votre premier message au vendeur.</p>
             </div>
           ) : (
-            allMessages.map((message) => (
+            allMessages.map((message, index) => (
               <div
-                key={message.id}
-                className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                key={message.id || `message-${index}`}
+                className={`flex ${message.senderId === (user as any)?.id ? 'justify-end' : 'justify-start'}`}
               >
                 <div
                   className={`max-w-[75%] rounded-lg p-3 ${
-                    message.senderId === user.id
+                    message.senderId === (user as any)?.id
                       ? 'bg-primary text-white ml-4'
                       : 'bg-secondary mr-4'
                   }`}
@@ -144,12 +144,12 @@ export default function ChatModal({ isOpen, onClose, listing, sellerId }: ChatMo
                   <p className="text-sm">{message.content}</p>
                   <p
                     className={`text-xs mt-1 ${
-                      message.senderId === user.id
+                      message.senderId === (user as any)?.id
                         ? 'text-white/70'
                         : 'text-muted-foreground'
                     }`}
                   >
-                    {formatMessageTime(message.createdAt)}
+                    {message.createdAt ? formatMessageTime(message.createdAt) : 'En cours...'}
                   </p>
                 </div>
               </div>
