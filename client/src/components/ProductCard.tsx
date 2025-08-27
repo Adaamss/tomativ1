@@ -38,16 +38,16 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
 
   return (
     <Card 
-      className="cursor-pointer overflow-hidden hover:shadow-md transition-shadow" 
+      className="cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-none shadow-lg bg-white rounded-2xl" 
       onClick={onClick}
       data-testid={`card-product-${listing.id}`}
     >
-      <div className="aspect-video bg-secondary flex items-center justify-center relative">
+      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative overflow-hidden">
         {mainImage ? (
           <img 
             src={mainImage} 
             alt={listing.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             data-testid={`img-product-${listing.id}`}
           />
         ) : (
@@ -60,52 +60,46 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
         )}
       </div>
       
-      <CardContent className="p-4">
-        <h4 className="font-medium text-foreground mb-1 capitalize" data-testid={`text-title-${listing.id}`}>
+      <CardContent className="p-5">
+        <h4 className="font-bold text-gray-900 mb-2 capitalize text-lg leading-tight" data-testid={`text-title-${listing.id}`}>
           {listing.title}
         </h4>
-        <p className="text-lg font-semibold text-primary mb-2" data-testid={`text-price-${listing.id}`}>
+        <p className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-3" data-testid={`text-price-${listing.id}`}>
           {formatPrice(listing.price)}
         </p>
         
-        <div className="flex items-center text-sm text-muted-foreground mb-2">
-          <MapPin className="w-4 h-4 mr-1" />
-          <span data-testid={`text-location-${listing.id}`}>
+        <div className="flex items-center text-sm text-gray-600 mb-3 bg-gray-50 rounded-full px-3 py-2">
+          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
+          <span className="font-medium" data-testid={`text-location-${listing.id}`}>
             {listing.location || 'Tunis, Tunisie'}
           </span>
         </div>
         
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span data-testid={`text-time-${listing.id}`}>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-500 bg-white px-3 py-1 rounded-full" data-testid={`text-time-${listing.id}`}>
             {formatTimeAgo(listing.createdAt)}
           </span>
-          <div className="flex items-center space-x-3">
-            <span className="flex items-center" data-testid={`text-views-${listing.id}`}>
+          <div className="flex items-center space-x-2">
+            <span className="flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded-full" data-testid={`text-views-${listing.id}`}>
               <Eye className="w-3 h-3 mr-1" />
               {listing.views || 0}
             </span>
-            <span className="flex items-center" data-testid={`text-likes-${listing.id}`}>
+            <span className="flex items-center bg-red-50 text-red-600 px-2 py-1 rounded-full" data-testid={`text-likes-${listing.id}`}>
               <Heart className="w-3 h-3 mr-1" />
               {listing.likes || 0}
-            </span>
-            <span className="flex items-center" data-testid={`text-shares-${listing.id}`}>
-              <Share2 className="w-3 h-3 mr-1" />
-              0
             </span>
           </div>
         </div>
         
         {/* Contact Seller Button */}
         {isAuthenticated && (user as any)?.id !== listing.userId && (
-          <div className="mt-3 pt-3 border-t border-border">
+          <div className="mt-4">
             <Button 
               onClick={(e) => {
                 e.stopPropagation();
                 onContactSeller?.(listing);
               }}
-              variant="outline" 
-              size="sm" 
-              className="w-full bg-primary/5 hover:bg-primary hover:text-white border-primary text-primary"
+              className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               data-testid={`button-contact-${listing.id}`}
             >
               <MessageCircle className="w-4 h-4 mr-2" />

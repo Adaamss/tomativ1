@@ -30,7 +30,7 @@ export default function ProductDetail() {
     enabled: !!listingId,
   });
 
-  const { data: categories } = useQuery({
+  const { data: categories } = useQuery<any[]>({
     queryKey: ['/api/categories'],
   });
 
@@ -48,7 +48,7 @@ export default function ProductDetail() {
   };
 
   const getCategorySlug = () => {
-    if (!listing || !categories) return '';
+    if (!listing || !categories || !Array.isArray(categories)) return '';
     const category = categories.find((cat: any) => cat.id === listing.categoryId);
     return category?.slug || '';
   };
@@ -96,12 +96,12 @@ export default function ProductDetail() {
       
       <main className="pt-20 pb-20">
         {/* Back Button */}
-        <div className="px-4 py-3 border-b border-border bg-white">
+        <div className="px-4 py-4 bg-gradient-to-r from-white to-gray-50 border-b border-gray-100">
           <Button 
             variant="ghost" 
             size="sm"
             onClick={() => setLocation('/')}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
             data-testid="button-back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -113,7 +113,7 @@ export default function ProductDetail() {
         <div className="relative">
           {hasImages ? (
             <>
-              <div className="aspect-video bg-secondary relative overflow-hidden">
+              <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden rounded-t-2xl">
                 <img 
                   src={images[currentImageIndex]} 
                   alt={listing.title}
@@ -121,7 +121,7 @@ export default function ProductDetail() {
                   data-testid="product-image"
                 />
                 {images.length > 1 && (
-                  <div className="absolute bottom-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                  <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
                     {currentImageIndex + 1} / {images.length}
                   </div>
                 )}
@@ -161,50 +161,57 @@ export default function ProductDetail() {
         </div>
 
         {/* Product Info */}
-        <div className="px-4 py-6 bg-white">
+        <div className="px-6 py-6 bg-white rounded-t-3xl -mt-4 relative z-10 shadow-xl">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground capitalize mb-2" data-testid="product-title">
+              <h1 className="text-3xl font-bold text-gray-900 capitalize mb-3 leading-tight" data-testid="product-title">
                 {listing.title}
               </h1>
-              <p className="text-3xl font-bold text-primary mb-3" data-testid="product-price">
+              <p className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-4" data-testid="product-price">
                 {formatPrice(listing.price)}
               </p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" data-testid="button-favorite">
-                <Heart className="w-4 h-4" />
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" className="rounded-full border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all" data-testid="button-favorite">
+                <Heart className="w-4 h-4 text-gray-600 hover:text-red-500" />
               </Button>
-              <Button variant="outline" size="sm" data-testid="button-share">
-                <Share2 className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="rounded-full border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all" data-testid="button-share">
+                <Share2 className="w-4 h-4 text-gray-600 hover:text-blue-500" />
               </Button>
             </div>
           </div>
 
           {/* Location and Stats */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-6">
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 mr-1" />
-              <span data-testid="product-location">{listing.location || 'Tunis, Tunisie'}</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="flex items-center">
-                <Eye className="w-3 h-3 mr-1" />
-                {listing.views || 0}
-              </span>
-              <span className="flex items-center">
-                <Clock className="w-3 h-3 mr-1" />
-                {formatTimeAgo(listing.createdAt)}
-              </span>
+          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center text-gray-700">
+                <div className="bg-blue-100 p-2 rounded-full mr-3">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="font-medium" data-testid="product-location">{listing.location || 'Tunis, Tunisie'}</span>
+              </div>
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span className="flex items-center bg-white px-3 py-1 rounded-full">
+                  <Eye className="w-3 h-3 mr-1 text-gray-500" />
+                  {listing.views || 0}
+                </span>
+                <span className="flex items-center bg-white px-3 py-1 rounded-full">
+                  <Clock className="w-3 h-3 mr-1 text-gray-500" />
+                  {formatTimeAgo(listing.createdAt)}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Description */}
           {listing.description && (
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground whitespace-pre-wrap" data-testid="product-description">
+            <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-white to-gray-50">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <div className="w-1 h-6 bg-gradient-to-b from-orange-400 to-red-500 rounded-full mr-3"></div>
+                  Description
+                </h3>
+                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed" data-testid="product-description">
                   {listing.description}
                 </p>
               </CardContent>
@@ -212,9 +219,12 @@ export default function ProductDetail() {
           )}
 
           {/* Details */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-3">Détails</h3>
+          <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-white to-blue-50">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <div className="w-1 h-6 bg-gradient-to-b from-blue-400 to-purple-500 rounded-full mr-3"></div>
+                Détails
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 {/* Car specific fields */}
                 {categorySlug === 'voiture' && (
@@ -347,16 +357,19 @@ export default function ProductDetail() {
           </Card>
 
           {/* Seller Info */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-3">Vendeur</h3>
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
+          <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-white to-green-50">
+            <CardContent className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <div className="w-1 h-6 bg-gradient-to-b from-green-400 to-teal-500 rounded-full mr-3"></div>
+                Vendeur
+              </h3>
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-lg">
+                  <User className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium" data-testid="seller-name">Vendeur privé</p>
-                  <p className="text-sm text-muted-foreground">Membre depuis {formatTimeAgo(listing.createdAt)}</p>
+                  <p className="font-bold text-lg text-gray-900" data-testid="seller-name">Vendeur privé</p>
+                  <p className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full inline-block">Membre depuis {formatTimeAgo(listing.createdAt)}</p>
                 </div>
               </div>
             </CardContent>
@@ -365,14 +378,14 @@ export default function ProductDetail() {
 
         {/* Contact Actions */}
         {isAuthenticated && (
-          <div className="fixed bottom-20 left-0 right-0 p-4 bg-white border-t border-border">
-            <div className="flex gap-3">
+          <div className="fixed bottom-20 left-0 right-0 p-4 bg-gradient-to-t from-white to-white/95 backdrop-blur-sm border-t border-gray-100 shadow-2xl">
+            <div className="flex gap-4 max-w-md mx-auto">
               <Button 
                 variant="outline"
-                className="flex-1"
+                className="flex-1 border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 rounded-full py-3 font-semibold transition-all duration-300"
                 data-testid="button-call"
               >
-                <Phone className="w-4 h-4 mr-2" />
+                <Phone className="w-5 h-5 mr-2 text-green-600" />
                 Appeler
               </Button>
               <Button 
@@ -381,10 +394,10 @@ export default function ProductDetail() {
                   listing,
                   sellerId: listing.userId
                 })}
-                className="flex-1 bg-primary hover:bg-primary/90"
+                className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-bold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 data-testid="button-message"
               >
-                <MessageCircle className="w-4 h-4 mr-2" />
+                <MessageCircle className="w-5 h-5 mr-2" />
                 Message
               </Button>
             </div>
