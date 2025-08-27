@@ -72,22 +72,27 @@ export default function CreateListing() {
     mutationFn: async (data: CarListingFormData) => {
       const payload = {
         title: data.title || '',
-        description: data.description || '',
-        price: data.price ? parseFloat(data.price) : null,
-        year: data.year ? parseInt(data.year) : null,
-        mileage: data.mileage ? parseInt(data.mileage) : null,
+        description: data.description || undefined,
+        price: data.price ? data.price : undefined, // Send as string, server will convert
+        year: data.year ? parseInt(data.year) : undefined,
+        mileage: data.mileage ? parseInt(data.mileage) : undefined,
         currency: 'TND',
         categoryId: carCategory?.id || '',
-        location: data.location || '',
-        brand: data.brand || '',
-        model: data.model || '',
-        fuelType: data.fuelType || null,
-        transmission: data.transmission || null,
-        condition: data.condition || null,
-        images: uploadedImages,
+        location: data.location || undefined,
+        brand: data.brand || undefined,
+        model: data.model || undefined,
+        fuelType: data.fuelType || undefined,
+        transmission: data.transmission || undefined,
+        condition: data.condition || undefined,
+        images: uploadedImages.length > 0 ? uploadedImages : undefined,
       };
       
-      return await apiRequest("POST", "/api/listings", payload);
+      // Remove undefined values to avoid Zod validation issues
+      const cleanPayload = Object.fromEntries(
+        Object.entries(payload).filter(([_, v]) => v !== undefined)
+      );
+      
+      return await apiRequest("POST", "/api/listings", cleanPayload);
     },
     onSuccess: () => {
       toast({
