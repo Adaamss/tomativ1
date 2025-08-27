@@ -19,29 +19,19 @@ import { Car, Upload } from "lucide-react";
 import type { Category } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
-// Validation schemas for each step
-const step1Schema = z.object({
-  brand: z.string().min(1, "La marque est requise"),
-  model: z.string().min(1, "Le modèle est requis"),
-  year: z.string().min(1, "L'année est requise"),
-  mileage: z.string().min(1, "Le kilométrage est requis"),
-  price: z.string().min(1, "Le prix est requis"),
-});
-
-const step2Schema = z.object({
+const carListingSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  price: z.string().optional(),
+  categoryId: z.string().optional(),
+  location: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  year: z.string().optional(),
+  mileage: z.string().optional(),
   fuelType: z.string().optional(),
   transmission: z.string().optional(),
   condition: z.string().optional(),
-});
-
-const step3Schema = z.object({
-  title: z.string().min(1, "Le titre est requis"),
-  description: z.string().optional(),
-  location: z.string().min(1, "La localisation est requise"),
-});
-
-const carListingSchema = step1Schema.merge(step2Schema).merge(step3Schema).extend({
-  categoryId: z.string().min(1, "La catégorie est requise"),
 });
 
 type CarListingFormData = z.infer<typeof carListingSchema>;
@@ -131,53 +121,78 @@ export default function CreateListing() {
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     const newImages: string[] = [];
     
-    for (const file of result.successful) {
-      try {
-        // Set ACL policy for the uploaded image
-        const aclResponse = await apiRequest("PUT", "/api/listing-images", {
-          imageURL: file.uploadURL
-        });
-        const aclData = await aclResponse.json();
-        newImages.push(aclData.objectPath);
-      } catch (error) {
-        console.error("Error setting ACL for image:", error);
-        // Still add the image even if ACL setting fails
-        newImages.push(file.uploadURL);
+    if (result.successful) {
+      for (const file of result.successful) {
+        try {
+          // Set ACL policy for the uploaded image
+          const aclResponse = await apiRequest("PUT", "/api/listing-images", {
+            imageURL: file.uploadURL || ""
+          });
+          const aclData = await aclResponse.json();
+          newImages.push(aclData.objectPath);
+        } catch (error) {
+          console.error("Error setting ACL for image:", error);
+          // Still add the image even if ACL setting fails
+          if (file.uploadURL) {
+            newImages.push(file.uploadURL);
+          }
+        }
       }
     }
     
     setUploadedImages(prev => [...prev, ...newImages]);
   };
 
-  const validateCurrentStep = async () => {
-    let schema;
-    let fieldsToValidate: (keyof CarListingFormData)[] = [];
-
-    if (step === 1) {
-      schema = step1Schema;
-      fieldsToValidate = ['brand', 'model', 'year', 'mileage', 'price'];
-    } else if (step === 2) {
-      schema = step2Schema;
-      fieldsToValidate = ['fuelType', 'transmission', 'condition'];
-    } else {
-      schema = step3Schema;
-      fieldsToValidate = ['title', 'location', 'description'];
+  const validateStep1 = (data: CarListingFormData) => {
+    if (!data.brand) {
+      form.setError('brand', { message: 'La marque est requise' });
+      return false;
     }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    return isValid;
+    if (!data.model) {
+      form.setError('model', { message: 'Le modèle est requis' });
+      return false;
+    }
+    if (!data.year) {
+      form.setError('year', { message: 'L\'année est requise' });
+      return false;
+    }
+    if (!data.mileage) {
+      form.setError('mileage', { message: 'Le kilométrage est requis' });
+      return false;
+    }
+    if (!data.price) {
+      form.setError('price', { message: 'Le prix est requis' });
+      return false;
+    }
+    return true;
   };
 
-  const onSubmit = async (data: CarListingFormData) => {
-    if (step < 3) {
-      const isValid = await validateCurrentStep();
-      if (isValid) {
-        setStep(step + 1);
+  const validateStep3 = (data: CarListingFormData) => {
+    if (!data.title) {
+      form.setError('title', { message: 'Le titre est requis' });
+      return false;
+    }
+    if (!data.location) {
+      form.setError('location', { message: 'La localisation est requise' });
+      return false;
+    }
+    return true;
+  };
+
+  const onSubmit = (data: CarListingFormData) => {
+    if (step === 1) {
+      if (validateStep1(data)) {
+        setStep(2);
       }
-    } else {
-      const isValid = await form.trigger();
-      if (isValid) {
-        createListingMutation.mutate(data);
+    } else if (step === 2) {
+      setStep(3);
+    } else if (step === 3) {
+      if (validateStep3(data)) {
+        const finalData = {
+          ...data,
+          categoryId: carCategory?.id || '',
+        };
+        createListingMutation.mutate(finalData);
       }
     }
   };
