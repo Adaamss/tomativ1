@@ -54,6 +54,20 @@ export default function ChatModal({ isOpen, onClose, listing, sellerId }: ChatMo
     }
   };
 
+  const handleRendezVous = () => {
+    if (sellerId && listing) {
+      const message = `Bonjour ! Je suis intéressé(e) par "${listing.title}". Pourriez-vous m'organiser un rendez-vous pour voir l'article ? Merci !`;
+      sendMessage(sellerId, message, listing.id);
+    }
+  };
+
+  const handleNegocierPrix = () => {
+    if (sellerId && listing) {
+      const message = `Bonjour ! Je suis intéressé(e) par "${listing.title}". Seriez-vous ouvert(e) à négocier le prix ? Merci !`;
+      sendMessage(sellerId, message, listing.id);
+    }
+  };
+
   const formatMessageTime = (date: Date | string) => {
     return formatDistanceToNow(new Date(date), { 
       addSuffix: true, 
@@ -151,6 +165,9 @@ export default function ChatModal({ isOpen, onClose, listing, sellerId }: ChatMo
               variant="outline" 
               size="sm"
               className="flex-1 text-xs"
+              onClick={handleRendezVous}
+              disabled={!isConnected}
+              data-testid="button-rendez-vous"
             >
               <Calendar className="w-4 h-4 mr-1" />
               Rendez-vous
@@ -159,6 +176,9 @@ export default function ChatModal({ isOpen, onClose, listing, sellerId }: ChatMo
               variant="outline" 
               size="sm"
               className="flex-1 text-xs"
+              onClick={handleNegocierPrix}
+              disabled={!isConnected}
+              data-testid="button-negocier-prix"
             >
               Négocier le prix
             </Button>
