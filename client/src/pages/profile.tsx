@@ -38,8 +38,8 @@ export default function Profile() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: user?.displayName || "",
-      bio: user?.bio || "",
+      displayName: (user as any)?.displayName || "",
+      bio: (user as any)?.bio || "",
     },
   });
 
@@ -101,15 +101,15 @@ export default function Profile() {
             {/* User Profile Card */}
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center relative">
-                {user.profileImageUrl ? (
+                {(user as any).profileImageUrl ? (
                   <img 
-                    src={user.profileImageUrl} 
+                    src={(user as any).profileImageUrl} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
                   <span className="text-white text-xl font-bold">
-                    {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    {(user as any).firstName?.charAt(0) || (user as any).email?.charAt(0) || 'U'}
                   </span>
                 )}
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${isConnected ? 'bg-green-500' : 'bg-red-500'} rounded-full flex items-center justify-center`}>
@@ -118,7 +118,7 @@ export default function Profile() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-medium text-foreground" data-testid="text-username">
-                  {user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur'}
+                  {(user as any).displayName || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || 'Utilisateur'}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className={`text-xs px-2 py-1 rounded-full ${isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -197,13 +197,13 @@ export default function Profile() {
               <div>
                 <p className="text-sm font-medium text-foreground">Nom d'affichage</p>
                 <p className="text-sm text-muted-foreground" data-testid="text-display-name">
-                  {user.displayName || 'Non renseigné'}
+                  {(user as any).displayName || 'Non renseigné'}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">Biographie</p>
                 <p className="text-sm text-muted-foreground" data-testid="text-bio">
-                  {user.bio || 'Aucune biographie'}
+                  {(user as any).bio || 'Aucune biographie'}
                 </p>
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function Profile() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Email</p>
                   <p className="text-sm text-muted-foreground" data-testid="text-email">
-                    {user.email || 'Non renseigné'}
+                    {(user as any).email || 'Non renseigné'}
                   </p>
                 </div>
               </div>
@@ -232,7 +232,7 @@ export default function Profile() {
                 <div>
                   <p className="text-sm font-medium text-foreground">Membre depuis</p>
                   <p className="text-sm text-muted-foreground" data-testid="text-member-since">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                    {(user as any).createdAt ? new Date((user as any).createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
                   </p>
                 </div>
               </div>
