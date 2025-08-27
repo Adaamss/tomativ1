@@ -19,19 +19,29 @@ import { Car, Upload } from "lucide-react";
 import type { Category } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
-const carListingSchema = z.object({
-  title: z.string().min(1, "Le titre est requis"),
-  description: z.string().optional(),
-  price: z.string().min(1, "Le prix est requis"),
-  categoryId: z.string().min(1, "La catégorie est requise"),
-  location: z.string().min(1, "La localisation est requise"),
+// Validation schemas for each step
+const step1Schema = z.object({
   brand: z.string().min(1, "La marque est requise"),
   model: z.string().min(1, "Le modèle est requis"),
   year: z.string().min(1, "L'année est requise"),
   mileage: z.string().min(1, "Le kilométrage est requis"),
+  price: z.string().min(1, "Le prix est requis"),
+});
+
+const step2Schema = z.object({
   fuelType: z.string().optional(),
   transmission: z.string().optional(),
   condition: z.string().optional(),
+});
+
+const step3Schema = z.object({
+  title: z.string().min(1, "Le titre est requis"),
+  description: z.string().optional(),
+  location: z.string().min(1, "La localisation est requise"),
+});
+
+const carListingSchema = step1Schema.merge(step2Schema).merge(step3Schema).extend({
+  categoryId: z.string().min(1, "La catégorie est requise"),
 });
 
 type CarListingFormData = z.infer<typeof carListingSchema>;
@@ -139,11 +149,36 @@ export default function CreateListing() {
     setUploadedImages(prev => [...prev, ...newImages]);
   };
 
-  const onSubmit = (data: CarListingFormData) => {
-    if (step < 3) {
-      setStep(step + 1);
+  const validateCurrentStep = async () => {
+    let schema;
+    let fieldsToValidate: (keyof CarListingFormData)[] = [];
+
+    if (step === 1) {
+      schema = step1Schema;
+      fieldsToValidate = ['brand', 'model', 'year', 'mileage', 'price'];
+    } else if (step === 2) {
+      schema = step2Schema;
+      fieldsToValidate = ['fuelType', 'transmission', 'condition'];
     } else {
-      createListingMutation.mutate(data);
+      schema = step3Schema;
+      fieldsToValidate = ['title', 'location', 'description'];
+    }
+
+    const isValid = await form.trigger(fieldsToValidate);
+    return isValid;
+  };
+
+  const onSubmit = async (data: CarListingFormData) => {
+    if (step < 3) {
+      const isValid = await validateCurrentStep();
+      if (isValid) {
+        setStep(step + 1);
+      }
+    } else {
+      const isValid = await form.trigger();
+      if (isValid) {
+        createListingMutation.mutate(data);
+      }
     }
   };
 
