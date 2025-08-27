@@ -66,6 +66,18 @@ export const listings = pgTable("listings", {
   mileage: integer("mileage"),
   fuelType: varchar("fuel_type"),
   transmission: varchar("transmission"),
+  // Real estate-specific fields
+  propertyType: varchar("property_type"), // maison, appartement, terrain
+  surface: integer("surface"), // superficie en m²
+  rooms: integer("rooms"), // nombre de pièces
+  bedrooms: integer("bedrooms"), // nombre de chambres
+  bathrooms: integer("bathrooms"), // nombre de salles de bain
+  floor: integer("floor"), // étage
+  // Job-specific fields
+  jobType: varchar("job_type"), // CDI, CDD, freelance, stage
+  experience: varchar("experience"), // débutant, 1-3 ans, 3-5 ans, etc.
+  salary: decimal("salary", { precision: 10, scale: 2 }),
+  sector: varchar("sector"), // informatique, santé, éducation, etc.
   // General fields
   condition: varchar("condition"),
   features: text("features").array(),

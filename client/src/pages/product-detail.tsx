@@ -30,6 +30,10 @@ export default function ProductDetail() {
     enabled: !!listingId,
   });
 
+  const { data: categories } = useQuery({
+    queryKey: ['/api/categories'],
+  });
+
   const formatPrice = (price: string | null) => {
     if (!price || Number(price) === 0) return "Gratuit";
     return `${Number(price).toLocaleString()} TND`;
@@ -42,6 +46,14 @@ export default function ProductDetail() {
       locale: fr 
     });
   };
+
+  const getCategorySlug = () => {
+    if (!listing || !categories) return '';
+    const category = categories.find((cat: any) => cat.id === listing.categoryId);
+    return category?.slug || '';
+  };
+
+  const categorySlug = getCategorySlug();
 
   if (isLoading) {
     return (
@@ -204,45 +216,129 @@ export default function ProductDetail() {
             <CardContent className="p-4">
               <h3 className="font-semibold mb-3">Détails</h3>
               <div className="grid grid-cols-2 gap-4">
-                {listing.brand && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Marque</span>
-                    <p className="font-medium" data-testid="product-brand">{listing.brand}</p>
-                  </div>
+                {/* Car specific fields */}
+                {categorySlug === 'voiture' && (
+                  <>
+                    {listing.brand && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Marque</span>
+                        <p className="font-medium" data-testid="product-brand">{listing.brand}</p>
+                      </div>
+                    )}
+                    {listing.model && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Modèle</span>
+                        <p className="font-medium" data-testid="product-model">{listing.model}</p>
+                      </div>
+                    )}
+                    {listing.year && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Année</span>
+                        <p className="font-medium" data-testid="product-year">{listing.year}</p>
+                      </div>
+                    )}
+                    {listing.mileage && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Kilométrage</span>
+                        <p className="font-medium" data-testid="product-mileage">{Number(listing.mileage).toLocaleString()} km</p>
+                      </div>
+                    )}
+                    {listing.fuelType && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Carburant</span>
+                        <p className="font-medium capitalize" data-testid="product-fuel">{listing.fuelType}</p>
+                      </div>
+                    )}
+                    {listing.transmission && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Transmission</span>
+                        <p className="font-medium capitalize" data-testid="product-transmission">{listing.transmission}</p>
+                      </div>
+                    )}
+                  </>
                 )}
-                {listing.model && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Modèle</span>
-                    <p className="font-medium" data-testid="product-model">{listing.model}</p>
-                  </div>
+
+                {/* Real estate specific fields */}
+                {categorySlug === 'immobilier' && (
+                  <>
+                    {listing.propertyType && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Type de bien</span>
+                        <p className="font-medium capitalize" data-testid="product-property-type">{listing.propertyType}</p>
+                      </div>
+                    )}
+                    {listing.surface && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Superficie</span>
+                        <p className="font-medium" data-testid="product-surface">{listing.surface} m²</p>
+                      </div>
+                    )}
+                    {listing.rooms && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Pièces</span>
+                        <p className="font-medium" data-testid="product-rooms">{listing.rooms}</p>
+                      </div>
+                    )}
+                    {listing.bedrooms && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Chambres</span>
+                        <p className="font-medium" data-testid="product-bedrooms">{listing.bedrooms}</p>
+                      </div>
+                    )}
+                    {listing.bathrooms && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Salles de bain</span>
+                        <p className="font-medium" data-testid="product-bathrooms">{listing.bathrooms}</p>
+                      </div>
+                    )}
+                    {listing.floor && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Étage</span>
+                        <p className="font-medium" data-testid="product-floor">{listing.floor}</p>
+                      </div>
+                    )}
+                  </>
                 )}
-                {listing.year && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Année</span>
-                    <p className="font-medium" data-testid="product-year">{listing.year}</p>
-                  </div>
+
+                {/* Job specific fields */}
+                {categorySlug === 'emploi' && (
+                  <>
+                    {listing.jobType && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Type de contrat</span>
+                        <p className="font-medium capitalize" data-testid="product-job-type">{listing.jobType}</p>
+                      </div>
+                    )}
+                    {listing.experience && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Expérience requise</span>
+                        <p className="font-medium" data-testid="product-experience">{listing.experience}</p>
+                      </div>
+                    )}
+                    {listing.sector && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Secteur</span>
+                        <p className="font-medium capitalize" data-testid="product-sector">{listing.sector}</p>
+                      </div>
+                    )}
+                    {listing.salary && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Salaire</span>
+                        <p className="font-medium" data-testid="product-salary">{Number(listing.salary).toLocaleString()} TND</p>
+                      </div>
+                    )}
+                  </>
                 )}
-                {listing.mileage && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Kilométrage</span>
-                    <p className="font-medium" data-testid="product-mileage">{Number(listing.mileage).toLocaleString()} km</p>
-                  </div>
-                )}
-                {listing.fuelType && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Carburant</span>
-                    <p className="font-medium capitalize" data-testid="product-fuel">{listing.fuelType}</p>
-                  </div>
-                )}
-                {listing.transmission && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Transmission</span>
-                    <p className="font-medium capitalize" data-testid="product-transmission">{listing.transmission}</p>
-                  </div>
-                )}
+
+                {/* Common condition field for all categories */}
                 {listing.condition && (
                   <div>
-                    <span className="text-sm text-muted-foreground">État</span>
+                    <span className="text-sm text-muted-foreground">
+                      {categorySlug === 'voiture' ? 'État du véhicule' :
+                       categorySlug === 'immobilier' ? 'État du bien' :
+                       categorySlug === 'emploi' ? 'Type de poste' :
+                       'État'}
+                    </span>
                     <p className="font-medium capitalize" data-testid="product-condition">{listing.condition}</p>
                   </div>
                 )}

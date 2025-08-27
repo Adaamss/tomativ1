@@ -19,26 +19,55 @@ import { Car, Upload } from "lucide-react";
 import type { Category } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
-const carListingSchema = z.object({
-  title: z.string().optional(),
+// Schémas de base commun
+const baseListingSchema = z.object({
+  title: z.string().min(1, "Le titre est requis"),
   description: z.string().optional(),
-  price: z.string().optional(),
-  categoryId: z.string().optional(),
-  location: z.string().optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  year: z.string().optional(),
-  mileage: z.string().optional(),
-  fuelType: z.string().optional(),
-  transmission: z.string().optional(),
+  price: z.string().min(1, "Le prix est requis"),
+  categoryId: z.string().min(1, "La catégorie est requise"),
+  location: z.string().min(1, "La localisation est requise"),
   condition: z.string().optional(),
 });
 
-type CarListingFormData = z.infer<typeof carListingSchema>;
+// Schéma pour les voitures
+const carListingSchema = baseListingSchema.extend({
+  brand: z.string().min(1, "La marque est requise"),
+  model: z.string().min(1, "Le modèle est requis"),
+  year: z.string().min(1, "L'année est requise"),
+  mileage: z.string().min(1, "Le kilométrage est requis"),
+  fuelType: z.string().min(1, "Le type de carburant est requis"),
+  transmission: z.string().min(1, "La transmission est requise"),
+});
+
+// Schéma pour l'immobilier
+const realEstateListingSchema = baseListingSchema.extend({
+  propertyType: z.string().min(1, "Le type de bien est requis"),
+  surface: z.string().min(1, "La superficie est requise"),
+  rooms: z.string().optional(),
+  bedrooms: z.string().optional(),
+  bathrooms: z.string().optional(),
+  floor: z.string().optional(),
+});
+
+// Schéma pour l'emploi
+const jobListingSchema = baseListingSchema.extend({
+  jobType: z.string().min(1, "Le type de contrat est requis"),
+  experience: z.string().min(1, "L'expérience requise est requise"),
+  salary: z.string().optional(),
+  sector: z.string().min(1, "Le secteur est requis"),
+});
+
+// Schéma général pour "Autre"
+const generalListingSchema = baseListingSchema;
+
+type ListingFormData = z.infer<typeof carListingSchema> & 
+  z.infer<typeof realEstateListingSchema> & 
+  z.infer<typeof jobListingSchema>;
 
 export default function CreateListing() {
   const [step, setStep] = useState(1);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>('');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -47,49 +76,103 @@ export default function CreateListing() {
     retry: false,
   });
 
-  // Get the car category (voiture)
-  const carCategory = categories.find(cat => cat.slug === 'voiture');
+  // Get selected category
+  const selectedCategory = categories.find(cat => cat.slug === selectedCategorySlug);
 
-  const form = useForm<CarListingFormData>({
-    resolver: zodResolver(carListingSchema),
+  // Determine which schema to use based on category
+  const getFormSchema = () => {
+    switch (selectedCategorySlug) {
+      case 'voiture':
+        return carListingSchema;
+      case 'immobilier':
+        return realEstateListingSchema;
+      case 'emploi':
+        return jobListingSchema;
+      default:
+        return generalListingSchema;
+    }
+  };
+
+  const form = useForm<ListingFormData>({
+    resolver: zodResolver(getFormSchema()),
     defaultValues: {
-      categoryId: carCategory?.id || '',
+      categoryId: selectedCategory?.id || '',
       title: '',
       description: '',
       price: '',
       location: '',
+      condition: '',
+      // Car fields
       brand: '',
       model: '',
       year: '',
       mileage: '',
       fuelType: '',
       transmission: '',
-      condition: '',
+      // Real estate fields
+      propertyType: '',
+      surface: '',
+      rooms: '',
+      bedrooms: '',
+      bathrooms: '',
+      floor: '',
+      // Job fields
+      jobType: '',
+      experience: '',
+      salary: '',
+      sector: '',
     },
   });
 
+  // Update form validation when category changes
+  const handleCategoryChange = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    if (category) {
+      setSelectedCategorySlug(category.slug);
+      form.setValue('categoryId', categoryId);
+    }
+  };
+
   const createListingMutation = useMutation({
-    mutationFn: async (data: CarListingFormData) => {
-      const payload = {
-        title: data.title || '',
+    mutationFn: async (data: ListingFormData) => {
+      const basePayload = {
+        title: data.title,
         description: data.description || undefined,
-        price: data.price ? data.price : undefined, // Send as string, server will convert
-        year: data.year ? parseInt(data.year) : undefined,
-        mileage: data.mileage ? parseInt(data.mileage) : undefined,
+        price: data.price,
         currency: 'TND',
-        categoryId: carCategory?.id || '',
-        location: data.location || undefined,
-        brand: data.brand || undefined,
-        model: data.model || undefined,
-        fuelType: data.fuelType || undefined,
-        transmission: data.transmission || undefined,
+        categoryId: data.categoryId,
+        location: data.location,
         condition: data.condition || undefined,
         images: uploadedImages.length > 0 ? uploadedImages : undefined,
       };
+
+      // Add category-specific fields
+      const categorySpecificPayload: any = { ...basePayload };
+      
+      if (selectedCategorySlug === 'voiture') {
+        categorySpecificPayload.brand = data.brand;
+        categorySpecificPayload.model = data.model;
+        categorySpecificPayload.year = data.year ? parseInt(data.year) : undefined;
+        categorySpecificPayload.mileage = data.mileage ? parseInt(data.mileage) : undefined;
+        categorySpecificPayload.fuelType = data.fuelType;
+        categorySpecificPayload.transmission = data.transmission;
+      } else if (selectedCategorySlug === 'immobilier') {
+        categorySpecificPayload.propertyType = data.propertyType;
+        categorySpecificPayload.surface = data.surface ? parseInt(data.surface) : undefined;
+        categorySpecificPayload.rooms = data.rooms ? parseInt(data.rooms) : undefined;
+        categorySpecificPayload.bedrooms = data.bedrooms ? parseInt(data.bedrooms) : undefined;
+        categorySpecificPayload.bathrooms = data.bathrooms ? parseInt(data.bathrooms) : undefined;
+        categorySpecificPayload.floor = data.floor ? parseInt(data.floor) : undefined;
+      } else if (selectedCategorySlug === 'emploi') {
+        categorySpecificPayload.jobType = data.jobType;
+        categorySpecificPayload.experience = data.experience;
+        categorySpecificPayload.salary = data.salary ? parseFloat(data.salary) : undefined;
+        categorySpecificPayload.sector = data.sector;
+      }
       
       // Remove undefined values to avoid Zod validation issues
       const cleanPayload = Object.fromEntries(
-        Object.entries(payload).filter(([_, v]) => v !== undefined)
+        Object.entries(categorySpecificPayload).filter(([_, v]) => v !== undefined)
       );
       
       return await apiRequest("POST", "/api/listings", cleanPayload);
@@ -156,7 +239,7 @@ export default function CreateListing() {
     setUploadedImages(prev => [...prev, ...newImages]);
   };
 
-  const validateStep1 = (data: CarListingFormData) => {
+  const validateStep1 = (data: ListingFormData) => {
     if (!data.brand) {
       form.setError('brand', { message: 'La marque est requise' });
       return false;
@@ -180,7 +263,7 @@ export default function CreateListing() {
     return true;
   };
 
-  const validateStep3 = (data: CarListingFormData) => {
+  const validateStep3 = (data: ListingFormData) => {
     if (!data.title) {
       form.setError('title', { message: 'Le titre est requis' });
       return false;
@@ -192,7 +275,7 @@ export default function CreateListing() {
     return true;
   };
 
-  const onSubmit = (data: CarListingFormData) => {
+  const onSubmit = (data: ListingFormData) => {
     if (step === 1) {
       if (validateStep1(data)) {
         setStep(2);
@@ -277,9 +360,55 @@ export default function CreateListing() {
                   <>
                     <h2 className="text-xl font-semibold text-foreground mb-6">Informations générales</h2>
                     
+                    {/* Category Selection */}
+                    <FormField
+                      control={form.control}
+                      name="categoryId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Catégorie</FormLabel>
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              handleCategoryChange(value);
+                            }} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-category">
+                                <SelectValue placeholder="Sélectionnez une catégorie" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {!selectedCategorySlug && (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">Sélectionnez une catégorie pour continuer</p>
+                      </div>
+                    )}
+
+                    {selectedCategorySlug && (
+                      <>
+                    
                     {/* Photo Upload Section */}
                     <div className="mb-8">
-                      <h3 className="text-lg font-medium text-foreground mb-4">Photos du véhicule</h3>
+                      <h3 className="text-lg font-medium text-foreground mb-4">
+                        Photos {selectedCategorySlug === 'voiture' ? 'du véhicule' : 
+                               selectedCategorySlug === 'immobilier' ? 'du bien' :
+                               selectedCategorySlug === 'emploi' ? 'de l\'annonce' : 
+                               'de l\'article'}
+                      </h3>
                       <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                         <div className="flex flex-col items-center">
                           <Upload className="w-12 h-12 text-muted-foreground mb-4" />
@@ -303,103 +432,310 @@ export default function CreateListing() {
                       </div>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="brand"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Marque du véhicule</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-brand">
-                                <SelectValue placeholder="Sélectionnez une marque" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="toyota">Toyota</SelectItem>
-                              <SelectItem value="peugeot">Peugeot</SelectItem>
-                              <SelectItem value="renault">Renault</SelectItem>
-                              <SelectItem value="volkswagen">Volkswagen</SelectItem>
-                              <SelectItem value="nissan">Nissan</SelectItem>
-                              <SelectItem value="hyundai">Hyundai</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Category-specific fields */}
+                    {selectedCategorySlug === 'voiture' && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="brand"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Marque du véhicule</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-brand">
+                                    <SelectValue placeholder="Sélectionnez une marque" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="toyota">Toyota</SelectItem>
+                                  <SelectItem value="peugeot">Peugeot</SelectItem>
+                                  <SelectItem value="renault">Renault</SelectItem>
+                                  <SelectItem value="volkswagen">Volkswagen</SelectItem>
+                                  <SelectItem value="nissan">Nissan</SelectItem>
+                                  <SelectItem value="hyundai">Hyundai</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="model"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Modèle</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex: Corolla, 208, etc." {...field} data-testid="input-model" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="year"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Année</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormField
+                          control={form.control}
+                          name="model"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Modèle</FormLabel>
                               <FormControl>
-                                <SelectTrigger data-testid="select-year">
-                                  <SelectValue placeholder="Année de fabrication" />
-                                </SelectTrigger>
+                                <Input placeholder="Ex: Corolla, 208, etc." {...field} data-testid="input-model" />
                               </FormControl>
-                              <SelectContent>
-                                {Array.from({ length: 25 }, (_, i) => {
-                                  const year = 2024 - i;
-                                  return (
-                                    <SelectItem key={year} value={year.toString()}>
-                                      {year}
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="mileage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Kilométrage</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="Km parcourus" {...field} data-testid="input-mileage" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="year"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Année</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger data-testid="select-year">
+                                      <SelectValue placeholder="Année de fabrication" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {Array.from({ length: 25 }, (_, i) => {
+                                      const year = 2024 - i;
+                                      return (
+                                        <SelectItem key={year} value={year.toString()}>
+                                          {year}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
+                          <FormField
+                            control={form.control}
+                            name="mileage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Kilométrage</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="Km parcourus" {...field} data-testid="input-mileage" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {selectedCategorySlug === 'immobilier' && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="propertyType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Type de bien</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-property-type">
+                                    <SelectValue placeholder="Sélectionnez le type de bien" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="maison">Maison</SelectItem>
+                                  <SelectItem value="appartement">Appartement</SelectItem>
+                                  <SelectItem value="terrain">Terrain</SelectItem>
+                                  <SelectItem value="bureau">Bureau</SelectItem>
+                                  <SelectItem value="commerce">Commerce</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="surface"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Superficie (m²)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="Ex: 120" {...field} data-testid="input-surface" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="rooms"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nombre de pièces</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="Ex: 4" {...field} data-testid="input-rooms" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="bedrooms"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Chambres</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="Ex: 3" {...field} data-testid="input-bedrooms" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="bathrooms"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Salles de bain</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="Ex: 2" {...field} data-testid="input-bathrooms" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {selectedCategorySlug === 'emploi' && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="jobType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Type de contrat</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-job-type">
+                                    <SelectValue placeholder="Sélectionnez le type de contrat" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="cdi">CDI</SelectItem>
+                                  <SelectItem value="cdd">CDD</SelectItem>
+                                  <SelectItem value="freelance">Freelance</SelectItem>
+                                  <SelectItem value="stage">Stage</SelectItem>
+                                  <SelectItem value="temps-partiel">Temps partiel</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="sector"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Secteur d'activité</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-sector">
+                                    <SelectValue placeholder="Sélectionnez le secteur" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="informatique">Informatique</SelectItem>
+                                  <SelectItem value="sante">Santé</SelectItem>
+                                  <SelectItem value="education">Éducation</SelectItem>
+                                  <SelectItem value="finance">Finance</SelectItem>
+                                  <SelectItem value="marketing">Marketing</SelectItem>
+                                  <SelectItem value="vente">Vente</SelectItem>
+                                  <SelectItem value="ingenierie">Ingénierie</SelectItem>
+                                  <SelectItem value="autre">Autre</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="experience"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expérience requise</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger data-testid="select-experience">
+                                      <SelectValue placeholder="Niveau d'expérience" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="debutant">Débutant</SelectItem>
+                                    <SelectItem value="1-3-ans">1-3 ans</SelectItem>
+                                    <SelectItem value="3-5-ans">3-5 ans</SelectItem>
+                                    <SelectItem value="5-10-ans">5-10 ans</SelectItem>
+                                    <SelectItem value="10-plus-ans">10+ ans</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="salary"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Salaire (TND) - Optionnel</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="Ex: 1200" {...field} data-testid="input-salary" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Common fields for all categories */}
                     <FormField
                       control={form.control}
                       name="price"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Prix (TND)</FormLabel>
+                          <FormLabel>
+                            Prix (TND) {selectedCategorySlug === 'emploi' ? '- Salaire mensuel' : ''}
+                          </FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="Prix de vente" {...field} data-testid="input-price" />
+                            <Input 
+                              type="number" 
+                              placeholder={
+                                selectedCategorySlug === 'voiture' ? 'Prix de vente' :
+                                selectedCategorySlug === 'immobilier' ? 'Prix de vente/location' :
+                                selectedCategorySlug === 'emploi' ? 'Salaire mensuel' :
+                                'Prix'
+                              } 
+                              {...field} 
+                              data-testid="input-price" 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                      </>
+                    )}
                   </>
                 )}
 
@@ -407,70 +743,113 @@ export default function CreateListing() {
                   <>
                     <h2 className="text-xl font-semibold text-foreground mb-6">Caractéristiques</h2>
                     
-                    <FormField
-                      control={form.control}
-                      name="fuelType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Type de carburant</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-fuel-type">
-                                <SelectValue placeholder="Sélectionnez le carburant" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="essence">Essence</SelectItem>
-                              <SelectItem value="diesel">Diesel</SelectItem>
-                              <SelectItem value="hybride">Hybride</SelectItem>
-                              <SelectItem value="electrique">Électrique</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {selectedCategorySlug === 'voiture' && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="fuelType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Type de carburant</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-fuel-type">
+                                    <SelectValue placeholder="Sélectionnez le carburant" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="essence">Essence</SelectItem>
+                                  <SelectItem value="diesel">Diesel</SelectItem>
+                                  <SelectItem value="hybride">Hybride</SelectItem>
+                                  <SelectItem value="electrique">Électrique</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="transmission"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Transmission</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-transmission">
-                                <SelectValue placeholder="Type de transmission" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="manuelle">Manuelle</SelectItem>
-                              <SelectItem value="automatique">Automatique</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="transmission"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Transmission</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger data-testid="select-transmission">
+                                    <SelectValue placeholder="Type de transmission" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="manuelle">Manuelle</SelectItem>
+                                  <SelectItem value="automatique">Automatique</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
 
+                    {/* Common condition field for all categories */}
                     <FormField
                       control={form.control}
                       name="condition"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>État du véhicule</FormLabel>
+                          <FormLabel>
+                            {selectedCategorySlug === 'voiture' ? 'État du véhicule' :
+                             selectedCategorySlug === 'immobilier' ? 'État du bien' :
+                             selectedCategorySlug === 'emploi' ? 'Type de poste' :
+                             'État'}
+                          </FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger data-testid="select-condition">
-                                <SelectValue placeholder="État général" />
+                                <SelectValue placeholder={
+                                  selectedCategorySlug === 'voiture' ? 'État général' :
+                                  selectedCategorySlug === 'immobilier' ? 'État du bien' :
+                                  selectedCategorySlug === 'emploi' ? 'Type de poste' :
+                                  'État général'
+                                } />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="excellent">Excellent</SelectItem>
-                              <SelectItem value="tres-bon">Très bon</SelectItem>
-                              <SelectItem value="bon">Bon</SelectItem>
-                              <SelectItem value="correct">Correct</SelectItem>
-                              <SelectItem value="a-reparer">À réparer</SelectItem>
+                              {selectedCategorySlug === 'voiture' && (
+                                <>
+                                  <SelectItem value="excellent">Excellent</SelectItem>
+                                  <SelectItem value="tres-bon">Très bon</SelectItem>
+                                  <SelectItem value="bon">Bon</SelectItem>
+                                  <SelectItem value="correct">Correct</SelectItem>
+                                  <SelectItem value="a-reparer">À réparer</SelectItem>
+                                </>
+                              )}
+                              {selectedCategorySlug === 'immobilier' && (
+                                <>
+                                  <SelectItem value="neuf">Neuf</SelectItem>
+                                  <SelectItem value="excellent">Excellent</SelectItem>
+                                  <SelectItem value="bon">Bon</SelectItem>
+                                  <SelectItem value="a-renover">À rénover</SelectItem>
+                                </>
+                              )}
+                              {selectedCategorySlug === 'emploi' && (
+                                <>
+                                  <SelectItem value="temps-plein">Temps plein</SelectItem>
+                                  <SelectItem value="temps-partiel">Temps partiel</SelectItem>
+                                  <SelectItem value="remote">Télétravail</SelectItem>
+                                  <SelectItem value="hybride">Hybride</SelectItem>
+                                </>
+                              )}
+                              {!['voiture', 'immobilier', 'emploi'].includes(selectedCategorySlug) && (
+                                <>
+                                  <SelectItem value="neuf">Neuf</SelectItem>
+                                  <SelectItem value="excellent">Excellent</SelectItem>
+                                  <SelectItem value="bon">Bon</SelectItem>
+                                  <SelectItem value="usage">Usagé</SelectItem>
+                                </>
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
