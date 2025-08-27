@@ -46,18 +46,8 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
   ];
 
   const getColorClasses = (color: string) => {
-    switch (color) {
-      case "blue":
-        return { bg: "bg-blue-100", icon: "text-blue-600" };
-      case "green":
-        return { bg: "bg-green-100", icon: "text-green-600" };
-      case "purple":
-        return { bg: "bg-purple-100", icon: "text-purple-600" };
-      case "orange":
-        return { bg: "bg-orange-100", icon: "text-orange-600" };
-      default:
-        return { bg: "bg-gray-100", icon: "text-gray-600" };
-    }
+    // All icons in black/gray
+    return { bg: "bg-transparent", icon: "text-gray-700" };
   };
 
   const handleCategorySelect = (categorySlug: string) => {
