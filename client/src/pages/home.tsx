@@ -113,29 +113,6 @@ export default function Home() {
         sellerId={chatModal.sellerId}
       />
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-border py-4 text-center">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center items-center space-x-6 text-sm text-muted-foreground mb-2">
-            <span>Immobilier</span>
-            <span>Voitures</span>
-            <span>Accueil</span>
-            <span>Catégories</span>
-            <span>FAQ</span>
-            <span>À propos</span>
-            <span>Sécurité</span>
-            <span>Cookies</span>
-            <span>Connexion</span>
-            <span>S'inscrire</span>
-          </div>
-          <div className="border-t border-border pt-3 flex justify-between items-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Tomati. Tous droits réservés.</p>
-            <p className="flex items-center">
-              Made with <span className="text-red-500 mx-1">❤️</span> in Tunisia
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
