@@ -1,6 +1,6 @@
 import { 
   Car, 
-  Home, 
+  Building2, 
   Briefcase, 
   Package 
 } from "lucide-react";
@@ -25,7 +25,7 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
     { 
       slug: "immobilier", 
       name: "Immobilier", 
-      icon: Home, 
+      icon: Building2, 
       color: "green",
       testId: "category-immobilier"
     },
@@ -73,19 +73,20 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center"
-      onClick={onClose}
-      data-testid="category-overlay"
-    >
+    <>
+      {/* Backdrop */}
       <div 
-        className="bg-white rounded-t-2xl w-full max-w-md p-6 transform transition-transform"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-40"
+        onClick={onClose}
+      />
+      
+      {/* Popup Menu */}
+      <div 
+        className="fixed bottom-36 right-4 z-50 bg-white rounded-2xl shadow-xl border border-border overflow-hidden min-w-[200px]"
+        data-testid="category-overlay"
       >
-        <div className="w-8 h-1 bg-secondary rounded-full mx-auto mb-6"></div>
-        
-        <div className="space-y-4">
-          {categories.map((category) => {
+        <div className="py-2">
+          {categories.map((category, index) => {
             const Icon = category.icon;
             const colors = getColorClasses(category.color);
             
@@ -93,13 +94,15 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
               <button
                 key={category.slug}
                 onClick={() => handleCategorySelect(category.slug)}
-                className="flex items-center space-x-4 w-full p-4 hover:bg-secondary rounded-lg transition-colors"
+                className={`flex items-center space-x-3 w-full px-4 py-3 hover:bg-gray-50 transition-colors text-left ${
+                  index < categories.length - 1 ? '' : ''
+                }`}
                 data-testid={category.testId}
               >
-                <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center`}>
+                <div className="w-6 h-6 flex items-center justify-center">
                   <Icon className={`w-5 h-5 ${colors.icon}`} />
                 </div>
-                <span className="text-lg font-medium text-foreground">
+                <span className="text-base font-medium text-gray-700">
                   {category.name}
                 </span>
               </button>
@@ -107,6 +110,6 @@ export default function CategoryOverlay({ isOpen, onClose }: CategoryOverlayProp
           })}
         </div>
       </div>
-    </div>
+    </>
   );
 }
