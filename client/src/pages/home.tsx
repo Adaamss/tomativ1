@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { RefreshCw, Filter } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { Listing, Category } from "@shared/schema";
 
 export default function Home() {
+  const [, navigate] = useLocation();
   const [chatModal, setChatModal] = useState<{
     isOpen: boolean;
     listing: Listing | null;
@@ -85,6 +87,7 @@ export default function Home() {
                 <ProductCard 
                   key={listing.id} 
                   listing={listing}
+                  onClick={() => navigate(`/listing/${listing.id}`)}
                   onContactSeller={(listing) => {
                     setChatModal({
                       isOpen: true,

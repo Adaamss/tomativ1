@@ -13,6 +13,7 @@ import Map from "@/pages/map";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import CreateListing from "@/pages/create-listing";
+import ProductDetail from "@/pages/product-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Home} />
+          <Route path="/listing/:id" component={ProductDetail} />
           <Route path="/map" component={Map} />
           <Route path="/messages" component={Messages} />
           <Route path="/profile" component={Profile} />
