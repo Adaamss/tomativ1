@@ -9,6 +9,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -950,6 +951,7 @@ export default function CreateListing() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

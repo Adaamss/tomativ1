@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
+import Footer from "@/components/Footer";
 import ChatModal from "@/components/ChatModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -405,6 +406,7 @@ export default function ProductDetail() {
         )}
       </main>
 
+      <Footer />
       <BottomNavigation />
 
       {/* Chat Modal */}

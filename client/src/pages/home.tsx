@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { RefreshCw, Filter } from "lucide-react";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
+import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ChatModal from "@/components/ChatModal";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,7 @@ export default function Home() {
 
       </main>
 
+      <Footer />
       <BottomNavigation />
 
       {/* Chat Modal */}

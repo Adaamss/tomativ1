@@ -5,6 +5,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,7 +46,7 @@ export default function Profile() {
   });
 
   // Fetch user's liked listings
-  const { data: likedListings = [] } = useUserLikes((user as any)?.id || '');
+  const { data: likedListings = [] } = useUserLikes((user as any)?.id || '') as { data: Listing[] };
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -351,6 +352,7 @@ export default function Profile() {
         </div>
       </main>
 
+      <Footer />
       <BottomNavigation />
     </div>
   );
