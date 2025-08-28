@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { RefreshCw, Filter } from "lucide-react";
 import Header from "@/components/Header";
@@ -14,6 +14,9 @@ import type { Listing, Category } from "@shared/schema";
 export default function Home() {
   const [, navigate] = useLocation();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const [showFilters, setShowFilters] = useState(false);
+  const [viewAllProducts, setViewAllProducts] = useState(false);
   const [chatModal, setChatModal] = useState<{
     isOpen: boolean;
     listing: Listing | null;
@@ -40,7 +43,16 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Tous les produits</h2>
             <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" className="text-primary hover:text-primary" data-testid="button-refresh">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-primary hover:text-primary" 
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+                }}
+                data-testid="button-refresh"
+              >
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Actualiser
               </Button>
@@ -48,10 +60,7 @@ export default function Home() {
                 variant="ghost" 
                 size="sm" 
                 className="text-muted-foreground hover:text-foreground" 
-                onClick={() => {
-                  // TODO: Implement filters functionality
-                  console.log('Filtres clicked');
-                }}
+                onClick={() => setShowFilters(!showFilters)}
                 data-testid="button-filters"
               >
                 <Filter className="w-4 h-4 mr-1" />
@@ -61,6 +70,32 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Filters Section */}
+        {showFilters && (
+          <div className="px-4 py-3 bg-gray-50 border-b border-border">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="text-xs">
+                Voitures
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                Immobilier
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                Emploi
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                Prix croissant
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                Prix décroissant
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                Plus récent
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Recent Products Section */}
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
@@ -69,13 +104,10 @@ export default function Home() {
               variant="ghost" 
               size="sm" 
               className="text-muted-foreground hover:text-foreground" 
-              onClick={() => {
-                // TODO: Implement view all functionality
-                console.log('Voir tout clicked');
-              }}
+              onClick={() => setViewAllProducts(!viewAllProducts)}
               data-testid="button-view-all"
             >
-              Voir tout
+              {viewAllProducts ? "Voir moins" : "Voir tout"}
             </Button>
           </div>
 
@@ -104,7 +136,7 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">Soyez le premier à publier une annonce !</p>
               </div>
             ) : (
-              listings.map((listing) => (
+              (viewAllProducts ? listings : listings.slice(0, 6)).map((listing) => (
                 <ProductCard 
                   key={listing.id} 
                   listing={listing}
