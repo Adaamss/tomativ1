@@ -41,7 +41,7 @@ export default function Profile() {
 
   // Fetch user's listings
   const { data: userListings = [] } = useQuery<Listing[]>({
-    queryKey: ['/api/listings/user', (user as any)?.id],
+    queryKey: [`/api/listings/user/${(user as any)?.id}`],
     enabled: !!user,
   });
 

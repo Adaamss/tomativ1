@@ -35,6 +35,12 @@ export default function ProductDetail() {
     queryKey: ['/api/categories'],
   });
 
+  // Fetch seller information
+  const { data: seller } = useQuery<any>({
+    queryKey: ['/api/users', listing?.userId],
+    enabled: !!listing?.userId,
+  });
+
   const formatPrice = (price: string | null) => {
     if (!price || Number(price) === 0) return "Gratuit";
     return `${Number(price).toLocaleString()} TND`;
@@ -369,8 +375,15 @@ export default function ProductDetail() {
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-lg text-gray-900" data-testid="seller-name">Vendeur privé</p>
-                  <p className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full inline-block">Membre depuis {formatTimeAgo(listing.createdAt)}</p>
+                  <p className="font-bold text-lg text-gray-900" data-testid="seller-name">
+                    {seller ? 
+                      (seller.displayName || `${seller.firstName || ''} ${seller.lastName || ''}`.trim() || 'Utilisateur') : 
+                      'Vendeur privé'
+                    }
+                  </p>
+                  <p className="text-sm text-gray-600 bg-white px-3 py-1 rounded-full inline-block">
+                    Membre depuis {formatTimeAgo(seller?.createdAt || listing.createdAt)}
+                  </p>
                 </div>
               </div>
             </CardContent>

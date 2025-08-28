@@ -65,6 +65,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get public user information (for seller profiles)
+  app.get('/api/users/:id', async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return only public information
+      const publicUser = {
+        id: user.id,
+        displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        createdAt: user.createdAt,
+      };
+      
+      res.json(publicUser);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Category routes
   app.get('/api/categories', async (req, res) => {
     try {
@@ -111,6 +136,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching listing:", error);
       res.status(500).json({ message: "Failed to fetch listing" });
+    }
+  });
+
+  // Get listings by user
+  app.get('/api/listings/user/:userId', async (req, res) => {
+    try {
+      const listings = await storage.getListingsByUser(req.params.userId);
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching user listings:", error);
+      res.status(500).json({ message: "Failed to fetch user listings" });
     }
   });
 
@@ -331,24 +367,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's listings
-  app.get("/api/listings/user/:userId", isAuthenticated, async (req: any, res) => {
-    const currentUserId = req.user?.claims?.sub;
-    const { userId } = req.params;
-
-    // Users can only see their own listings (for privacy)
-    if (currentUserId !== userId) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    try {
-      const listings = await storage.getListingsByUser(userId);
-      res.json(listings);
-    } catch (error) {
-      console.error("Error fetching user listings:", error);
-      res.status(500).json({ error: "Failed to fetch listings" });
-    }
-  });
 
   // Toggle like/unlike a listing
   app.post("/api/listings/:id/like", isAuthenticated, async (req: any, res) => {
