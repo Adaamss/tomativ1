@@ -9,6 +9,9 @@ import { apiRequest } from "@/lib/queryClient";
 
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
 import Map from "@/pages/map";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
@@ -27,6 +30,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/listing/:id" component={ProductDetail} />
       <Route path="/map" component={Map} />
       <Route path="/messages" component={Messages} />

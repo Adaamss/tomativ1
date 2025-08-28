@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { authenticateToken, hashPassword, comparePassword, generateToken, generateResetToken, type AuthenticatedRequest } from "./auth";
 import { insertListingSchema } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -10,10 +10,11 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
+import cookieParser from "cookie-parser";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Add cookie parser middleware
+  app.use(cookieParser());
 
   // Initialize categories if they don't exist
   app.get('/api/init', async (req, res) => {
@@ -54,11 +55,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.post('/api/auth/register', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const { email, password, firstName, lastName } = req.body;
+
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ message: "User already exists" });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        displayName: `${firstName} ${lastName}`,
+      });
+
+      // Generate token
+      const token = generateToken(user.id);
+
+      // Set cookie and return user
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json({ user: userWithoutPassword, token });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Check password
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Generate token
+      const token = generateToken(user.id);
+
+      // Set cookie and return user
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword, token });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ message: "Logged out successfully" });
+  });
+
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if user exists or not
+        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+
+      // Generate reset token
+      const resetToken = generateResetToken();
+      const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      await storage.updateUserResetToken(user.id, resetToken, expiry);
+
+      // In a real app, you would send an email here
+      // For now, just return success
+      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get('/api/auth/user', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -150,9 +269,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/listings', isAuthenticated, async (req: any, res) => {
+  app.post('/api/listings', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const listingData = insertListingSchema.parse({
         ...req.body,
         userId
@@ -169,9 +288,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/listings/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/listings/:id', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const listing = await storage.getListingById(req.params.id);
       
       if (!listing) {
@@ -190,9 +309,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/user/listings', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/listings', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const listings = await storage.getListingsByUser(userId);
       res.json(listings);
     } catch (error) {
@@ -202,9 +321,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message routes
-  app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/conversations', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const conversations = await storage.getConversationsByUser(userId);
       res.json(conversations);
     } catch (error) {
@@ -213,9 +332,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/conversations/:id/messages', isAuthenticated, async (req: any, res) => {
+  app.get('/api/conversations/:id/messages', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const messages = await storage.getMessagesByConversation(req.params.id);
       res.json(messages);
     } catch (error) {
@@ -224,9 +343,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/messages', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const { receiverId, listingId, content } = req.body;
 
       // Check if conversation exists
@@ -284,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+  app.post("/api/objects/upload", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -295,12 +414,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/listing-images", isAuthenticated, async (req: any, res) => {
+  app.put("/api/listing-images", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
     if (!req.body.imageURL) {
       return res.status(400).json({ error: "imageURL is required" });
     }
 
-    const userId = req.user?.claims?.sub;
+    const userId = req.user?.id;
 
     try {
       const objectStorageService = new ObjectStorageService();
@@ -322,8 +441,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messages API
-  app.get("/api/messages/:sellerId/:listingId?", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/api/messages/:sellerId/:listingId?", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     const { sellerId, listingId } = req.params;
 
     try {
@@ -340,8 +459,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get conversations for current user
-  app.get("/api/conversations", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/api/conversations", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     try {
       const conversations = await storage.getConversationsByUser(userId);
       res.json(conversations);
@@ -352,8 +471,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User profile routes
-  app.put("/api/profile", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.put("/api/profile", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     const { displayName, bio } = req.body;
 
     try {
@@ -371,8 +490,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update profile image
-  app.put("/api/profile-image", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.put("/api/profile-image", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     const { profileImageURL } = req.body;
 
     if (!profileImageURL) {
@@ -408,8 +527,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Toggle like/unlike a listing
-  app.post("/api/listings/:id/like", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.post("/api/listings/:id/like", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     const { id: listingId } = req.params;
 
     if (!userId) {
@@ -426,8 +545,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Check if user liked a listing
-  app.get("/api/listings/:id/like", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/api/listings/:id/like", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const userId = req.user?.id;
     const { id: listingId } = req.params;
 
     if (!userId) {
@@ -444,8 +563,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user's liked listings
-  app.get("/api/likes/user/:userId", isAuthenticated, async (req: any, res) => {
-    const currentUserId = req.user?.claims?.sub;
+  app.get("/api/likes/user/:userId", authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    const currentUserId = req.user?.id;
     const { userId } = req.params;
 
     // Users can only see their own liked listings
