@@ -382,7 +382,7 @@ export default function Profile() {
                       <p>Vous n'avez publié aucun produit</p>
                       <Button 
                         className="mt-4" 
-                        onClick={() => setLocation('/create')}
+                        onClick={() => setLocation('/create-listing')}
                         data-testid="button-create-listing"
                       >
                         <Plus className="w-4 h-4 mr-2" />
