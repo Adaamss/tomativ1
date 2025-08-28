@@ -56,7 +56,8 @@ export default function BottomNavigation() {
 
       {/* Floating Action Button */}
       <Button
-        className="fixed bottom-20 right-4 w-14 h-14 bg-primary text-white rounded-full shadow-lg hover:shadow-xl hover:bg-primary/90 z-30"
+        style={{ backgroundColor: '#f14247' }}
+        className="fixed bottom-20 right-4 w-14 h-14 text-white rounded-full shadow-lg hover:shadow-xl hover:opacity-90 z-30"
         onClick={() => setShowCategoryOverlay(true)}
         data-testid="fab-create"
       >
