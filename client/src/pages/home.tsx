@@ -8,10 +8,12 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ChatModal from "@/components/ChatModal";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import type { Listing, Category } from "@shared/schema";
 
 export default function Home() {
   const [, navigate] = useLocation();
+  const { isAuthenticated } = useAuth();
   const [chatModal, setChatModal] = useState<{
     isOpen: boolean;
     listing: Listing | null;
@@ -89,13 +91,13 @@ export default function Home() {
                   key={listing.id} 
                   listing={listing}
                   onClick={() => navigate(`/listing/${listing.id}`)}
-                  onContactSeller={(listing) => {
+                  onContactSeller={isAuthenticated ? (listing) => {
                     setChatModal({
                       isOpen: true,
                       listing,
                       sellerId: listing.userId
                     });
-                  }}
+                  } : undefined}
                 />
               ))
             )}
@@ -105,15 +107,17 @@ export default function Home() {
       </main>
 
       <Footer />
-      <BottomNavigation />
+      {isAuthenticated && <BottomNavigation />}
 
       {/* Chat Modal */}
-      <ChatModal
-        isOpen={chatModal.isOpen}
-        onClose={() => setChatModal({ isOpen: false, listing: null, sellerId: '' })}
-        listing={chatModal.listing}
-        sellerId={chatModal.sellerId}
-      />
+      {isAuthenticated && (
+        <ChatModal
+          isOpen={chatModal.isOpen}
+          onClose={() => setChatModal({ isOpen: false, listing: null, sellerId: '' })}
+          listing={chatModal.listing}
+          sellerId={chatModal.sellerId}
+        />
+      )}
 
     </div>
   );
