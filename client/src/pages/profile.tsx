@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useWebSocket } from "@/hooks/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -34,7 +33,6 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function Profile() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, user } = useAuth();
-  const { isConnected } = useWebSocket();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -125,7 +123,7 @@ export default function Profile() {
                     {(user as any).firstName?.charAt(0) || (user as any).email?.charAt(0) || 'U'}
                   </span>
                 )}
-                <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${isConnected ? 'bg-green-500' : 'bg-red-500'} rounded-full flex items-center justify-center`}>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
                 </div>
               </div>
@@ -134,8 +132,8 @@ export default function Profile() {
                   {(user as any).displayName || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || 'Utilisateur'}
                 </h3>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className={`text-xs px-2 py-1 rounded-full ${isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {isConnected ? 'En ligne' : 'Hors ligne'}
+                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                    En ligne
                   </span>
                   <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
                     <DialogTrigger asChild>

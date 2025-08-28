@@ -25,14 +25,20 @@ export function useWebSocket(): UseWebSocketReturn {
   const [messages, setMessages] = useState<WebSocketMessage[]>([]);
 
   const connect = useCallback(() => {
-    if (!user || ws.current?.readyState === WebSocket.CONNECTING || ws.current?.readyState === WebSocket.OPEN) {
+    if (!user || !((user as any)?.id) || ws.current?.readyState === WebSocket.CONNECTING || ws.current?.readyState === WebSocket.OPEN) {
       return;
     }
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    ws.current = new WebSocket(wsUrl);
+    try {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      ws.current = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+      setIsConnected(false);
+      return;
+    }
 
     ws.current.onopen = () => {
       setIsConnected(true);
@@ -40,7 +46,7 @@ export function useWebSocket(): UseWebSocketReturn {
       if (user && ws.current) {
         ws.current.send(JSON.stringify({
           type: 'auth',
-          userId: user.id || user.sub
+          userId: (user as any).id || (user as any).sub
         }));
       }
     };
@@ -63,12 +69,12 @@ export function useWebSocket(): UseWebSocketReturn {
 
     ws.current.onclose = () => {
       setIsConnected(false);
-      // Reconnect after 3 seconds
-      setTimeout(() => {
-        if (user) {
+      // Only attempt reconnection if user is still authenticated
+      if (user && (user as any).id) {
+        setTimeout(() => {
           connect();
-        }
-      }, 3000);
+        }, 3000);
+      }
     };
 
     ws.current.onerror = (error) => {
@@ -93,7 +99,8 @@ export function useWebSocket(): UseWebSocketReturn {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    // Only connect if user is authenticated
+    if (user && (user as any).id) {
       connect();
     }
 
