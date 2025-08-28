@@ -141,10 +141,13 @@ export async function canAccessObject({
   objectFile: File;
   requestedPermission: ObjectPermission;
 }): Promise<boolean> {
-  // When this function is called, the acl policy is required.
+  // Get the ACL policy from object metadata
   const aclPolicy = await getObjectAclPolicy(objectFile);
+  
+  // If no ACL policy is set, allow public read access by default
+  // This handles legacy objects that don't have ACL policies
   if (!aclPolicy) {
-    return false;
+    return requestedPermission === ObjectPermission.READ;
   }
 
   // Public objects are always accessible for read.

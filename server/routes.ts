@@ -256,24 +256,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage routes for file uploads
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
         req.path,
       );
+      
+      // Check if object has public visibility
       const canAccess = await objectStorageService.canAccessObjectEntity({
         objectFile,
-        userId: userId,
+        userId: undefined, // Allow public access
         requestedPermission: ObjectPermission.READ,
       });
+      
       if (!canAccess) {
-        return res.sendStatus(401);
+        return res.sendStatus(404);
       }
+      
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
-      console.error("Error checking object access:", error);
+      console.error("Error accessing object:", error);
       if (error instanceof ObjectNotFoundError) {
         return res.sendStatus(404);
       }
