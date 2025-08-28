@@ -15,7 +15,10 @@ export function useLikes(listingId: string) {
 
   // Toggle like mutation
   const toggleLike = useMutation({
-    mutationFn: () => apiRequest('POST', `/api/listings/${listingId}/like`),
+    mutationFn: async () => {
+      const response = await apiRequest('POST', `/api/listings/${listingId}/like`);
+      return response.json();
+    },
     onSuccess: () => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({ queryKey: ['/api/listings', listingId, 'like'] });

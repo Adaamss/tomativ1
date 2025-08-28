@@ -17,11 +17,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar, Heart, Eye } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar, Heart, Eye, Camera } from "lucide-react";
 import type { Listing } from "@shared/schema";
 import ProductCard from "@/components/ProductCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserLikes } from "@/hooks/useLikes";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from '@uppy/core';
 
 const profileSchema = z.object({
   displayName: z.string().min(2, "Le nom doit contenir au moins 2 caractères").optional(),
@@ -45,6 +47,70 @@ export default function Profile() {
 
   // Fetch user's liked listings
   const { data: likedListings = [] } = useUserLikes((user as any)?.id || '') as { data: Listing[] };
+
+  // Profile update mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (profileData: ProfileFormData & { profileImageUrl?: string }) => {
+      const response = await apiRequest('PUT', '/api/profile', profileData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      setEditModalOpen(false);
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos informations ont été sauvegardées avec succès.",
+      });
+    },
+    onError: (error) => {
+      console.error("Profile update error:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le profil.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleProfileSubmit = (data: ProfileFormData) => {
+    updateProfileMutation.mutate(data);
+  };
+
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest('POST', '/api/objects/upload');
+    const { uploadURL } = await response.json();
+    return {
+      method: 'PUT' as const,
+      url: uploadURL,
+    };
+  };
+
+  const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const profileImageURL = uploadedFile.uploadURL;
+      
+      try {
+        // Update profile with new image
+        await apiRequest('PUT', '/api/profile-image', { profileImageURL });
+        
+        // Invalidate auth query to refresh user data
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        
+        toast({
+          title: "Photo mise à jour",
+          description: "Votre photo de profil a été changée avec succès.",
+        });
+      } catch (error) {
+        console.error("Error updating profile image:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de mettre à jour la photo de profil.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -111,20 +177,34 @@ export default function Profile() {
             
             {/* User Profile Card */}
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center relative">
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center relative group">
                 {(user as any).profileImageUrl ? (
                   <img 
                     src={(user as any).profileImageUrl} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
+                    data-testid="img-profile-avatar"
                   />
                 ) : (
-                  <span className="text-white text-xl font-bold">
+                  <span className="text-white text-xl font-bold" data-testid="text-profile-initial">
                     {(user as any).firstName?.charAt(0) || (user as any).email?.charAt(0) || 'U'}
                   </span>
                 )}
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
+                </div>
+                
+                {/* Photo Upload Button */}
+                <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={5242880} // 5MB
+                    onGetUploadParameters={handleGetUploadParameters}
+                    onComplete={handleUploadComplete}
+                    buttonClassName="bg-transparent hover:bg-transparent p-2"
+                  >
+                    <Camera className="w-5 h-5 text-white" />
+                  </ObjectUploader>
                 </div>
               </div>
               <div className="flex-1">
@@ -151,7 +231,7 @@ export default function Profile() {
                         <DialogTitle>Modifier le profil</DialogTitle>
                       </DialogHeader>
                       <Form {...form}>
-                        <form onSubmit={form.handleSubmit(() => {})} className="space-y-4">
+                        <form onSubmit={form.handleSubmit(handleProfileSubmit)} className="space-y-4">
                           <FormField
                             control={form.control}
                             name="displayName"

@@ -116,11 +116,11 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
                 : 'text-gray-600 hover:text-red-500 hover:bg-red-50'
             }`}
             onClick={handleLikeClick}
-            disabled={isToggling || !isAuthenticated}
+            disabled={isToggling}
             data-testid={`button-like-${listing.id}`}
           >
             <Heart className={`w-4 h-4 ${isAuthenticated && isLiked ? 'fill-current' : ''}`} />
-            {!isAuthenticated && <span className="ml-1 text-xs">Connectez-vous</span>}
+            {!isAuthenticated && <span className="ml-1 text-xs">Se connecter</span>}
           </Button>
 
           {/* Contact Seller Button */}

@@ -370,6 +370,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update profile image
+  app.put("/api/profile-image", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub;
+    const { profileImageURL } = req.body;
+
+    if (!profileImageURL) {
+      return res.status(400).json({ error: "profileImageURL is required" });
+    }
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        profileImageURL,
+        {
+          owner: userId,
+          visibility: "public", // Profile images are public
+        },
+      );
+
+      // Update user profile with new image
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        profileImageUrl: objectPath,
+        updatedAt: new Date(),
+      });
+
+      res.json({ 
+        objectPath: objectPath,
+        user: updatedUser 
+      });
+    } catch (error) {
+      console.error("Error setting profile image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
 
   // Toggle like/unlike a listing
   app.post("/api/listings/:id/like", isAuthenticated, async (req: any, res) => {

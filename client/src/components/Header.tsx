@@ -20,7 +20,6 @@ export default function Header() {
           <h1 className="text-lg font-semibold text-foreground" data-testid="text-app-title">
             Tomati
           </h1>
-          <p className="text-xs text-muted-foreground">Marketplace Tunisien</p>
         </div>
       </div>
       <div className="flex items-center space-x-3">
