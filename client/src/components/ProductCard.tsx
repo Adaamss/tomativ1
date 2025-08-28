@@ -77,7 +77,7 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
         <h4 className="font-bold text-gray-900 mb-2 capitalize text-lg leading-tight" data-testid={`text-title-${listing.id}`}>
           {listing.title}
         </h4>
-        <p className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-3" data-testid={`text-price-${listing.id}`}>
+        <p className="text-2xl font-bold mb-3" style={{ color: '#f14247' }} data-testid={`text-price-${listing.id}`}>
           {formatPrice(listing.price)}
         </p>
         
@@ -97,7 +97,7 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
               <Eye className="w-3 h-3 mr-1" />
               {listing.views || 0}
             </span>
-            <span className="flex items-center bg-red-50 text-red-600 px-2 py-1 rounded-full" data-testid={`text-likes-${listing.id}`}>
+            <span className="flex items-center px-2 py-1 rounded-full" style={{ backgroundColor: '#f1424720', color: '#f14247' }} data-testid={`text-likes-${listing.id}`}>
               <Heart className="w-3 h-3 mr-1" />
               {listing.likes || 0}
             </span>
@@ -130,7 +130,8 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
                 e.stopPropagation();
                 onContactSeller?.(listing);
               }}
-              className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              style={{ backgroundColor: '#f14247' }}
+              className="flex-1 hover:opacity-90 text-white font-semibold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               data-testid={`button-contact-${listing.id}`}
             >
               <MessageCircle className="w-4 h-4 mr-2" />

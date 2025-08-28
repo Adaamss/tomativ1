@@ -70,7 +70,8 @@ export default function Header() {
                 setLocation('/login');
               }}
               size="sm"
-              className="bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600"
+              style={{ backgroundColor: '#f14247' }}
+              className="hover:opacity-90 transition-opacity"
               data-testid="button-login"
             >
               <LogIn className="w-4 h-4 mr-2" />

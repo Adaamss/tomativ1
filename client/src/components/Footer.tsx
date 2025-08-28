@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Logo et description */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f14247' }}>
                 <span className="text-white font-bold text-lg">🍅</span>
               </div>
               <h3 className="text-xl font-bold">Tomati</h3>

@@ -167,7 +167,8 @@ export default function Login() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600"
+                  style={{ backgroundColor: '#f14247' }}
+                  className="w-full hover:opacity-90 transition-opacity"
                   disabled={loginMutation.isPending}
                   data-testid="button-submit"
                 >

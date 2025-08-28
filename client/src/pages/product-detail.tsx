@@ -174,7 +174,7 @@ export default function ProductDetail() {
               <h1 className="text-3xl font-bold text-gray-900 capitalize mb-3 leading-tight" data-testid="product-title">
                 {listing.title}
               </h1>
-              <p className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-4" data-testid="product-price">
+              <p className="text-4xl font-bold mb-4" style={{ color: '#f14247' }} data-testid="product-price">
                 {formatPrice(listing.price)}
               </p>
             </div>
@@ -215,7 +215,7 @@ export default function ProductDetail() {
             <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-white to-gray-50">
               <CardContent className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                  <div className="w-1 h-6 bg-gradient-to-b from-orange-400 to-red-500 rounded-full mr-3"></div>
+                  <div className="w-1 h-6 rounded-full mr-3" style={{ backgroundColor: '#f14247' }}></div>
                   Description
                 </h3>
                 <p className="text-gray-700 whitespace-pre-wrap leading-relaxed" data-testid="product-description">
@@ -408,7 +408,8 @@ export default function ProductDetail() {
                   listing,
                   sellerId: listing.userId
                 })}
-                className="flex-1 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white font-bold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                style={{ backgroundColor: '#f14247' }}
+                className="flex-1 hover:opacity-90 text-white font-bold py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 data-testid="button-message"
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
