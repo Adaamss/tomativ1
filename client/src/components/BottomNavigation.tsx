@@ -24,7 +24,7 @@ export default function BottomNavigation() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-40 lg:hidden" data-testid="bottom-navigation">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-40 block md:hidden" data-testid="bottom-navigation">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive = isActivePath(item.path);
@@ -57,7 +57,7 @@ export default function BottomNavigation() {
       {/* Floating Action Button */}
       <Button
         style={{ backgroundColor: '#f14247' }}
-        className="fixed bottom-20 right-4 w-14 h-14 text-white rounded-full shadow-lg hover:shadow-xl hover:opacity-90 z-30 lg:hidden"
+        className="fixed bottom-20 right-4 w-14 h-14 text-white rounded-full shadow-lg hover:shadow-xl hover:opacity-90 z-30 block md:hidden"
         onClick={() => setShowCategoryOverlay(true)}
         data-testid="fab-create"
       >
