@@ -44,7 +44,16 @@ export default function Home() {
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Actualiser
               </Button>
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" data-testid="button-filters">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-muted-foreground hover:text-foreground" 
+                onClick={() => {
+                  // TODO: Implement filters functionality
+                  console.log('Filtres clicked');
+                }}
+                data-testid="button-filters"
+              >
                 <Filter className="w-4 h-4 mr-1" />
                 Filtres
               </Button>
@@ -56,7 +65,16 @@ export default function Home() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-foreground">Produits récents</h3>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" data-testid="button-view-all">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground hover:text-foreground" 
+              onClick={() => {
+                // TODO: Implement view all functionality
+                console.log('Voir tout clicked');
+              }}
+              data-testid="button-view-all"
+            >
               Voir tout
             </Button>
           </div>
