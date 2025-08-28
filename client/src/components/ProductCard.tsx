@@ -26,6 +26,9 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
     e.stopPropagation();
     if (isAuthenticated) {
       toggleLike();
+    } else {
+      // Redirect to login if not authenticated
+      window.location.href = '/api/login';
     }
   };
 
@@ -104,22 +107,21 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
         {/* Action Buttons */}
         <div className="mt-4 flex items-center space-x-2">
           {/* Like Button */}
-          {isAuthenticated && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className={`transition-colors duration-200 ${
-                isLiked 
-                  ? 'text-red-500 bg-red-50 hover:bg-red-100' 
-                  : 'text-gray-600 hover:text-red-500 hover:bg-red-50'
-              }`}
-              onClick={handleLikeClick}
-              disabled={isToggling}
-              data-testid={`button-like-${listing.id}`}
-            >
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={`transition-colors duration-200 ${
+              isAuthenticated && isLiked 
+                ? 'text-red-500 bg-red-50 hover:bg-red-100' 
+                : 'text-gray-600 hover:text-red-500 hover:bg-red-50'
+            }`}
+            onClick={handleLikeClick}
+            disabled={isToggling || !isAuthenticated}
+            data-testid={`button-like-${listing.id}`}
+          >
+            <Heart className={`w-4 h-4 ${isAuthenticated && isLiked ? 'fill-current' : ''}`} />
+            {!isAuthenticated && <span className="ml-1 text-xs">Connectez-vous</span>}
+          </Button>
 
           {/* Contact Seller Button */}
           {isAuthenticated && (user as any)?.id !== listing.userId && (
