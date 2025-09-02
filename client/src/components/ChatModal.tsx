@@ -75,10 +75,7 @@ export default function ChatModal({
   // Mutation for creating appointments
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointmentData: any) => {
-      return await apiRequest("/api/appointments", {
-        method: "POST",
-        body: JSON.stringify(appointmentData),
-      });
+      return await apiRequest("POST", "/api/appointments", appointmentData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -90,10 +87,7 @@ export default function ChatModal({
   // Mutation for creating price negotiations
   const createNegotiationMutation = useMutation({
     mutationFn: async (negotiationData: any) => {
-      return await apiRequest("/api/negotiations", {
-        method: "POST",
-        body: JSON.stringify(negotiationData),
-      });
+      return await apiRequest("POST", "/api/negotiations", negotiationData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -101,6 +95,14 @@ export default function ChatModal({
       });
     },
   });
+
+  const handleQuickRendezVous = () => {
+    setShowAppointmentCalendar(true);
+  };
+
+  const handleQuickNegocierPrix = () => {
+    setShowPriceNegotiation(true);
+  };
 
   const handleScheduleAppointment = async (appointmentData: {
     date: Date;
@@ -123,7 +125,7 @@ export default function ChatModal({
 
       // Send message about appointment request
       const message = `📅 Demande de rendez-vous:\n📍 ${appointmentData.location}\n🕐 ${appointmentData.date.toLocaleDateString("fr-FR")} à ${appointmentData.time}\n⏱ ${appointmentData.duration} minutes\n${appointmentData.notes ? `\n📝 ${appointmentData.notes}` : ""}`;
-      sendMessage(sellerId, message, listing.id, "appointment_request");
+      sendMessage(sellerId, message, listing.id);
     } catch (error) {
       console.error("Error creating appointment:", error);
     }
@@ -146,7 +148,7 @@ export default function ChatModal({
 
       // Send message about price negotiation
       const message = `💰 Négociation de prix:\n💵 Prix original: ${listing.price} ${listing.currency}\n🏷 Mon offre: ${negotiationData.offeredPrice} ${listing.currency}\n\n${negotiationData.message}`;
-      sendMessage(sellerId, message, listing.id, "price_negotiation");
+      sendMessage(sellerId, message, listing.id);
     } catch (error) {
       console.error("Error creating negotiation:", error);
     }
