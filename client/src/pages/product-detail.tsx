@@ -1,23 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
-import {
-  Heart,
-  Eye,
-  MessageCircle,
-  Phone,
-  ArrowLeft,
-  MapPin,
-  Clock,
-  User,
-} from "lucide-react";
+import { Heart, ArrowLeft, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatModal from "@/components/ChatModal";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useLikes } from "@/hooks/useLikes";
 import type { Listing } from "@shared/schema";
@@ -55,6 +45,7 @@ export default function ProductDetail() {
     !price || Number(price) === 0
       ? "Gratuit"
       : `${Number(price).toLocaleString()} TND`;
+
   const formatTimeAgo = (date: Date | null) =>
     !date
       ? "Date inconnue"
@@ -66,6 +57,7 @@ export default function ProductDetail() {
         Chargement...
       </div>
     );
+
   if (!listing)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -81,7 +73,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Back button */}
+      {/* Bouton retour */}
       <div className="px-4 py-4 pt-36">
         <Button variant="ghost" size="sm" onClick={() => setLocation("/")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -89,7 +81,7 @@ export default function ProductDetail() {
         </Button>
       </div>
 
-      <main className="bg-white max-w-md mx-auto">
+      <main className="bg-white max-w-lg mx-auto rounded-lg shadow">
         {/* Image principale */}
         <div className="aspect-square w-full bg-gray-100 overflow-hidden">
           {mainImage ? (
@@ -105,9 +97,10 @@ export default function ProductDetail() {
           )}
         </div>
 
-        <div className="flex">
-          {/* Section 1: Photo vendeur + avis */}
-          <div className="w-24 p-4 flex flex-col items-center">
+        {/* Contenu principal */}
+        <div className="flex border-t">
+          {/* Section vendeur */}
+          <div className="w-28 p-4 flex flex-col items-center border-r">
             <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-2">
               <User className="w-8 h-8 text-gray-500" />
             </div>
@@ -122,9 +115,9 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Section 2: Autres infos */}
+          {/* Section produit */}
           <div className="flex-1 p-4">
-            {/* Titre avec cœur vert */}
+            {/* Titre + bouton like */}
             <div className="flex items-start justify-between mb-1">
               <h1 className="text-lg font-bold text-gray-900 flex-1 pr-2">
                 {listing.title}
@@ -140,10 +133,11 @@ export default function ProductDetail() {
                 <Heart className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`} />
               </button>
             </div>
-            
-            {/* Catégorie et date */}
+
+            {/* Catégorie + date */}
             <p className="text-sm text-gray-500 mb-3">
-              Véhicules • publié {formatTimeAgo(listing.createdAt)}
+              {listing.category || "Autre"} • publié{" "}
+              {formatTimeAgo(listing.createdAt)}
             </p>
 
             {/* Prix */}
@@ -166,17 +160,30 @@ export default function ProductDetail() {
             {listing.condition && (
               <div className="mb-4">
                 <p className="text-sm text-gray-900">
-                  <span className="font-medium">Condition</span> <span className="capitalize">{listing.condition}</span>
+                  <span className="font-medium">Condition</span>{" "}
+                  <span className="capitalize">{listing.condition}</span>
                 </p>
               </div>
             )}
 
-            {/* Where to meet */}
-            <div className="mb-4">
+            {/* Où se rencontrer */}
+            <div className="mb-4 border-t pt-2">
               <div className="flex items-center justify-between py-1">
-                <span className="text-sm font-medium text-gray-900">Où se rencontrer</span>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <span className="text-sm font-medium text-gray-900">
+                  Où se rencontrer
+                </span>
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </div>
             </div>
@@ -184,7 +191,8 @@ export default function ProductDetail() {
             {/* Statistiques */}
             <div className="mb-6">
               <p className="text-sm text-gray-500">
-                {listing.views || 4} chats • {listing.likes || 1} favoris • 75 vues
+                {listing.views || 4} chats • {listing.likes || 1} favoris • 75
+                vues
               </p>
             </div>
 
@@ -201,12 +209,12 @@ export default function ProductDetail() {
                   }
                   className="w-full bg-[#f14247] hover:bg-red-600 text-white py-3 text-base font-medium rounded-lg"
                 >
-                  Contacter le vendeur sur Tomati
+                  Contacter le vendeur
                 </Button>
               </div>
             )}
 
-            {/* Info vendeur nom + lieu */}
+            {/* Nom vendeur */}
             <div className="text-left">
               <p className="font-bold text-gray-900">
                 {user?.id === listing.userId ? "Moi" : "Frankie"}
