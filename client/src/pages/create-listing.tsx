@@ -259,23 +259,31 @@ export default function CreateListing() {
   };
 
   const onSubmit = (data: ListingFormData) => {
+    console.log("=== onSubmit called ===");
     console.log("Submitting step", step, "with data:", data);
     console.log("Selected category slug:", selectedCategorySlug);
+    console.log("Form errors:", form.formState.errors);
     
     if (step === 1) {
+      console.log("Processing step 1");
       if (validateStep1(data)) {
+        console.log("Step 1 validation passed, moving to step 2");
         setStep(2);
       } else {
         console.log("Step 1 validation failed");
       }
     } else if (step === 2) {
+      console.log("Processing step 2");
       if (validateStep2(data)) {
+        console.log("Step 2 validation passed, moving to step 3");
         setStep(3);
       } else {
         console.log("Step 2 validation failed");
       }
     } else if (step === 3) {
+      console.log("Processing step 3");
       if (validateStep3(data)) {
+        console.log("Step 3 validation passed, creating listing");
         createListingMutation.mutate(data);
       } else {
         console.log("Step 3 validation failed");
@@ -752,6 +760,7 @@ export default function CreateListing() {
                   <Button
                     type="submit"
                     disabled={createListingMutation.isPending}
+                    onClick={() => console.log("Submit button clicked, current step:", step)}
                   >
                     {step === 3 ? "Publier" : "Suivant"}
                   </Button>
