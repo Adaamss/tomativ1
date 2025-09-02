@@ -93,69 +93,71 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Section localisation et recherche */}
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center space-x-3 max-w-2xl">
-            {/* Sélecteur de ville */}
-            <div className="flex-shrink-0">
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
-                <SelectTrigger className="w-48 bg-white" data-testid="city-selector">
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-2 text-gray-500" />
-                    <SelectValue />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tunis">Tunis</SelectItem>
-                  <SelectItem value="sfax">Sfax</SelectItem>
-                  <SelectItem value="sousse">Sousse</SelectItem>
-                  <SelectItem value="gabes">Gabès</SelectItem>
-                  <SelectItem value="bizerte">Bizerte</SelectItem>
-                  <SelectItem value="ariana">Ariana</SelectItem>
-                  <SelectItem value="gafsa">Gafsa</SelectItem>
-                  <SelectItem value="monastir">Monastir</SelectItem>
-                  <SelectItem value="ben-arous">Ben Arous</SelectItem>
-                  <SelectItem value="kasserine">Kasserine</SelectItem>
-                  <SelectItem value="medenine">Médenine</SelectItem>
-                  <SelectItem value="nabeul">Nabeul</SelectItem>
-                  <SelectItem value="tataouine">Tataouine</SelectItem>
-                  <SelectItem value="beja">Béja</SelectItem>
-                  <SelectItem value="jendouba">Jendouba</SelectItem>
-                  <SelectItem value="mahdia">Mahdia</SelectItem>
-                  <SelectItem value="mannouba">Manouba</SelectItem>
-                  <SelectItem value="kebili">Kébili</SelectItem>
-                  <SelectItem value="tozeur">Tozeur</SelectItem>
-                  <SelectItem value="zaghouan">Zaghouan</SelectItem>
-                  <SelectItem value="siliana">Siliana</SelectItem>
-                  <SelectItem value="kairouan">Kairouan</SelectItem>
-                  <SelectItem value="sidi-bouzid">Sidi Bouzid</SelectItem>
-                  <SelectItem value="kef">Le Kef</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Section localisation et recherche - Full Width */}
+        <div className="w-full py-3 bg-gray-50 border-t border-gray-200">
+          <div className="w-full px-4">
+            <div className="flex items-center space-x-3 w-full">
+              {/* Sélecteur de ville */}
+              <div className="flex-shrink-0">
+                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <SelectTrigger className="w-48 bg-white" data-testid="city-selector">
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                      <SelectValue />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tunis">Tunis</SelectItem>
+                    <SelectItem value="sfax">Sfax</SelectItem>
+                    <SelectItem value="sousse">Sousse</SelectItem>
+                    <SelectItem value="gabes">Gabès</SelectItem>
+                    <SelectItem value="bizerte">Bizerte</SelectItem>
+                    <SelectItem value="ariana">Ariana</SelectItem>
+                    <SelectItem value="gafsa">Gafsa</SelectItem>
+                    <SelectItem value="monastir">Monastir</SelectItem>
+                    <SelectItem value="ben-arous">Ben Arous</SelectItem>
+                    <SelectItem value="kasserine">Kasserine</SelectItem>
+                    <SelectItem value="medenine">Médenine</SelectItem>
+                    <SelectItem value="nabeul">Nabeul</SelectItem>
+                    <SelectItem value="tataouine">Tataouine</SelectItem>
+                    <SelectItem value="beja">Béja</SelectItem>
+                    <SelectItem value="jendouba">Jendouba</SelectItem>
+                    <SelectItem value="mahdia">Mahdia</SelectItem>
+                    <SelectItem value="mannouba">Manouba</SelectItem>
+                    <SelectItem value="kebili">Kébili</SelectItem>
+                    <SelectItem value="tozeur">Tozeur</SelectItem>
+                    <SelectItem value="zaghouan">Zaghouan</SelectItem>
+                    <SelectItem value="siliana">Siliana</SelectItem>
+                    <SelectItem value="kairouan">Kairouan</SelectItem>
+                    <SelectItem value="sidi-bouzid">Sidi Bouzid</SelectItem>
+                    <SelectItem value="kef">Le Kef</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Barre de recherche */}
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Que recherchez-vous ?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white"
-                data-testid="search-input"
-              />
-            </div>
+              {/* Barre de recherche - Full Width */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Que recherchez-vous ?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white w-full"
+                  data-testid="search-input"
+                />
+              </div>
 
-            {/* Bouton de recherche (optionnel) */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="px-3"
-              data-testid="search-button"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
+              {/* Bouton de recherche */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="px-3 flex-shrink-0"
+                data-testid="search-button"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
