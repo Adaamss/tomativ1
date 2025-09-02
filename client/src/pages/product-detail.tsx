@@ -89,45 +89,27 @@ export default function ProductDetail() {
         </Button>
       </div>
 
-      <main className="px-4 pb-6 max-w-lg mx-auto">
+      <main className="bg-white">
         {/* Image principale */}
-        <div className="mb-4">
-          <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
-            {mainImage ? (
-              <img
-                src={mainImage}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                Pas d'image
-              </div>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto mt-2">
-              {images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 ${idx === currentImageIndex ? "border-[#f14247]" : "border-transparent"}`}
-                >
-                  <img
-                    src={img}
-                    alt={`thumbnail ${idx}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+        <div className="aspect-square w-full bg-gray-100 overflow-hidden">
+          {mainImage ? (
+            <img
+              src={mainImage}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              Pas d'image
             </div>
           )}
         </div>
 
-        {/* Titre avec cœur */}
-        <div className="mb-3">
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xl font-bold text-gray-900 flex-1">
+        {/* Contenu principal */}
+        <div className="px-4 py-4">
+          {/* Titre avec cœur vert */}
+          <div className="flex items-start justify-between mb-1">
+            <h1 className="text-lg font-bold text-gray-900 flex-1 pr-2">
               {listing.title}
             </h1>
             <button
@@ -136,93 +118,90 @@ export default function ProductDetail() {
                 toggleLike();
               }}
               disabled={isToggling}
-              className={`p-1 ${isLiked ? "text-green-500" : "text-gray-400"}`}
+              className={`mt-1 ${isLiked ? "text-green-500" : "text-gray-400"}`}
             >
               <Heart className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`} />
             </button>
           </div>
           
-          {/* Info vendeur/catégorie */}
-          <p className="text-sm text-gray-500 mb-2">
+          {/* Catégorie et date */}
+          <p className="text-sm text-gray-500 mb-3">
             Véhicules • publié {formatTimeAgo(listing.createdAt)}
           </p>
-        </div>
 
-        {/* Prix */}
-        <div className="mb-4">
-          <p className="text-3xl font-bold text-gray-900">
-            {formatPrice(listing.price)}
-          </p>
-        </div>
-
-        {/* Description */}
-        {listing.description && (
+          {/* Prix */}
           <div className="mb-4">
-            <p className="text-gray-700 text-sm leading-relaxed">
-              {listing.description}
+            <p className="text-2xl font-bold text-gray-900">
+              {formatPrice(listing.price)}
             </p>
           </div>
-        )}
 
-        {/* État/Condition */}
-        {listing.condition && (
+          {/* Description */}
+          {listing.description && (
+            <div className="mb-4">
+              <p className="text-gray-700 text-sm leading-5">
+                {listing.description}
+              </p>
+            </div>
+          )}
+
+          {/* Condition */}
+          {listing.condition && (
+            <div className="mb-4">
+              <p className="text-sm text-gray-900">
+                <span className="font-medium">Condition</span> <span className="capitalize">{listing.condition}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Where to meet */}
           <div className="mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-900">État</span>
-              <span className="text-sm text-gray-600 capitalize">{listing.condition}</span>
+            <div className="flex items-center justify-between py-1">
+              <span className="text-sm font-medium text-gray-900">Où se rencontrer</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </div>
           </div>
-        )}
 
-        {/* Where to meet */}
-        <div className="mb-4 border-t border-gray-200 pt-4">
-          <div className="flex items-center justify-between py-3 cursor-pointer">
-            <span className="text-sm font-medium text-gray-900">Lieu de rencontre</span>
-            <ArrowLeft className="w-4 h-4 text-gray-400 rotate-180" />
-          </div>
-        </div>
-
-        {/* Statistiques */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>{listing.views || 0} chats</span>
-            <span>{listing.likes || 0} favoris</span>
-            <span>75 vues</span>
-          </div>
-        </div>
-
-        {/* Bouton de contact principal */}
-        {isAuthenticated && user?.id !== listing.userId && (
+          {/* Statistiques */}
           <div className="mb-6">
-            <Button
-              onClick={() =>
-                setChatModal({
-                  isOpen: true,
-                  listing,
-                  sellerId: listing.userId,
-                })
-              }
-              className="w-full bg-[#f14247] hover:bg-[#d63384] text-white py-3 text-base font-medium rounded-xl"
-            >
-              Contacter le vendeur
-            </Button>
+            <p className="text-sm text-gray-500">
+              {listing.views || 4} chats • {listing.likes || 1} favoris • 75 vues
+            </p>
           </div>
-        )}
 
-        {/* Profil vendeur en bas */}
-        <div className="border-t border-gray-200 pt-6">
+          {/* Bouton orange principal */}
+          {isAuthenticated && user?.id !== listing.userId && (
+            <div className="mb-6">
+              <Button
+                onClick={() =>
+                  setChatModal({
+                    isOpen: true,
+                    listing,
+                    sellerId: listing.userId,
+                  })
+                }
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-base font-medium rounded-lg"
+              >
+                Contacter le vendeur sur Tomati
+              </Button>
+            </div>
+          )}
+
+          {/* Profil vendeur */}
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
               <User className="w-6 h-6 text-gray-500" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-1">
                 <p className="font-bold text-gray-900">
                   {user?.id === listing.userId ? "Moi" : "Frankie"}
                 </p>
                 <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 bg-yellow-400 rounded-sm flex items-center justify-center">
-                    <span className="text-xs text-white font-bold">⭐</span>
+                  <div className="w-4 h-4 bg-yellow-400 rounded flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">★</span>
                   </div>
                   <span className="text-sm font-bold text-gray-900">567</span>
                 </div>
@@ -232,53 +211,6 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
-
-        {/* Détails produit (optionnel, replié) */}
-        {(listing.brand || listing.model || listing.year || listing.mileage || listing.fuelType || listing.transmission) && (
-          <div className="border-t border-gray-200 pt-4 mt-6">
-            <h3 className="text-lg font-bold mb-3 text-gray-900">Détails du véhicule</h3>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-              {listing.brand && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Marque</span>
-                  <span className="font-medium text-gray-900">{listing.brand}</span>
-                </div>
-              )}
-              {listing.model && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Modèle</span>
-                  <span className="font-medium text-gray-900">{listing.model}</span>
-                </div>
-              )}
-              {listing.year && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Année</span>
-                  <span className="font-medium text-gray-900">{listing.year}</span>
-                </div>
-              )}
-              {listing.mileage && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Kilométrage</span>
-                  <span className="font-medium text-gray-900">
-                    {Number(listing.mileage).toLocaleString()} km
-                  </span>
-                </div>
-              )}
-              {listing.fuelType && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Carburant</span>
-                  <span className="font-medium text-gray-900 capitalize">{listing.fuelType}</span>
-                </div>
-              )}
-              {listing.transmission && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Transmission</span>
-                  <span className="font-medium text-gray-900 capitalize">{listing.transmission}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </main>
 
       <Footer />
