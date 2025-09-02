@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -34,13 +35,50 @@ import { Car, Upload } from "lucide-react";
 import type { Category } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
-// Schémas
-const baseListingSchema = z.object({
+// Schémas par étape
+const step1Schema = z.object({
+  categoryId: z.string().min(1, "La catégorie est requise"),
+});
+
+const step2CarSchema = z.object({
+  categoryId: z.string().min(1, "La catégorie est requise"),
+  brand: z.string().min(1, "La marque est requise"),
+  model: z.string().min(1, "Le modèle est requis"),
+  year: z.string().min(1, "L'année est requise"),
+  mileage: z.string().min(1, "Le kilométrage est requis"),
+  fuelType: z.string().min(1, "Le carburant est requis"),
+  transmission: z.string().min(1, "La transmission est requise"),
+});
+
+const step2RealEstateSchema = z.object({
+  categoryId: z.string().min(1, "La catégorie est requise"),
+  propertyType: z.string().min(1, "Le type de bien est requis"),
+  surface: z.string().min(1, "La surface est requise"),
+});
+
+const step2JobSchema = z.object({
+  categoryId: z.string().min(1, "La catégorie est requise"),
+  jobType: z.string().min(1, "Le type de contrat est requis"),
+  experience: z.string().min(1, "L'expérience est requise"),
+  sector: z.string().min(1, "Le secteur est requis"),
+});
+
+const step3Schema = z.object({
+  categoryId: z.string().min(1, "La catégorie est requise"),
   title: z.string().min(1, "Le titre est requis"),
   description: z.string().optional(),
   price: z.string().min(1, "Le prix est requis"),
-  categoryId: z.string().min(1, "La catégorie est requise"),
   location: z.string().min(1, "La localisation est requise"),
+  condition: z.string().optional(),
+});
+
+// Schéma de base sans validation stricte pour les valeurs par défaut
+const baseListingSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  price: z.string().optional(),
+  categoryId: z.string().optional(),
+  location: z.string().optional(),
   condition: z.string().optional(),
 });
 
@@ -93,20 +131,26 @@ export default function CreateListing() {
   );
 
   const getFormSchema = () => {
-    switch (selectedCategorySlug) {
-      case "voiture":
-        return carListingSchema;
-      case "immobilier":
-        return realEstateListingSchema;
-      case "emploi":
-        return jobListingSchema;
-      default:
-        return generalListingSchema;
+    if (step === 1) {
+      return step1Schema;
+    } else if (step === 2) {
+      switch (selectedCategorySlug) {
+        case "voiture":
+          return step2CarSchema;
+        case "immobilier":
+          return step2RealEstateSchema;
+        case "emploi":
+          return step2JobSchema;
+        default:
+          return step1Schema; // Pour les autres catégories, pas de step 2 spécifique
+      }
+    } else {
+      return step3Schema;
     }
   };
 
   const form = useForm<ListingFormData>({
-    resolver: zodResolver(baseListingSchema),
+    // Pas de resolver - on fait la validation manuellement
     mode: "onChange",
     defaultValues: {
       categoryId: "",
@@ -235,8 +279,13 @@ export default function CreateListing() {
 
   const validateStep1 = (data: ListingFormData) => {
     console.log("Validating step 1 with categoryId:", data.categoryId);
+    
+    // Effacer les erreurs précédentes
+    form.clearErrors();
+    
     if (!data.categoryId) {
       console.log("Step 1 validation failed: no categoryId");
+      form.setError("categoryId", { message: "La catégorie est requise" });
       return false;
     }
     console.log("Step 1 validation passed");
@@ -244,19 +293,49 @@ export default function CreateListing() {
   };
 
   const validateStep2 = (data: ListingFormData) => {
+    console.log("Validating step 2 for category:", selectedCategorySlug);
+    
+    // Effacer les erreurs précédentes
+    form.clearErrors();
+    
     if (selectedCategorySlug === "voiture") {
-      if (!data.brand || !data.model || !data.year || !data.mileage || !data.fuelType || !data.transmission) return false;
+      let hasError = false;
+      if (!data.brand) { form.setError("brand", { message: "La marque est requise" }); hasError = true; }
+      if (!data.model) { form.setError("model", { message: "Le modèle est requis" }); hasError = true; }
+      if (!data.year) { form.setError("year", { message: "L'année est requise" }); hasError = true; }
+      if (!data.mileage) { form.setError("mileage", { message: "Le kilométrage est requis" }); hasError = true; }
+      if (!data.fuelType) { form.setError("fuelType", { message: "Le carburant est requis" }); hasError = true; }
+      if (!data.transmission) { form.setError("transmission", { message: "La transmission est requise" }); hasError = true; }
+      return !hasError;
     } else if (selectedCategorySlug === "immobilier") {
-      if (!data.propertyType || !data.surface) return false;
+      let hasError = false;
+      if (!data.propertyType) { form.setError("propertyType", { message: "Le type de bien est requis" }); hasError = true; }
+      if (!data.surface) { form.setError("surface", { message: "La surface est requise" }); hasError = true; }
+      return !hasError;
     } else if (selectedCategorySlug === "emploi") {
-      if (!data.jobType || !data.experience || !data.sector) return false;
+      let hasError = false;
+      if (!data.jobType) { form.setError("jobType", { message: "Le type de contrat est requis" }); hasError = true; }
+      if (!data.experience) { form.setError("experience", { message: "L'expérience est requise" }); hasError = true; }
+      if (!data.sector) { form.setError("sector", { message: "Le secteur est requis" }); hasError = true; }
+      return !hasError;
     }
+    
+    // Pour les autres catégories, pas de validation step 2
     return true;
   };
 
   const validateStep3 = (data: ListingFormData) => {
-    if (!data.title || !data.location || !data.price) return false;
-    return true;
+    console.log("Validating step 3");
+    
+    // Effacer les erreurs précédentes
+    form.clearErrors();
+    
+    let hasError = false;
+    if (!data.title) { form.setError("title", { message: "Le titre est requis" }); hasError = true; }
+    if (!data.location) { form.setError("location", { message: "La localisation est requise" }); hasError = true; }
+    if (!data.price) { form.setError("price", { message: "Le prix est requis" }); hasError = true; }
+    
+    return !hasError;
   };
 
   const onSubmit = (data: ListingFormData) => {
