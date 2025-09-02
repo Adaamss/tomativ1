@@ -134,10 +134,13 @@ export default function CreateListing() {
   });
 
   const handleCategoryChange = (categoryId: string) => {
+    console.log("Category changed to:", categoryId);
     const category = categories.find((cat) => cat.id === categoryId);
+    console.log("Found category:", category);
     if (category) {
       setSelectedCategorySlug(category.slug);
       form.setValue("categoryId", categoryId);
+      console.log("Set category slug to:", category.slug);
     }
   };
 
@@ -230,7 +233,12 @@ export default function CreateListing() {
   };
 
   const validateStep1 = (data: ListingFormData) => {
-    if (!data.categoryId) return false;
+    console.log("Validating step 1 with categoryId:", data.categoryId);
+    if (!data.categoryId) {
+      console.log("Step 1 validation failed: no categoryId");
+      return false;
+    }
+    console.log("Step 1 validation passed");
     return true;
   };
 
