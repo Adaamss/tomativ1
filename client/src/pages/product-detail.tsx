@@ -89,7 +89,7 @@ export default function ProductDetail() {
         </Button>
       </div>
 
-      <main className="bg-white">
+      <main className="bg-white max-w-md mx-auto">
         {/* Image principale */}
         <div className="aspect-square w-full bg-gray-100 overflow-hidden">
           {mainImage ? (
@@ -105,109 +105,113 @@ export default function ProductDetail() {
           )}
         </div>
 
-        {/* Contenu principal */}
-        <div className="px-4 py-4">
-          {/* Titre avec cœur vert */}
-          <div className="flex items-start justify-between mb-1">
-            <h1 className="text-lg font-bold text-gray-900 flex-1 pr-2">
-              {listing.title}
-            </h1>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleLike();
-              }}
-              disabled={isToggling}
-              className={`mt-1 ${isLiked ? "text-green-500" : "text-gray-400"}`}
-            >
-              <Heart className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`} />
-            </button>
-          </div>
-          
-          {/* Catégorie et date */}
-          <p className="text-sm text-gray-500 mb-3">
-            Véhicules • publié {formatTimeAgo(listing.createdAt)}
-          </p>
-
-          {/* Prix */}
-          <div className="mb-4">
-            <p className="text-2xl font-bold text-gray-900">
-              {formatPrice(listing.price)}
-            </p>
-          </div>
-
-          {/* Description */}
-          {listing.description && (
-            <div className="mb-4">
-              <p className="text-gray-700 text-sm leading-5">
-                {listing.description}
-              </p>
+        <div className="flex">
+          {/* Section 1: Photo vendeur + avis */}
+          <div className="w-24 p-4 flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-2">
+              <User className="w-8 h-8 text-gray-500" />
             </div>
-          )}
-
-          {/* Condition */}
-          {listing.condition && (
-            <div className="mb-4">
-              <p className="text-sm text-gray-900">
-                <span className="font-medium">Condition</span> <span className="capitalize">{listing.condition}</span>
-              </p>
-            </div>
-          )}
-
-          {/* Where to meet */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between py-1">
-              <span className="text-sm font-medium text-gray-900">Où se rencontrer</span>
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Statistiques */}
-          <div className="mb-6">
-            <p className="text-sm text-gray-500">
-              {listing.views || 4} chats • {listing.likes || 1} favoris • 75 vues
-            </p>
-          </div>
-
-          {/* Bouton orange principal */}
-          {isAuthenticated && user?.id !== listing.userId && (
-            <div className="mb-6">
-              <Button
-                onClick={() =>
-                  setChatModal({
-                    isOpen: true,
-                    listing,
-                    sellerId: listing.userId,
-                  })
-                }
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-base font-medium rounded-lg"
-              >
-                Contacter le vendeur sur Tomati
-              </Button>
-            </div>
-          )}
-
-          {/* Profil vendeur */}
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="w-6 h-6 text-gray-500" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-bold text-gray-900">
-                  {user?.id === listing.userId ? "Moi" : "Frankie"}
-                </p>
-                <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 bg-yellow-400 rounded flex items-center justify-center">
-                    <span className="text-xs text-white font-bold">★</span>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900">567</span>
+            <div className="text-center">
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-4 h-4 bg-yellow-400 rounded flex items-center justify-center">
+                  <span className="text-xs text-white font-bold">★</span>
                 </div>
+                <span className="text-sm font-bold text-gray-900">567</span>
               </div>
-              <p className="text-sm text-gray-500">Tunis</p>
               <p className="text-xs text-gray-400">32 avis</p>
+            </div>
+          </div>
+
+          {/* Section 2: Autres infos */}
+          <div className="flex-1 p-4">
+            {/* Titre avec cœur vert */}
+            <div className="flex items-start justify-between mb-1">
+              <h1 className="text-lg font-bold text-gray-900 flex-1 pr-2">
+                {listing.title}
+              </h1>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleLike();
+                }}
+                disabled={isToggling}
+                className={`mt-1 ${isLiked ? "text-green-500" : "text-gray-400"}`}
+              >
+                <Heart className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`} />
+              </button>
+            </div>
+            
+            {/* Catégorie et date */}
+            <p className="text-sm text-gray-500 mb-3">
+              Véhicules • publié {formatTimeAgo(listing.createdAt)}
+            </p>
+
+            {/* Prix */}
+            <div className="mb-4">
+              <p className="text-2xl font-bold text-gray-900">
+                {formatPrice(listing.price)}
+              </p>
+            </div>
+
+            {/* Description */}
+            {listing.description && (
+              <div className="mb-4">
+                <p className="text-gray-700 text-sm leading-5">
+                  {listing.description}
+                </p>
+              </div>
+            )}
+
+            {/* Condition */}
+            {listing.condition && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-900">
+                  <span className="font-medium">Condition</span> <span className="capitalize">{listing.condition}</span>
+                </p>
+              </div>
+            )}
+
+            {/* Where to meet */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm font-medium text-gray-900">Où se rencontrer</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Statistiques */}
+            <div className="mb-6">
+              <p className="text-sm text-gray-500">
+                {listing.views || 4} chats • {listing.likes || 1} favoris • 75 vues
+              </p>
+            </div>
+
+            {/* Bouton rouge principal */}
+            {isAuthenticated && user?.id !== listing.userId && (
+              <div className="mb-4">
+                <Button
+                  onClick={() =>
+                    setChatModal({
+                      isOpen: true,
+                      listing,
+                      sellerId: listing.userId,
+                    })
+                  }
+                  className="w-full bg-[#f14247] hover:bg-red-600 text-white py-3 text-base font-medium rounded-lg"
+                >
+                  Contacter le vendeur sur Tomati
+                </Button>
+              </div>
+            )}
+
+            {/* Info vendeur nom + lieu */}
+            <div className="text-left">
+              <p className="font-bold text-gray-900">
+                {user?.id === listing.userId ? "Moi" : "Frankie"}
+              </p>
+              <p className="text-sm text-gray-500">Tunis</p>
             </div>
           </div>
         </div>
