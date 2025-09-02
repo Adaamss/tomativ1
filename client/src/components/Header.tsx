@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SupportChat } from "@/components/SupportChat";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -252,87 +253,8 @@ export default function Header() {
 
       {/* Support Chat Modal */}
       <Dialog open={showSupportChat} onOpenChange={setShowSupportChat}>
-        <DialogContent className="max-w-md h-[500px] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <HelpCircle className="w-5 h-5 mr-2 text-blue-600" />
-              Contacter Chattomati
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 flex flex-col">
-            {/* Messages area */}
-            <div className="flex-1 p-4 bg-gray-50 rounded-lg mb-4 overflow-y-auto">
-              <div className="space-y-3">
-                <div className="bg-white p-3 rounded-lg shadow-sm">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-2">
-                      <span className="text-white text-sm font-bold">C</span>
-                    </div>
-                    <span className="font-semibold text-gray-900">Chattomati</span>
-                    <span className="text-xs text-gray-500 ml-2">Maintenant</span>
-                  </div>
-                  <p className="text-gray-700">
-                    👋 Bonjour ! Je suis l'assistant virtuel de Tomati. Comment puis-je vous aider aujourd'hui ?
-                  </p>
-                </div>
-                
-                <div className="bg-white p-3 rounded-lg shadow-sm">
-                  <p className="text-gray-700 mb-2">
-                    Je peux vous aider avec :
-                  </p>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Questions sur les annonces</li>
-                    <li>• Problèmes techniques</li>
-                    <li>• Aide à la navigation</li>
-                    <li>• Support général</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            
-            {/* Quick actions */}
-            <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  // Simulate adding a user message
-                }}
-              >
-                💬 J'ai une question sur une annonce
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  // Simulate adding a user message
-                }}
-              >
-                🔧 J'ai un problème technique
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  // Simulate adding a user message
-                }}
-              >
-                📞 Demander un appel
-              </Button>
-            </div>
-            
-            {/* Message input */}
-            <div className="flex mt-4 space-x-2">
-              <Input 
-                placeholder="Tapez votre message..."
-                className="flex-1"
-              />
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                <MessageCircle className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+        <DialogContent className="max-w-md p-0 gap-0">
+          <SupportChat onClose={() => setShowSupportChat(false)} />
         </DialogContent>
       </Dialog>
     </>

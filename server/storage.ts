@@ -5,6 +5,8 @@ import {
   messages,
   conversations,
   userLikes,
+  supportTickets,
+  supportMessages,
   type User,
   type UpsertUser,
   type Category,
@@ -17,6 +19,10 @@ import {
   type InsertConversation,
   type UserLike,
   type InsertUserLike,
+  type SupportTicket,
+  type InsertSupportTicket,
+  type SupportMessage,
+  type InsertSupportMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
@@ -56,6 +62,14 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   createConversation(conversation: InsertConversation): Promise<Conversation>;
   getConversation(user1Id: string, user2Id: string, listingId?: string): Promise<Conversation | undefined>;
+  
+  // Support operations
+  createSupportTicket(ticketData: InsertSupportTicket): Promise<SupportTicket>;
+  getSupportTickets(): Promise<SupportTicket[]>;
+  getSupportTicketById(id: string): Promise<SupportTicket | undefined>;
+  updateSupportTicket(id: string, ticketData: Partial<InsertSupportTicket>): Promise<SupportTicket | undefined>;
+  createSupportMessage(messageData: InsertSupportMessage): Promise<SupportMessage>;
+  getSupportMessagesByTicket(ticketId: string): Promise<SupportMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -363,6 +377,55 @@ export class DatabaseStorage implements IStorage {
       .where(and(...conditions));
     
     return conversation;
+  }
+
+  // Support operations
+  async createSupportTicket(ticketData: InsertSupportTicket): Promise<SupportTicket> {
+    const [ticket] = await db
+      .insert(supportTickets)
+      .values(ticketData)
+      .returning();
+    return ticket;
+  }
+
+  async getSupportTickets(): Promise<SupportTicket[]> {
+    return await db
+      .select()
+      .from(supportTickets)
+      .orderBy(desc(supportTickets.createdAt));
+  }
+
+  async getSupportTicketById(id: string): Promise<SupportTicket | undefined> {
+    const [ticket] = await db
+      .select()
+      .from(supportTickets)
+      .where(eq(supportTickets.id, id));
+    return ticket;
+  }
+
+  async updateSupportTicket(id: string, ticketData: Partial<InsertSupportTicket>): Promise<SupportTicket | undefined> {
+    const [ticket] = await db
+      .update(supportTickets)
+      .set({ ...ticketData, updatedAt: new Date() })
+      .where(eq(supportTickets.id, id))
+      .returning();
+    return ticket;
+  }
+
+  async createSupportMessage(messageData: InsertSupportMessage): Promise<SupportMessage> {
+    const [message] = await db
+      .insert(supportMessages)
+      .values(messageData)
+      .returning();
+    return message;
+  }
+
+  async getSupportMessagesByTicket(ticketId: string): Promise<SupportMessage[]> {
+    return await db
+      .select()
+      .from(supportMessages)
+      .where(eq(supportMessages.ticketId, ticketId))
+      .orderBy(supportMessages.createdAt);
   }
 }
 

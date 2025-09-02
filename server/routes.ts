@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { authenticateToken, hashPassword, comparePassword, generateToken, generateResetToken, type AuthenticatedRequest } from "./auth";
-import { insertListingSchema } from "@shared/schema";
+import { insertListingSchema, insertSupportTicketSchema, insertSupportMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -578,6 +578,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching liked listings:", error);
       res.status(500).json({ error: "Failed to fetch liked listings" });
+    }
+  });
+
+  // Support chat routes
+  app.post('/api/support/tickets', async (req, res) => {
+    try {
+      const { subject, category, priority, userEmail, userName } = req.body;
+      
+      // Get user ID if authenticated
+      let userId = null;
+      if (req.headers.authorization) {
+        try {
+          const token = req.headers.authorization.split(' ')[1];
+          const decoded = await authenticateToken(token);
+          userId = decoded.id;
+        } catch (error) {
+          // Continue as anonymous user
+        }
+      }
+
+      const ticket = await storage.createSupportTicket({
+        userId,
+        userEmail: userEmail || 'anonymous@tomati.com',
+        userName: userName || 'Utilisateur Anonyme',
+        subject: subject || 'Demande de support',
+        category: category || 'general',
+        priority: priority || 'medium',
+        status: 'open'
+      });
+
+      // Create welcome message from bot
+      await storage.createSupportMessage({
+        ticketId: ticket.id,
+        senderId: null,
+        senderType: 'bot',
+        content: `👋 Bonjour ! Je suis Chattomati, votre assistant support. J'ai bien reçu votre demande "${subject}". Un de nos agents va prendre en charge votre ticket sous peu. En attendant, n'hésitez pas à me poser vos questions !`,
+        messageType: 'text'
+      });
+
+      res.status(201).json(ticket);
+    } catch (error) {
+      console.error("Error creating support ticket:", error);
+      res.status(500).json({ message: "Failed to create support ticket" });
+    }
+  });
+
+  app.get('/api/support/tickets/:id/messages', async (req, res) => {
+    try {
+      const messages = await storage.getSupportMessagesByTicket(req.params.id);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching support messages:", error);
+      res.status(500).json({ message: "Failed to fetch support messages" });
+    }
+  });
+
+  app.post('/api/support/tickets/:id/messages', async (req, res) => {
+    try {
+      const { content, senderType } = req.body;
+      
+      let senderId = null;
+      if (req.headers.authorization) {
+        try {
+          const token = req.headers.authorization.split(' ')[1];
+          const decoded = await authenticateToken(token);
+          senderId = decoded.id;
+        } catch (error) {
+          // Continue as anonymous user
+        }
+      }
+
+      const message = await storage.createSupportMessage({
+        ticketId: req.params.id,
+        senderId,
+        senderType: senderType || 'user',
+        content,
+        messageType: 'text'
+      });
+
+      res.status(201).json(message);
+    } catch (error) {
+      console.error("Error creating support message:", error);
+      res.status(500).json({ message: "Failed to create support message" });
     }
   });
 

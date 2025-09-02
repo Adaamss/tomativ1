@@ -169,6 +169,52 @@ export const userStatus = pgTable("user_status", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Support system tables
+export const supportTickets = pgTable("support_tickets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id), // null for anonymous users
+  userEmail: varchar("user_email"), // for tracking anonymous users
+  userName: varchar("user_name"), // for display
+  subject: varchar("subject").notNull(),
+  category: varchar("category").default("general"), // general, technical, billing, feature
+  priority: varchar("priority").default("medium"), // low, medium, high, urgent
+  status: varchar("status").default("open"), // open, in_progress, resolved, closed
+  assignedTo: varchar("assigned_to").references(() => users.id), // support agent
+  tags: text("tags").array(), // for categorization
+  metadata: jsonb("metadata"), // extra data like browser, device, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  closedAt: timestamp("closed_at"),
+});
+
+export const supportMessages = pgTable("support_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticketId: varchar("ticket_id").notNull().references(() => supportTickets.id),
+  senderId: varchar("sender_id").references(() => users.id), // null for system messages
+  senderType: varchar("sender_type").notNull().default("user"), // user, agent, system, bot
+  content: text("content").notNull(),
+  messageType: varchar("message_type").default("text"), // text, file, system_notification
+  attachments: text("attachments").array(), // file URLs
+  isInternal: integer("is_internal").default(0), // internal agent notes
+  metadata: jsonb("metadata"), // for rich content, reactions, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const supportAgents = pgTable("support_agents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  department: varchar("department").default("general"), // general, technical, billing
+  specialties: text("specialties").array(), // areas of expertise
+  isActive: integer("is_active").default(1),
+  maxTickets: integer("max_tickets").default(10), // concurrent ticket limit
+  avgResponseTime: integer("avg_response_time"), // in minutes
+  rating: decimal("rating", { precision: 3, scale: 2 }), // customer satisfaction
+  totalTickets: integer("total_tickets").default(0),
+  resolvedTickets: integer("resolved_tickets").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   listings: many(listings),
@@ -183,6 +229,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   userStatus: one(userStatus, {
     fields: [users.id],
     references: [userStatus.userId],
+  }),
+  supportTickets: many(supportTickets),
+  supportMessages: many(supportMessages),
+  supportAgent: one(supportAgents, {
+    fields: [users.id],
+    references: [supportAgents.userId],
   }),
 }));
 
@@ -311,6 +363,39 @@ export const userStatusRelations = relations(userStatus, ({ one }) => ({
   }),
 }));
 
+// Support system relations
+export const supportTicketsRelations = relations(supportTickets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [supportTickets.userId],
+    references: [users.id],
+  }),
+  assignedAgent: one(users, {
+    fields: [supportTickets.assignedTo],
+    references: [users.id],
+    relationName: "assignedAgent",
+  }),
+  messages: many(supportMessages),
+}));
+
+export const supportMessagesRelations = relations(supportMessages, ({ one }) => ({
+  ticket: one(supportTickets, {
+    fields: [supportMessages.ticketId],
+    references: [supportTickets.id],
+  }),
+  sender: one(users, {
+    fields: [supportMessages.senderId],
+    references: [users.id],
+  }),
+}));
+
+export const supportAgentsRelations = relations(supportAgents, ({ one, many }) => ({
+  user: one(users, {
+    fields: [supportAgents.userId],
+    references: [users.id],
+  }),
+  assignedTickets: many(supportTickets, { relationName: "assignedAgent" }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -365,6 +450,26 @@ export const insertUserStatusSchema = createInsertSchema(userStatus).omit({
   updatedAt: true,
 });
 
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  closedAt: true,
+});
+
+export const insertSupportMessageSchema = createInsertSchema(supportMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSupportAgentSchema = createInsertSchema(supportAgents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  totalTickets: true,
+  resolvedTickets: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -384,3 +489,9 @@ export type InsertPriceNegotiation = z.infer<typeof insertPriceNegotiationSchema
 export type PriceNegotiation = typeof priceNegotiations.$inferSelect;
 export type InsertUserStatus = z.infer<typeof insertUserStatusSchema>;
 export type UserStatus = typeof userStatus.$inferSelect;
+export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export type InsertSupportMessage = z.infer<typeof insertSupportMessageSchema>;
+export type SupportMessage = typeof supportMessages.$inferSelect;
+export type InsertSupportAgent = z.infer<typeof insertSupportAgentSchema>;
+export type SupportAgent = typeof supportAgents.$inferSelect;
