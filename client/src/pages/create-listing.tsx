@@ -394,6 +394,13 @@ export default function CreateListing() {
           </div>
 
           <div className="p-6">
+            {/* DEBUG */}
+            <div className="mb-4 p-4 bg-gray-100 text-sm">
+              <div>Current step: {step}</div>
+              <div>Selected category slug: {selectedCategorySlug}</div>
+              <div>Categories loaded: {categories.length}</div>
+            </div>
+            
             <Form {...form}>
               <div className="space-y-6">
                 {/* STEP 1 */}
