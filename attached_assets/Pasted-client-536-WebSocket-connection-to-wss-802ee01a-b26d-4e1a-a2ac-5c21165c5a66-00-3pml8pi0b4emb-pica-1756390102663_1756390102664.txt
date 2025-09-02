@@ -1,0 +1,56 @@
+client:536 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/?token=PyXdO-EamlJt' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=PyXdO-EamlJt' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-RPCDYKBN.js?v=e74e8172:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ChatModal.tsx:245 Uncaught ReferenceError: handleRendezVous is not defined
+    at ChatModal (ChatModal.tsx:245:24)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=e74e8172:11548:26)
+    at mountIndeterminateComponent (chunk-RPCDYKBN.js?v=e74e8172:14926:21)
+    at beginWork (chunk-RPCDYKBN.js?v=e74e8172:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=e74e8172:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=e74e8172:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=e74e8172:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=e74e8172:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=e74e8172:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=e74e8172:19137:13)
+ChatModal.tsx:245 Uncaught ReferenceError: handleRendezVous is not defined
+    at ChatModal (ChatModal.tsx:245:24)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=e74e8172:11548:26)
+    at mountIndeterminateComponent (chunk-RPCDYKBN.js?v=e74e8172:14926:21)
+    at beginWork (chunk-RPCDYKBN.js?v=e74e8172:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=e74e8172:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=e74e8172:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=e74e8172:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=e74e8172:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=e74e8172:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=e74e8172:19137:13)
+chunk-RPCDYKBN.js?v=e74e8172:14032 The above error occurred in the <ChatModal> component:
+
+    at ChatModal (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/src/components/ChatModal.tsx?t=1756389482324:32:37)
+    at div
+    at Home (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/src/pages/home.tsx?t=1756389482324:31:24)
+    at Route (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e74e8172:191:16)
+    at Switch (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e74e8172:247:17)
+    at Router (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/src/App.tsx?t=1756389482324&v=td-WBgk1OD-Fvhvp1Ucco:38:42)
+    at Provider (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5AJU3CG7.js?v=e74e8172:38:15)
+    at TooltipProvider (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e74e8172:60:5)
+    at QueryClientProvider (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=e74e8172:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-RPCDYKBN.js?v=e74e8172:14032
+chunk-RPCDYKBN.js?v=e74e8172:9129 Uncaught ReferenceError: handleRendezVous is not defined
+    at ChatModal (ChatModal.tsx:245:24)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=e74e8172:11548:26)
+    at mountIndeterminateComponent (chunk-RPCDYKBN.js?v=e74e8172:14926:21)
+    at beginWork (chunk-RPCDYKBN.js?v=e74e8172:15914:22)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=e74e8172:19753:22)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=e74e8172:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=e74e8172:19137:13)
+    at renderRootSync (chunk-RPCDYKBN.js?v=e74e8172:19116:15)
+    at recoverFromConcurrentError (chunk-RPCDYKBN.js?v=e74e8172:18736:28)
+    at performSyncWorkOnRoot (chunk-RPCDYKBN.js?v=e74e8172:18879:28)

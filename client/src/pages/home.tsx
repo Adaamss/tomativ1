@@ -37,7 +37,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-20 pb-20">
+      <main className="pt-36 pb-20">
         {/* Products Header */}
         <div className="px-4 py-4 bg-white border-b border-border">
           <div className="flex items-center justify-between">

@@ -62,6 +62,9 @@ export const listings = pgTable("listings", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   images: text("images").array(),
+  status: varchar("status").default("available"), // available, reserved, sold, inactive
+  reservedBy: varchar("reserved_by").references(() => users.id),
+  reservedUntil: timestamp("reserved_until"),
   // Car-specific fields
   brand: varchar("brand"),
   model: varchar("model"),
@@ -97,6 +100,8 @@ export const messages = pgTable("messages", {
   receiverId: varchar("receiver_id").notNull().references(() => users.id),
   listingId: varchar("listing_id").references(() => listings.id),
   content: text("content").notNull(),
+  messageType: varchar("message_type").default("text"), // text, appointment_request, appointment_response, price_negotiation
+  metadata: jsonb("metadata"), // Store appointment details, price offers, etc.
   isRead: integer("is_read").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -121,12 +126,64 @@ export const userLikes = pgTable("user_likes", {
   index("idx_user_likes_listing_id").on(table.listingId),
 ]);
 
+// Appointments table for scheduling meetings
+export const appointments = pgTable("appointments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => listings.id),
+  buyerId: varchar("buyer_id").notNull().references(() => users.id),
+  sellerId: varchar("seller_id").notNull().references(() => users.id),
+  appointmentDate: timestamp("appointment_date").notNull(),
+  duration: integer("duration").default(60), // minutes
+  location: varchar("location"),
+  notes: text("notes"),
+  status: varchar("status").default("pending"), // pending, confirmed, cancelled, completed
+  messageId: varchar("message_id").references(() => messages.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Price negotiations table
+export const priceNegotiations = pgTable("price_negotiations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => listings.id),
+  buyerId: varchar("buyer_id").notNull().references(() => users.id),
+  sellerId: varchar("seller_id").notNull().references(() => users.id),
+  originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(),
+  offeredPrice: decimal("offered_price", { precision: 10, scale: 2 }).notNull(),
+  counterPrice: decimal("counter_price", { precision: 10, scale: 2 }),
+  status: varchar("status").default("pending"), // pending, accepted, rejected, countered
+  buyerMessage: text("buyer_message"),
+  sellerMessage: text("seller_message"),
+  finalPrice: decimal("final_price", { precision: 10, scale: 2 }),
+  messageId: varchar("message_id").references(() => messages.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Online status tracking for users
+export const userStatus = pgTable("user_status", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id).unique(),
+  isOnline: integer("is_online").default(0),
+  lastSeen: timestamp("last_seen").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   listings: many(listings),
+  reservedListings: many(listings, { relationName: "reservedBy" }),
   sentMessages: many(messages, { relationName: "sender" }),
   receivedMessages: many(messages, { relationName: "receiver" }),
   userLikes: many(userLikes),
+  buyerAppointments: many(appointments, { relationName: "buyer" }),
+  sellerAppointments: many(appointments, { relationName: "seller" }),
+  buyerNegotiations: many(priceNegotiations, { relationName: "buyer" }),
+  sellerNegotiations: many(priceNegotiations, { relationName: "seller" }),
+  userStatus: one(userStatus, {
+    fields: [users.id],
+    references: [userStatus.userId],
+  }),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -142,8 +199,15 @@ export const listingsRelations = relations(listings, ({ one, many }) => ({
     fields: [listings.userId],
     references: [users.id],
   }),
+  reservedByUser: one(users, {
+    fields: [listings.reservedBy],
+    references: [users.id],
+    relationName: "reservedBy",
+  }),
   messages: many(messages),
   userLikes: many(userLikes),
+  appointments: many(appointments),
+  priceNegotiations: many(priceNegotiations),
 }));
 
 export const userLikesRelations = relations(userLikes, ({ one }) => ({
@@ -195,6 +259,58 @@ export const conversationsRelations = relations(conversations, ({ one }) => ({
   }),
 }));
 
+// Appointments relations
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  listing: one(listings, {
+    fields: [appointments.listingId],
+    references: [listings.id],
+  }),
+  buyer: one(users, {
+    fields: [appointments.buyerId],
+    references: [users.id],
+    relationName: "buyer",
+  }),
+  seller: one(users, {
+    fields: [appointments.sellerId],
+    references: [users.id],
+    relationName: "seller",
+  }),
+  message: one(messages, {
+    fields: [appointments.messageId],
+    references: [messages.id],
+  }),
+}));
+
+// Price negotiations relations
+export const priceNegotiationsRelations = relations(priceNegotiations, ({ one }) => ({
+  listing: one(listings, {
+    fields: [priceNegotiations.listingId],
+    references: [listings.id],
+  }),
+  buyer: one(users, {
+    fields: [priceNegotiations.buyerId],
+    references: [users.id],
+    relationName: "buyer",
+  }),
+  seller: one(users, {
+    fields: [priceNegotiations.sellerId],
+    references: [users.id],
+    relationName: "seller",
+  }),
+  message: one(messages, {
+    fields: [priceNegotiations.messageId],
+    references: [messages.id],
+  }),
+}));
+
+// User status relations
+export const userStatusRelations = relations(userStatus, ({ one }) => ({
+  user: one(users, {
+    fields: [userStatus.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -232,6 +348,23 @@ export const insertUserLikeSchema = createInsertSchema(userLikes).omit({
   createdAt: true,
 });
 
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPriceNegotiationSchema = createInsertSchema(priceNegotiations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserStatusSchema = createInsertSchema(userStatus).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -245,3 +378,9 @@ export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertUserLike = z.infer<typeof insertUserLikeSchema>;
 export type UserLike = typeof userLikes.$inferSelect;
+export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+export type Appointment = typeof appointments.$inferSelect;
+export type InsertPriceNegotiation = z.infer<typeof insertPriceNegotiationSchema>;
+export type PriceNegotiation = typeof priceNegotiations.$inferSelect;
+export type InsertUserStatus = z.infer<typeof insertUserStatusSchema>;
+export type UserStatus = typeof userStatus.$inferSelect;
