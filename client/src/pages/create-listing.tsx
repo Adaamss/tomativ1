@@ -446,7 +446,7 @@ export default function CreateListing() {
                               field.onChange(val);
                               handleCategoryChange(val);
                             }}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -885,13 +885,22 @@ export default function CreateListing() {
                           setStep(2);
                         } else {
                           console.log("Step 1 failed - no category");
+                          form.setError("categoryId", { message: "Veuillez sélectionner une catégorie" });
                         }
                       } else if (step === 2) {
-                        console.log("Step 2, going to step 3");
-                        setStep(3);
+                        // Validation selon la catégorie
+                        const isValid = validateStep2(data);
+                        if (isValid) {
+                          console.log("Step 2 OK, going to step 3");
+                          setStep(3);
+                        } else {
+                          console.log("Step 2 failed - validation errors");
+                        }
                       } else if (step === 3) {
-                        console.log("Step 3, creating listing");
-                        if (data.title && data.price && data.location) {
+                        // Validation finale
+                        const isValid = validateStep3(data);
+                        if (isValid) {
+                          console.log("Step 3 OK, creating listing");
                           createListingMutation.mutate(data);
                         } else {
                           console.log("Step 3 failed - missing required fields");
