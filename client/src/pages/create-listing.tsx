@@ -106,9 +106,10 @@ export default function CreateListing() {
   };
 
   const form = useForm<ListingFormData>({
-    resolver: zodResolver(getFormSchema()),
+    resolver: zodResolver(baseListingSchema),
+    mode: "onChange",
     defaultValues: {
-      categoryId: selectedCategory?.id || "",
+      categoryId: "",
       title: "",
       description: "",
       price: "",
@@ -316,7 +317,10 @@ export default function CreateListing() {
           <div className="p-6">
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={(e) => {
+                  console.log("Form onSubmit triggered");
+                  form.handleSubmit(onSubmit)(e);
+                }}
                 className="space-y-6"
               >
                 {/* STEP 1 */}
@@ -760,7 +764,12 @@ export default function CreateListing() {
                   <Button
                     type="submit"
                     disabled={createListingMutation.isPending}
-                    onClick={() => console.log("Submit button clicked, current step:", step)}
+                    onClick={(e) => {
+                      console.log("Submit button clicked, current step:", step);
+                      console.log("Form is valid:", form.formState.isValid);
+                      console.log("Form errors:", form.formState.errors);
+                      // Don't prevent default here - let the form handle it
+                    }}
                   >
                     {step === 3 ? "Publier" : "Suivant"}
                   </Button>
