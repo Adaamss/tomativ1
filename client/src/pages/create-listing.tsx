@@ -372,8 +372,15 @@ export default function CreateListing() {
   };
 
   const goBack = () => {
-    if (step > 1) setStep(step - 1);
-    else setLocation("/");
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      // Demander confirmation avant de quitter
+      const confirmed = window.confirm("Êtes-vous sûr de vouloir quitter ? Vos modifications seront perdues.");
+      if (confirmed) {
+        setLocation("/");
+      }
+    }
   };
 
   return (
@@ -868,7 +875,7 @@ export default function CreateListing() {
 
                 <div className="flex justify-between mt-8 pt-6 border-t border-border">
                   <Button type="button" variant="outline" onClick={goBack}>
-                    {step === 1 ? "Annuler" : "Précédent"}
+                    {step === 1 ? "Retour" : "Précédent"}
                   </Button>
                   <Button
                     type="button"
