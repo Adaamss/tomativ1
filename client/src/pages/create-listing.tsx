@@ -395,13 +395,7 @@ export default function CreateListing() {
 
           <div className="p-6">
             <Form {...form}>
-              <form
-                onSubmit={(e) => {
-                  console.log("Form onSubmit triggered");
-                  form.handleSubmit(onSubmit)(e);
-                }}
-                className="space-y-6"
-              >
+              <div className="space-y-6">
                 {/* STEP 1 */}
                 {step === 1 && (
                   <>
@@ -841,19 +835,38 @@ export default function CreateListing() {
                     {step === 1 ? "Annuler" : "Précédent"}
                   </Button>
                   <Button
-                    type="submit"
+                    type="button"
                     disabled={createListingMutation.isPending}
-                    onClick={(e) => {
-                      console.log("Submit button clicked, current step:", step);
-                      console.log("Form is valid:", form.formState.isValid);
-                      console.log("Form errors:", form.formState.errors);
-                      // Don't prevent default here - let the form handle it
+                    onClick={() => {
+                      console.log("=== BUTTON CLICKED ===");
+                      console.log("Current step:", step);
+                      const data = form.getValues();
+                      console.log("Form data:", data);
+                      
+                      if (step === 1) {
+                        if (data.categoryId) {
+                          console.log("Step 1 OK, going to step 2");
+                          setStep(2);
+                        } else {
+                          console.log("Step 1 failed - no category");
+                        }
+                      } else if (step === 2) {
+                        console.log("Step 2, going to step 3");
+                        setStep(3);
+                      } else if (step === 3) {
+                        console.log("Step 3, creating listing");
+                        if (data.title && data.price && data.location) {
+                          createListingMutation.mutate(data);
+                        } else {
+                          console.log("Step 3 failed - missing required fields");
+                        }
+                      }
                     }}
                   >
                     {step === 3 ? "Publier" : "Suivant"}
                   </Button>
                 </div>
-              </form>
+              </div>
             </Form>
           </div>
         </div>
