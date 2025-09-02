@@ -154,27 +154,30 @@ export default function ProductDetail() {
           </div>
 
           {/* Seller Info Block */}
-          <Card className="border-none shadow-lg mt-6">
-            <CardContent>
-              <h3 className="text-xl font-bold mb-3">Vendeur</h3>
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-8 h-8 text-white" />
+          <Card className="border-none shadow-sm bg-white rounded-xl mt-6">
+            <CardContent className="p-4">
+              <h3 className="text-lg font-semibold mb-3 text-gray-900">Vendeur</h3>
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+                  <User className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold">
+                  <p className="font-semibold text-gray-900">
                     {user?.id === listing.userId ? "Moi" : "Vendeur"}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     Membre depuis {formatTimeAgo(listing.createdAt)}
                   </p>
                 </div>
               </div>
               {isAuthenticated && user?.id !== listing.userId && (
-                <div className="flex gap-4 mt-4">
-                  <Button variant="outline" className="flex-1">
-                    <Phone className="w-5 h-5 mr-2" />
-                    Appeler
+                <div className="flex gap-3 mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    <Phone className="w-4 h-4" />
                   </Button>
                   <Button
                     onClick={() =>
@@ -184,11 +187,10 @@ export default function ProductDetail() {
                         sellerId: listing.userId,
                       })
                     }
-                    style={{ backgroundColor: "#f14247" }}
-                    className="flex-1 text-white"
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md transition-all"
+                    size="sm"
                   >
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Message
+                    <MessageCircle className="w-4 h-4" />
                   </Button>
                 </div>
               )}
