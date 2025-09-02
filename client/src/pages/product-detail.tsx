@@ -152,22 +152,9 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Section 2: Scrollable / Dynamic Details */}
-        <div className="space-y-6 overflow-y-auto max-h-[80vh]">
-          {/* Product Title & Price */}
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {listing.title}
-            </h1>
-            <p className="text-4xl font-bold text-red-500">
-              {formatPrice(listing.price)}
-            </p>
-          </div>
-
-          {/* Seller Info (en haut) */}
-          <Card className="border-none shadow-lg">
+          {/* Seller Info Block */}
+          <Card className="border-none shadow-lg mt-6">
             <CardContent>
               <h3 className="text-xl font-bold mb-3">Vendeur</h3>
               <div className="flex items-center space-x-4">
@@ -207,6 +194,19 @@ export default function ProductDetail() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Section 2: Scrollable / Dynamic Details */}
+        <div className="space-y-6 overflow-y-auto max-h-[80vh]">
+          {/* Product Title & Price */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {listing.title}
+            </h1>
+            <p className="text-4xl font-bold text-red-500">
+              {formatPrice(listing.price)}
+            </p>
+          </div>
 
           {/* Product Details */}
           <Card className="border-none shadow-lg">
