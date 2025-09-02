@@ -231,36 +231,48 @@ export default function CreateListing() {
 
   const validateStep1 = (data: ListingFormData) => {
     if (!data.categoryId) return false;
-    if (selectedCategorySlug === "voiture") {
-      if (
-        !data.brand ||
-        !data.model ||
-        !data.year ||
-        !data.mileage ||
-        !data.price
-      )
-        return false;
-    }
     return true;
   };
 
   const validateStep2 = (data: ListingFormData) => {
     if (selectedCategorySlug === "voiture") {
-      if (!data.fuelType || !data.transmission) return false;
+      if (!data.brand || !data.model || !data.year || !data.mileage || !data.fuelType || !data.transmission) return false;
+    } else if (selectedCategorySlug === "immobilier") {
+      if (!data.propertyType || !data.surface) return false;
+    } else if (selectedCategorySlug === "emploi") {
+      if (!data.jobType || !data.experience || !data.sector) return false;
     }
     return true;
   };
 
   const validateStep3 = (data: ListingFormData) => {
-    if (!data.title || !data.location) return false;
+    if (!data.title || !data.location || !data.price) return false;
     return true;
   };
 
   const onSubmit = (data: ListingFormData) => {
-    if (step === 1 && validateStep1(data)) setStep(2);
-    else if (step === 2 && validateStep2(data)) setStep(3);
-    else if (step === 3 && validateStep3(data))
-      createListingMutation.mutate(data);
+    console.log("Submitting step", step, "with data:", data);
+    console.log("Selected category slug:", selectedCategorySlug);
+    
+    if (step === 1) {
+      if (validateStep1(data)) {
+        setStep(2);
+      } else {
+        console.log("Step 1 validation failed");
+      }
+    } else if (step === 2) {
+      if (validateStep2(data)) {
+        setStep(3);
+      } else {
+        console.log("Step 2 validation failed");
+      }
+    } else if (step === 3) {
+      if (validateStep3(data)) {
+        createListingMutation.mutate(data);
+      } else {
+        console.log("Step 3 validation failed");
+      }
+    }
   };
 
   const goBack = () => {
@@ -327,38 +339,292 @@ export default function CreateListing() {
                   </>
                 )}
 
-                {/* STEP 2 */}
+                {/* STEP 2 - Car specific fields */}
                 {step === 2 && selectedCategorySlug === "voiture" && (
                   <>
                     <FormField
                       control={form.control}
-                      name="fuelType"
+                      name="brand"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Carburant</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                          <FormLabel>Marque</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Ex: BMW, Mercedes, Peugeot..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="model"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Modèle</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Ex: X5, C220, 208..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="year"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Année</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="2020" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="mileage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Kilométrage</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="50000" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="fuelType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Carburant</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Carburant" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="essence">Essence</SelectItem>
+                                <SelectItem value="diesel">Diesel</SelectItem>
+                                <SelectItem value="hybride">Hybride</SelectItem>
+                                <SelectItem value="electrique">Électrique</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="transmission"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Transmission</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Transmission" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="manuelle">Manuelle</SelectItem>
+                                <SelectItem value="automatique">Automatique</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* STEP 2 - Real Estate specific fields */}
+                {step === 2 && selectedCategorySlug === "immobilier" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="propertyType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type de bien</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Sélectionnez le carburant" />
+                                <SelectValue placeholder="Type de bien" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="essence">Essence</SelectItem>
-                              <SelectItem value="diesel">Diesel</SelectItem>
-                              <SelectItem value="hybride">Hybride</SelectItem>
-                              <SelectItem value="electrique">
-                                Électrique
-                              </SelectItem>
+                              <SelectItem value="appartement">Appartement</SelectItem>
+                              <SelectItem value="maison">Maison</SelectItem>
+                              <SelectItem value="villa">Villa</SelectItem>
+                              <SelectItem value="terrain">Terrain</SelectItem>
+                              <SelectItem value="bureau">Bureau</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+                      control={form.control}
+                      name="surface"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Surface (m²)</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" placeholder="120" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="rooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Pièces</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="3" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="bedrooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Chambres</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="2" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="bathrooms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Salles de bain</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="1" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </>
+                )}
+
+                {/* STEP 2 - Job specific fields */}
+                {step === 2 && selectedCategorySlug === "emploi" && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="jobType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type de contrat</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Type de contrat" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="cdi">CDI</SelectItem>
+                              <SelectItem value="cdd">CDD</SelectItem>
+                              <SelectItem value="freelance">Freelance</SelectItem>
+                              <SelectItem value="stage">Stage</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="experience"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Expérience requise</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Expérience" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="debutant">Débutant</SelectItem>
+                              <SelectItem value="1-3 ans">1-3 ans</SelectItem>
+                              <SelectItem value="3-5 ans">3-5 ans</SelectItem>
+                              <SelectItem value="5+ ans">5+ ans</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="sector"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Secteur</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Ex: Informatique, Santé, Éducation..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="salary"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Salaire (TND) - Optionnel</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" placeholder="1500" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {/* STEP 2 - General category (no specific fields) */}
+                {step === 2 && !["voiture", "immobilier", "emploi"].includes(selectedCategorySlug) && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Aucun champ spécifique pour cette catégorie.</p>
+                    <p className="text-sm text-gray-500 mt-2">Cliquez sur "Suivant" pour continuer.</p>
+                  </div>
                 )}
 
                 {/* STEP 3 */}
