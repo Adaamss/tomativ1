@@ -1,13 +1,23 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
-import { Heart, ArrowLeft, User } from "lucide-react";
+import {
+  Heart,
+  Eye,
+  MessageCircle,
+  Phone,
+  ArrowLeft,
+  MapPin,
+  Clock,
+  User,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatModal from "@/components/ChatModal";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useLikes } from "@/hooks/useLikes";
 import type { Listing } from "@shared/schema";
@@ -45,7 +55,6 @@ export default function ProductDetail() {
     !price || Number(price) === 0
       ? "Gratuit"
       : `${Number(price).toLocaleString()} TND`;
-
   const formatTimeAgo = (date: Date | null) =>
     !date
       ? "Date inconnue"
@@ -57,7 +66,6 @@ export default function ProductDetail() {
         Chargement...
       </div>
     );
-
   if (!listing)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -73,155 +81,201 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Bouton retour */}
-      <div className="px-4 py-4 pt-36">
+      {/* Back button */}
+      <div className="px-4 py-4">
         <Button variant="ghost" size="sm" onClick={() => setLocation("/")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
       </div>
 
-      <main className="bg-white max-w-lg mx-auto rounded-lg shadow">
-        {/* Image principale */}
-        <div className="aspect-square w-full bg-gray-100 overflow-hidden">
-          {mainImage ? (
-            <img
-              src={mainImage}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              Pas d'image
+      <main className="px-6 py-6 grid md:grid-cols-2 gap-6">
+        {/* Section 1: Photo + like / stats fixed */}
+        <div className="space-y-4 sticky top-24">
+          <div className="aspect-video bg-gray-100 rounded-2xl overflow-hidden">
+            {mainImage ? (
+              <img
+                src={mainImage}
+                alt={listing.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                Pas d'image
+              </div>
+            )}
+          </div>
+          {images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 ${idx === currentImageIndex ? "border-primary" : "border-transparent"}`}
+                >
+                  <img
+                    src={img}
+                    alt={`thumbnail ${idx}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
             </div>
           )}
+
+          {/* Like / Views / Time */}
+          <div className="flex items-center justify-between mt-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLike();
+              }}
+              disabled={isToggling}
+              className={`flex items-center px-4 py-2 rounded-full border ${
+                isLiked
+                  ? "bg-red-50 text-red-500 border-red-200"
+                  : "bg-gray-50 text-gray-600 border-gray-200"
+              }`}
+            >
+              <Heart className="w-5 h-5 mr-2" />
+              {listing.likes || 0}
+            </button>
+
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center px-3 py-1 bg-gray-50 rounded-full">
+                <Eye className="w-4 h-4 mr-1 text-gray-500" />
+                {listing.views || 0}
+              </div>
+              <div className="flex items-center px-3 py-1 bg-gray-50 rounded-full">
+                <Clock className="w-4 h-4 mr-1 text-gray-500" />
+                {formatTimeAgo(listing.createdAt)}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Contenu principal */}
-        <div className="flex border-t">
-          {/* Section vendeur */}
-          <div className="w-28 p-4 flex flex-col items-center border-r">
-            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-2">
-              <User className="w-8 h-8 text-gray-500" />
-            </div>
-            <div className="text-center">
-              <div className="flex items-center gap-1 mb-1">
-                <div className="w-4 h-4 bg-yellow-400 rounded flex items-center justify-center">
-                  <span className="text-xs text-white font-bold">★</span>
-                </div>
-                <span className="text-sm font-bold text-gray-900">567</span>
-              </div>
-              <p className="text-xs text-gray-400">32 avis</p>
-            </div>
+        {/* Section 2: Scrollable / Dynamic Details */}
+        <div className="space-y-6 overflow-y-auto max-h-[80vh]">
+          {/* Product Title & Price */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {listing.title}
+            </h1>
+            <p className="text-4xl font-bold text-red-500">
+              {formatPrice(listing.price)}
+            </p>
           </div>
 
-          {/* Section produit */}
-          <div className="flex-1 p-4">
-            {/* Titre + bouton like */}
-            <div className="flex items-start justify-between mb-1">
-              <h1 className="text-lg font-bold text-gray-900 flex-1 pr-2">
-                {listing.title}
-              </h1>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleLike();
-                }}
-                disabled={isToggling}
-                className={`mt-1 ${isLiked ? "text-green-500" : "text-gray-400"}`}
-              >
-                <Heart className={`w-6 h-6 ${isLiked ? "fill-current" : ""}`} />
-              </button>
-            </div>
+          {/* Seller Info (en haut) */}
+          <Card className="border-none shadow-lg">
+            <CardContent>
+              <h3 className="text-xl font-bold mb-3">Vendeur</h3>
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold">
+                    {user?.id === listing.userId ? "Moi" : "Vendeur"}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Membre depuis {formatTimeAgo(listing.createdAt)}
+                  </p>
+                </div>
+              </div>
+              {isAuthenticated && user?.id !== listing.userId && (
+                <div className="flex gap-4 mt-4">
+                  <Button variant="outline" className="flex-1">
+                    <Phone className="w-5 h-5 mr-2" />
+                    Appeler
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      setChatModal({
+                        isOpen: true,
+                        listing,
+                        sellerId: listing.userId,
+                      })
+                    }
+                    style={{ backgroundColor: "#f14247" }}
+                    className="flex-1 text-white"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Message
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Catégorie + date */}
-            <p className="text-sm text-gray-500 mb-3">
-              {listing.category || "Autre"} • publié{" "}
-              {formatTimeAgo(listing.createdAt)}
-            </p>
+          {/* Product Details */}
+          <Card className="border-none shadow-lg">
+            <CardContent>
+              <h3 className="text-xl font-bold mb-3">Détails</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {listing.brand && (
+                  <div>
+                    <span className="text-sm text-gray-500">Marque</span>
+                    <p className="font-medium">{listing.brand}</p>
+                  </div>
+                )}
+                {listing.model && (
+                  <div>
+                    <span className="text-sm text-gray-500">Modèle</span>
+                    <p className="font-medium">{listing.model}</p>
+                  </div>
+                )}
+                {listing.year && (
+                  <div>
+                    <span className="text-sm text-gray-500">Année</span>
+                    <p className="font-medium">{listing.year}</p>
+                  </div>
+                )}
+                {listing.mileage && (
+                  <div>
+                    <span className="text-sm text-gray-500">Kilométrage</span>
+                    <p className="font-medium">
+                      {Number(listing.mileage).toLocaleString()} km
+                    </p>
+                  </div>
+                )}
+                {listing.fuelType && (
+                  <div>
+                    <span className="text-sm text-gray-500">Carburant</span>
+                    <p className="font-medium capitalize">{listing.fuelType}</p>
+                  </div>
+                )}
+                {listing.transmission && (
+                  <div>
+                    <span className="text-sm text-gray-500">Transmission</span>
+                    <p className="font-medium capitalize">
+                      {listing.transmission}
+                    </p>
+                  </div>
+                )}
+                {listing.condition && (
+                  <div>
+                    <span className="text-sm text-gray-500">État</span>
+                    <p className="font-medium capitalize">
+                      {listing.condition}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Prix */}
-            <div className="mb-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {formatPrice(listing.price)}
-              </p>
-            </div>
-
-            {/* Description */}
-            {listing.description && (
-              <div className="mb-4">
-                <p className="text-gray-700 text-sm leading-5">
+          {/* Description */}
+          {listing.description && (
+            <Card className="border-none shadow-lg">
+              <CardContent>
+                <h3 className="text-xl font-bold mb-3">Description</h3>
+                <p className="text-gray-700 whitespace-pre-wrap">
                   {listing.description}
                 </p>
-              </div>
-            )}
-
-            {/* Condition */}
-            {listing.condition && (
-              <div className="mb-4">
-                <p className="text-sm text-gray-900">
-                  <span className="font-medium">Condition</span>{" "}
-                  <span className="capitalize">{listing.condition}</span>
-                </p>
-              </div>
-            )}
-
-            {/* Où se rencontrer */}
-            <div className="mb-4 border-t pt-2">
-              <div className="flex items-center justify-between py-1">
-                <span className="text-sm font-medium text-gray-900">
-                  Où se rencontrer
-                </span>
-                <svg
-                  className="w-4 h-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Statistiques */}
-            <div className="mb-6">
-              <p className="text-sm text-gray-500">
-                {listing.views || 4} chats • {listing.likes || 1} favoris • 75
-                vues
-              </p>
-            </div>
-
-            {/* Bouton rouge principal */}
-            {isAuthenticated && user?.id !== listing.userId && (
-              <div className="mb-4">
-                <Button
-                  onClick={() =>
-                    setChatModal({
-                      isOpen: true,
-                      listing,
-                      sellerId: listing.userId,
-                    })
-                  }
-                  className="w-full bg-[#f14247] hover:bg-red-600 text-white py-3 text-base font-medium rounded-lg"
-                >
-                  Contacter le vendeur
-                </Button>
-              </div>
-            )}
-
-            {/* Nom vendeur */}
-            <div className="text-left">
-              <p className="font-bold text-gray-900">
-                {user?.id === listing.userId ? "Moi" : "Frankie"}
-              </p>
-              <p className="text-sm text-gray-500">Tunis</p>
-            </div>
-          </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
 
