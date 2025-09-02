@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatModal from "@/components/ChatModal";
+import { MiniMap } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -266,6 +267,29 @@ export default function ProductDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Location */}
+          {listing.location && (
+            <Card className="border-none shadow-lg">
+              <CardContent>
+                <h3 className="text-xl font-bold mb-3 flex items-center">
+                  <MapPin className="w-5 h-5 mr-2 text-primary" />
+                  Localisation
+                </h3>
+                <div className="space-y-4">
+                  <p className="text-gray-700 font-medium">{listing.location}</p>
+                  {listing.latitude && listing.longitude && (
+                    <MiniMap
+                      latitude={parseFloat(listing.latitude)}
+                      longitude={parseFloat(listing.longitude)}
+                      location={listing.location}
+                      className="h-48"
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Description */}
           {listing.description && (

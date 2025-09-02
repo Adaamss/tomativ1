@@ -11,6 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { LocationPicker } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,6 +79,7 @@ export default function CreateListing() {
   const [step, setStep] = useState(1);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState({ name: "", lat: 36.8065, lng: 10.1815 });
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -148,6 +150,8 @@ export default function CreateListing() {
         currency: "TND",
         categoryId: data.categoryId,
         location: data.location,
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng,
         condition: data.condition || undefined,
         images: uploadedImages.length > 0 ? uploadedImages : undefined,
       };
@@ -376,6 +380,94 @@ export default function CreateListing() {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              placeholder="Décrivez votre annonce..."
+                              className="h-20"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prix (TND)</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              placeholder="0"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Localisation</FormLabel>
+                          <FormControl>
+                            <LocationPicker
+                              value={field.value}
+                              latitude={selectedLocation.lat}
+                              longitude={selectedLocation.lng}
+                              onChange={(name, lat, lng) => {
+                                field.onChange(name);
+                                setSelectedLocation({ name, lat, lng });
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Upload Images */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Photos</label>
+                      <ObjectUploader
+                        maxNumberOfFiles={5}
+                        maxFileSize={10485760} // 10MB
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleUploadComplete}
+                        buttonClassName="w-full"
+                      >
+                        <div className="flex items-center justify-center py-4">
+                          <Upload className="w-6 h-6 mr-2" />
+                          Ajouter des photos ({uploadedImages.length}/5)
+                        </div>
+                      </ObjectUploader>
+                      {uploadedImages.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {uploadedImages.map((img, idx) => (
+                            <div key={idx} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                              <img
+                                src={img}
+                                alt={`Upload ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 
