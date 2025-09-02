@@ -394,11 +394,40 @@ export default function CreateListing() {
           </div>
 
           <div className="p-6">
-            {/* DEBUG */}
-            <div className="mb-4 p-4 bg-gray-100 text-sm">
-              <div>Current step: {step}</div>
-              <div>Selected category slug: {selectedCategorySlug}</div>
-              <div>Categories loaded: {categories.length}</div>
+            {/* Progress Steps */}
+            <div className="mb-8">
+              <div className="flex items-center justify-center space-x-8">
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                  }`}>
+                    1
+                  </div>
+                  <span className="ml-2 text-sm font-medium text-foreground">Catégorie</span>
+                </div>
+                
+                <div className={`w-8 h-1 ${step >= 2 ? 'bg-primary' : 'bg-secondary'}`} />
+                
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                  }`}>
+                    2
+                  </div>
+                  <span className="ml-2 text-sm font-medium text-foreground">Détails</span>
+                </div>
+                
+                <div className={`w-8 h-1 ${step >= 3 ? 'bg-primary' : 'bg-secondary'}`} />
+                
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                  }`}>
+                    3
+                  </div>
+                  <span className="ml-2 text-sm font-medium text-foreground">Publication</span>
+                </div>
+              </div>
             </div>
             
             <Form {...form}>
