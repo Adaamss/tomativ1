@@ -28,17 +28,24 @@ export function SupportChat({ onClose }: SupportChatProps) {
   // Create initial support ticket
   const createTicketMutation = useMutation({
     mutationFn: async (): Promise<SupportTicket> => {
-      return await apiRequest('POST', '/api/support/tickets', {
+      const response = await apiRequest('POST', '/api/support/tickets', {
         subject: 'Chat avec Chattomati',
         category: 'general',
         priority: 'medium',
         userEmail: (user as any)?.email || 'anonymous@tomati.com',
         userName: user ? `${(user as any).firstName} ${(user as any).lastName}` : 'Utilisateur Anonyme'
-      }) as SupportTicket;
+      });
+      
+      console.log('Ticket created:', response);
+      return response as SupportTicket;
     },
     onSuccess: (ticket: SupportTicket) => {
+      console.log('Setting current ticket:', ticket);
       setCurrentTicket(ticket);
       setIsInitialized(true);
+    },
+    onError: (error) => {
+      console.error('Failed to create ticket:', error);
     }
   });
 
@@ -73,10 +80,11 @@ export function SupportChat({ onClose }: SupportChatProps) {
 
   // Initialize chat on component mount
   useEffect(() => {
-    if (!isInitialized) {
+    if (!isInitialized && !createTicketMutation.isPending) {
+      console.log('Initializing chat - creating ticket...');
       createTicketMutation.mutate();
     }
-  }, [isInitialized]);
+  }, [isInitialized, createTicketMutation.isPending]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -84,10 +92,12 @@ export function SupportChat({ onClose }: SupportChatProps) {
   }, [messages]);
 
   const handleSendMessage = () => {
+    console.log('Attempting to send message, ticket:', currentTicket);
     if (newMessage.trim() && !sendMessageMutation.isPending && currentTicket?.id) {
+      console.log('Sending message to ticket:', currentTicket.id);
       sendMessageMutation.mutate(newMessage.trim());
     } else if (!currentTicket?.id) {
-      console.error('Cannot send message: No ticket available');
+      console.error('Cannot send message: No ticket available. Current ticket:', currentTicket);
     }
   };
 
@@ -190,13 +200,15 @@ export function SupportChat({ onClose }: SupportChatProps) {
                 </Button>
               </div>
               
-              <div className="text-xs text-gray-500 mt-2">
-                Ticket #{currentTicket?.id?.slice(-8)}
-              </div>
+              {currentTicket?.id && (
+                <div className="text-xs text-gray-500 mt-2">
+                  Ticket #{currentTicket.id.slice(-8)}
+                </div>
+              )}
             </DialogHeader>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.map((message, index: number) => {
           const isUser = message.senderType === 'user';
           const isBot = message.senderType === 'bot';
