@@ -7,6 +7,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ChatModal from "@/components/ChatModal";
+import HeroSlider from "@/components/HeroSlider";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import type { Listing, Category } from "@shared/schema";
@@ -37,7 +38,10 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-36 pb-20">
+      <main className="pt-16 pb-20">
+        {/* Hero Slider */}
+        <HeroSlider />
+        
         {/* Products Header */}
         <div className="px-4 py-4 bg-white border-b border-border">
           <div className="flex items-center justify-between">
