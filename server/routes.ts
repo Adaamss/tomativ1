@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { authenticateToken, hashPassword, comparePassword, generateToken, generateResetToken, type AuthenticatedRequest } from "./auth";
-import { insertListingSchema, insertSupportTicketSchema, insertSupportMessageSchema } from "@shared/schema";
+import { insertListingSchema, insertSupportTicketSchema, insertSupportMessageSchema, insertReviewSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -888,6 +888,98 @@ Tomati - La marketplace N°1 en Tunisie !`;
     
     return null; // No specific response, let human agent handle
   }
+
+  // Review API endpoints
+  app.get('/api/listings/:id/reviews', async (req, res) => {
+    try {
+      const reviews = await storage.getReviewsByListing(req.params.id);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
+    }
+  });
+
+  app.post('/api/listings/:id/reviews', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const listingId = req.params.id;
+      
+      // Validate that the listing exists
+      const listing = await storage.getListingById(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // Prevent users from reviewing their own listings
+      if (listing.userId === userId) {
+        return res.status(400).json({ message: "Cannot review your own listing" });
+      }
+
+      const reviewData = insertReviewSchema.parse({
+        ...req.body,
+        listingId,
+        reviewerId: userId,
+        sellerId: listing.userId
+      });
+
+      const review = await storage.createReview(reviewData);
+      res.status(201).json(review);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review data", errors: error.errors });
+      }
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  app.get('/api/sellers/:sellerId/reviews', async (req, res) => {
+    try {
+      const reviews = await storage.getReviewsBySeller(req.params.sellerId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching seller reviews:", error);
+      res.status(500).json({ message: "Failed to fetch seller reviews" });
+    }
+  });
+
+  app.get('/api/sellers/:sellerId/rating', async (req, res) => {
+    try {
+      const rating = await storage.getAverageRating(req.params.sellerId);
+      res.json(rating);
+    } catch (error) {
+      console.error("Error fetching average rating:", error);
+      res.status(500).json({ message: "Failed to fetch average rating" });
+    }
+  });
+
+  app.post('/api/reviews/:reviewId/vote', authenticateToken as any, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const { voteType } = req.body;
+      
+      if (!['helpful', 'not_helpful', 'report'].includes(voteType)) {
+        return res.status(400).json({ message: "Invalid vote type" });
+      }
+
+      const vote = await storage.voteReview(userId, req.params.reviewId, voteType);
+      res.json(vote);
+    } catch (error) {
+      console.error("Error voting on review:", error);
+      res.status(500).json({ message: "Failed to vote on review" });
+    }
+  });
+
+  app.get('/api/reviews/:reviewId/votes', async (req, res) => {
+    try {
+      const votes = await storage.getReviewVoteCounts(req.params.reviewId);
+      res.json(votes);
+    } catch (error) {
+      console.error("Error fetching review votes:", error);
+      res.status(500).json({ message: "Failed to fetch review votes" });
+    }
+  });
 
   const httpServer = createServer(app);
 

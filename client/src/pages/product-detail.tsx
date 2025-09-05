@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import {
   Heart,
@@ -10,6 +10,7 @@ import {
   MapPin,
   Clock,
   User,
+  Star,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -19,9 +20,15 @@ import ChatModal from "@/components/ChatModal";
 import { MiniMap } from "@/components/LocationPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useLikes } from "@/hooks/useLikes";
-import type { Listing } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { Listing, Review, User as UserType } from "@shared/schema";
+import StarRating from "@/components/StarRating";
+import ReviewCard from "@/components/ReviewCard";
+import ReviewForm from "@/components/ReviewForm";
 
 // Typage pour user
 interface AuthUser {
@@ -50,7 +57,44 @@ export default function ProductDetail() {
     enabled: !!listingId,
   });
 
+  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<Review[]>({
+    queryKey: [`/api/listings/${listingId}/reviews`],
+    enabled: !!listingId,
+  });
+
+  const { data: sellerRating } = useQuery<{ average: number; count: number }>({
+    queryKey: [`/api/sellers/${listing?.userId}/rating`],
+    enabled: !!listing?.userId,
+  });
+
   const { isLiked, toggleLike, isToggling } = useLikes(listingId || "");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const voteReviewMutation = useMutation({
+    mutationFn: async ({ reviewId, voteType }: { reviewId: string; voteType: 'helpful' | 'not_helpful' | 'report' }) => {
+      return await apiRequest('POST', `/api/reviews/${reviewId}/vote`, { voteType });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}/reviews`] });
+      toast({
+        title: "Vote enregistré",
+        description: "Votre vote a été pris en compte.",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible d'enregistrer votre vote.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleVoteReview = (reviewId: string, voteType: 'helpful' | 'not_helpful' | 'report') => {
+    voteReviewMutation.mutate({ reviewId, voteType });
+  };
 
   const formatPrice = (price: string | null) =>
     !price || Number(price) === 0
@@ -302,6 +346,83 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Reviews Section */}
+          <Card className="border-none shadow-lg">
+            <CardContent>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold flex items-center">
+                  <Star className="w-5 h-5 mr-2 text-yellow-400" />
+                  Avis clients
+                </h3>
+                {sellerRating && sellerRating.count > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <StarRating 
+                      rating={sellerRating.average} 
+                      size="sm" 
+                      showValue 
+                      readOnly 
+                    />
+                    <span className="text-sm text-gray-600">
+                      ({sellerRating.count} avis)
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Review Form - Only show if user is authenticated and not the owner */}
+              {isAuthenticated && user?.id !== listing.userId && (
+                <div className="mb-8">
+                  <ReviewForm
+                    listingId={listing.id}
+                    sellerId={listing.userId}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}/reviews`] });
+                      queryClient.invalidateQueries({ queryKey: [`/api/sellers/${listing.userId}/rating`] });
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Reviews List */}
+              <div className="space-y-6">
+                {reviewsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="text-gray-600 mt-2">Chargement des avis...</p>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <>
+                    <div className="text-sm text-gray-600 mb-4">
+                      {reviews.length} avis pour ce vendeur
+                    </div>
+                    {reviews.map((review) => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        currentUserId={user?.id}
+                        onVote={handleVoteReview}
+                        className="mb-4"
+                        data-testid={`review-${review.id}`}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">
+                        Aucun avis pour le moment
+                      </h4>
+                      <p className="text-gray-600">
+                        Soyez le premier à donner votre avis sur ce vendeur !
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
 

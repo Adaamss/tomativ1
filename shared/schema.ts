@@ -215,6 +215,40 @@ export const supportAgents = pgTable("support_agents", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Reviews and ratings table
+export const reviews = pgTable("reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => listings.id),
+  reviewerId: varchar("reviewer_id").notNull().references(() => users.id),
+  sellerId: varchar("seller_id").notNull().references(() => users.id), // The user being reviewed
+  rating: integer("rating").notNull(), // 1-5 star rating
+  title: varchar("title"),
+  comment: text("comment"),
+  isVerified: integer("is_verified").default(0), // 1 if purchase was verified
+  isAnonymous: integer("is_anonymous").default(0), // 1 if reviewer wants to be anonymous
+  status: varchar("status").default("published"), // published, pending, rejected, flagged
+  helpfulVotes: integer("helpful_votes").default(0), // how many found this helpful
+  reportCount: integer("report_count").default(0), // abuse reports
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_reviews_listing_id").on(table.listingId),
+  index("idx_reviews_seller_id").on(table.sellerId),
+  index("idx_reviews_reviewer_id").on(table.reviewerId),
+]);
+
+// Review helpful votes table (to track who voted)
+export const reviewVotes = pgTable("review_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reviewId: varchar("review_id").notNull().references(() => reviews.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  voteType: varchar("vote_type").notNull(), // helpful, not_helpful, report
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_review_votes_review_id").on(table.reviewId),
+  index("idx_review_votes_user_id").on(table.userId),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   listings: many(listings),
@@ -236,6 +270,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.id],
     references: [supportAgents.userId],
   }),
+  writtenReviews: many(reviews, { relationName: "reviewer" }),
+  receivedReviews: many(reviews, { relationName: "seller" }),
+  reviewVotes: many(reviewVotes),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -260,6 +297,7 @@ export const listingsRelations = relations(listings, ({ one, many }) => ({
   userLikes: many(userLikes),
   appointments: many(appointments),
   priceNegotiations: many(priceNegotiations),
+  reviews: many(reviews),
 }));
 
 export const userLikesRelations = relations(userLikes, ({ one }) => ({
@@ -396,6 +434,36 @@ export const supportAgentsRelations = relations(supportAgents, ({ one, many }) =
   assignedTickets: many(supportTickets, { relationName: "assignedAgent" }),
 }));
 
+// Review relations
+export const reviewsRelations = relations(reviews, ({ one, many }) => ({
+  listing: one(listings, {
+    fields: [reviews.listingId],
+    references: [listings.id],
+  }),
+  reviewer: one(users, {
+    fields: [reviews.reviewerId],
+    references: [users.id],
+    relationName: "reviewer",
+  }),
+  seller: one(users, {
+    fields: [reviews.sellerId],
+    references: [users.id],
+    relationName: "seller",
+  }),
+  votes: many(reviewVotes),
+}));
+
+export const reviewVotesRelations = relations(reviewVotes, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewVotes.reviewId],
+    references: [reviews.id],
+  }),
+  user: one(users, {
+    fields: [reviewVotes.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -470,6 +538,19 @@ export const insertSupportAgentSchema = createInsertSchema(supportAgents).omit({
   resolvedTickets: true,
 });
 
+export const insertReviewSchema = createInsertSchema(reviews).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  helpfulVotes: true,
+  reportCount: true,
+});
+
+export const insertReviewVoteSchema = createInsertSchema(reviewVotes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -495,3 +576,7 @@ export type InsertSupportMessage = z.infer<typeof insertSupportMessageSchema>;
 export type SupportMessage = typeof supportMessages.$inferSelect;
 export type InsertSupportAgent = z.infer<typeof insertSupportAgentSchema>;
 export type SupportAgent = typeof supportAgents.$inferSelect;
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type Review = typeof reviews.$inferSelect;
+export type InsertReviewVote = z.infer<typeof insertReviewVoteSchema>;
+export type ReviewVote = typeof reviewVotes.$inferSelect;

@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Eye, Heart, Share2, MapPin, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
 import type { Listing } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { useLikes } from "@/hooks/useLikes";
+import StarRating from "./StarRating";
 
 interface ProductCardProps {
   listing: Listing;
@@ -16,6 +18,12 @@ interface ProductCardProps {
 export default function ProductCard({ listing, onClick, onContactSeller }: ProductCardProps) {
   const { user, isAuthenticated } = useAuth();
   const { isLiked, toggleLike, isToggling } = useLikes(listing.id);
+  
+  // Fetch seller rating
+  const { data: sellerRating } = useQuery<{ average: number; count: number }>({
+    queryKey: [`/api/sellers/${listing.userId}/rating`],
+    enabled: !!listing.userId,
+  });
   
   const formatPrice = (price: string | null) => {
     if (!price || Number(price) === 0) return "Gratuit";
@@ -95,15 +103,31 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
           <span className="text-gray-500 bg-white px-3 py-1 rounded-full" data-testid={`text-time-${listing.id}`}>
             {formatTimeAgo(listing.createdAt)}
           </span>
-          <div className="flex items-center space-x-2">
-            <span className="flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded-full" data-testid={`text-views-${listing.id}`}>
-              <Eye className="w-3 h-3 mr-1" />
-              {listing.views || 0}
-            </span>
-            <span className="flex items-center px-2 py-1 rounded-full" style={{ backgroundColor: '#f1424720', color: '#f14247' }} data-testid={`text-likes-${listing.id}`}>
-              <Heart className="w-3 h-3 mr-1" />
-              {listing.likes || 0}
-            </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded-full" data-testid={`text-views-${listing.id}`}>
+                <Eye className="w-3 h-3 mr-1" />
+                {listing.views || 0}
+              </span>
+              <span className="flex items-center px-2 py-1 rounded-full" style={{ backgroundColor: '#f1424720', color: '#f14247' }} data-testid={`text-likes-${listing.id}`}>
+                <Heart className="w-3 h-3 mr-1" />
+                {listing.likes || 0}
+              </span>
+            </div>
+            
+            {/* Display seller rating if available */}
+            {sellerRating && sellerRating.count > 0 && (
+              <div className="flex items-center space-x-1" data-testid={`rating-seller-${listing.id}`}>
+                <StarRating 
+                  rating={sellerRating.average} 
+                  size="sm" 
+                  readOnly 
+                />
+                <span className="text-xs text-gray-600">
+                  ({sellerRating.count})
+                </span>
+              </div>
+            )}
           </div>
         </div>
         

@@ -7,6 +7,8 @@ import {
   userLikes,
   supportTickets,
   supportMessages,
+  reviews,
+  reviewVotes,
   type User,
   type UpsertUser,
   type Category,
@@ -23,6 +25,10 @@ import {
   type InsertSupportTicket,
   type SupportMessage,
   type InsertSupportMessage,
+  type Review,
+  type InsertReview,
+  type ReviewVote,
+  type InsertReviewVote,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
@@ -70,6 +76,20 @@ export interface IStorage {
   updateSupportTicket(id: string, ticketData: Partial<InsertSupportTicket>): Promise<SupportTicket | undefined>;
   createSupportMessage(messageData: InsertSupportMessage): Promise<SupportMessage>;
   getSupportMessagesByTicket(ticketId: string): Promise<SupportMessage[]>;
+  
+  // Review operations
+  createReview(reviewData: InsertReview): Promise<Review>;
+  getReviewsByListing(listingId: string): Promise<Review[]>;
+  getReviewsBySeller(sellerId: string): Promise<Review[]>;
+  getReviewById(id: string): Promise<Review | undefined>;
+  updateReview(id: string, reviewData: Partial<InsertReview>): Promise<Review | undefined>;
+  deleteReview(id: string): Promise<void>;
+  getAverageRating(sellerId: string): Promise<{ average: number; count: number }>;
+  
+  // Review vote operations
+  voteReview(userId: string, reviewId: string, voteType: 'helpful' | 'not_helpful' | 'report'): Promise<ReviewVote>;
+  getUserVoteForReview(userId: string, reviewId: string): Promise<ReviewVote | undefined>;
+  getReviewVoteCounts(reviewId: string): Promise<{ helpful: number; not_helpful: number; report: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -266,46 +286,12 @@ export class DatabaseStorage implements IStorage {
 
   async getUserLikedListings(userId: string): Promise<Listing[]> {
     return await db
-      .select({
-        id: listings.id,
-        title: listings.title,
-        description: listings.description,
-        price: listings.price,
-        currency: listings.currency,
-        categoryId: listings.categoryId,
-        userId: listings.userId,
-        location: listings.location,
-        latitude: listings.latitude,
-        longitude: listings.longitude,
-        images: listings.images,
-        brand: listings.brand,
-        model: listings.model,
-        year: listings.year,
-        mileage: listings.mileage,
-        fuelType: listings.fuelType,
-        transmission: listings.transmission,
-        propertyType: listings.propertyType,
-        surface: listings.surface,
-        rooms: listings.rooms,
-        bedrooms: listings.bedrooms,
-        bathrooms: listings.bathrooms,
-        floor: listings.floor,
-        jobType: listings.jobType,
-        experience: listings.experience,
-        salary: listings.salary,
-        sector: listings.sector,
-        condition: listings.condition,
-        features: listings.features,
-        views: listings.views,
-        likes: listings.likes,
-        isActive: listings.isActive,
-        createdAt: listings.createdAt,
-        updatedAt: listings.updatedAt,
-      })
+      .select()
       .from(userLikes)
       .innerJoin(listings, eq(userLikes.listingId, listings.id))
       .where(and(eq(userLikes.userId, userId), eq(listings.isActive, 1)))
-      .orderBy(desc(userLikes.createdAt));
+      .orderBy(desc(userLikes.createdAt))
+      .then(rows => rows.map(row => row.listings));
   }
 
   // Message operations
@@ -426,6 +412,138 @@ export class DatabaseStorage implements IStorage {
       .from(supportMessages)
       .where(eq(supportMessages.ticketId, ticketId))
       .orderBy(supportMessages.createdAt);
+  }
+
+  // Review operations
+  async createReview(reviewData: InsertReview): Promise<Review> {
+    const [review] = await db
+      .insert(reviews)
+      .values(reviewData)
+      .returning();
+    return review;
+  }
+
+  async getReviewsByListing(listingId: string): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.listingId, listingId), eq(reviews.status, "published")))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async getReviewsBySeller(sellerId: string): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.sellerId, sellerId), eq(reviews.status, "published")))
+      .orderBy(desc(reviews.createdAt));
+  }
+
+  async getReviewById(id: string): Promise<Review | undefined> {
+    const [review] = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.id, id));
+    return review;
+  }
+
+  async updateReview(id: string, reviewData: Partial<InsertReview>): Promise<Review | undefined> {
+    const [review] = await db
+      .update(reviews)
+      .set({ ...reviewData, updatedAt: new Date() })
+      .where(eq(reviews.id, id))
+      .returning();
+    return review;
+  }
+
+  async deleteReview(id: string): Promise<void> {
+    await db
+      .delete(reviews)
+      .where(eq(reviews.id, id));
+  }
+
+  async getAverageRating(sellerId: string): Promise<{ average: number; count: number }> {
+    const result = await db
+      .select({
+        average: sql<number>`ROUND(AVG(${reviews.rating})::numeric, 1)`,
+        count: sql<number>`COUNT(${reviews.id})::int`
+      })
+      .from(reviews)
+      .where(and(eq(reviews.sellerId, sellerId), eq(reviews.status, "published")));
+    
+    return {
+      average: result[0]?.average || 0,
+      count: result[0]?.count || 0
+    };
+  }
+
+  // Review vote operations
+  async voteReview(userId: string, reviewId: string, voteType: 'helpful' | 'not_helpful' | 'report'): Promise<ReviewVote> {
+    // First, remove any existing vote by this user for this review
+    await db
+      .delete(reviewVotes)
+      .where(and(eq(reviewVotes.userId, userId), eq(reviewVotes.reviewId, reviewId)));
+
+    // Insert the new vote
+    const [vote] = await db
+      .insert(reviewVotes)
+      .values({ userId, reviewId, voteType })
+      .returning();
+
+    // Update the review's vote counts
+    if (voteType === 'helpful') {
+      await db
+        .update(reviews)
+        .set({ 
+          helpfulVotes: sql`(
+            SELECT COUNT(*) FROM ${reviewVotes} 
+            WHERE ${reviewVotes.reviewId} = ${reviewId} 
+            AND ${reviewVotes.voteType} = 'helpful'
+          )`
+        })
+        .where(eq(reviews.id, reviewId));
+    } else if (voteType === 'report') {
+      await db
+        .update(reviews)
+        .set({ 
+          reportCount: sql`(
+            SELECT COUNT(*) FROM ${reviewVotes} 
+            WHERE ${reviewVotes.reviewId} = ${reviewId} 
+            AND ${reviewVotes.voteType} = 'report'
+          )`
+        })
+        .where(eq(reviews.id, reviewId));
+    }
+
+    return vote;
+  }
+
+  async getUserVoteForReview(userId: string, reviewId: string): Promise<ReviewVote | undefined> {
+    const [vote] = await db
+      .select()
+      .from(reviewVotes)
+      .where(and(eq(reviewVotes.userId, userId), eq(reviewVotes.reviewId, reviewId)));
+    return vote;
+  }
+
+  async getReviewVoteCounts(reviewId: string): Promise<{ helpful: number; not_helpful: number; report: number }> {
+    const result = await db
+      .select({
+        voteType: reviewVotes.voteType,
+        count: sql<number>`COUNT(*)::int`
+      })
+      .from(reviewVotes)
+      .where(eq(reviewVotes.reviewId, reviewId))
+      .groupBy(reviewVotes.voteType);
+
+    const counts = { helpful: 0, not_helpful: 0, report: 0 };
+    result.forEach(row => {
+      if (row.voteType === 'helpful') counts.helpful = row.count;
+      else if (row.voteType === 'not_helpful') counts.not_helpful = row.count;
+      else if (row.voteType === 'report') counts.report = row.count;
+    });
+
+    return counts;
   }
 }
 
