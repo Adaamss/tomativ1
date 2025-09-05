@@ -10,6 +10,7 @@ import { Calendar as CalendarIcon, Clock, MapPin } from "lucide-react";
 import { fr } from "date-fns/locale";
 import { format } from "date-fns";
 import type { Listing } from "@shared/schema";
+import LocationInput from "./LocationInput";
 
 interface AppointmentCalendarProps {
   isOpen: boolean;
@@ -159,11 +160,13 @@ export default function AppointmentCalendar({
               <MapPin className="w-4 h-4 mr-1" />
               Lieu de rendez-vous
             </Label>
-            <Input
-              placeholder="Adresse ou lieu de rencontre"
+            <LocationInput
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              data-testid="location-input"
+              onChange={setLocation}
+              placeholder="Chercher une adresse en Tunisie..."
+              onLocationSelect={(selectedLocation: { lat: number; lng: number; address: string }) => {
+                console.log('Lieu sélectionné:', selectedLocation);
+              }}
             />
           </div>
 
