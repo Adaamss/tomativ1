@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   resetToken: varchar("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
   emailVerified: integer("email_verified").default(0),
+  role: varchar("role").default("user"), // user, admin
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -90,6 +91,10 @@ export const listings = pgTable("listings", {
   views: integer("views").default(0),
   likes: integer("likes").default(0),
   isActive: integer("is_active").default(1),
+  isAd: integer("is_ad").default(0), // 0 = normal listing, 1 = publicité
+  adStatus: varchar("ad_status"), // pending, approved, rejected (for ad requests)
+  adApprovedAt: timestamp("ad_approved_at"),
+  adApprovedBy: varchar("ad_approved_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -249,6 +254,23 @@ export const reviewVotes = pgTable("review_votes", {
   index("idx_review_votes_user_id").on(table.userId),
 ]);
 
+// Ad requests table for managing advertisement requests
+export const adRequests = pgTable("ad_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => listings.id),
+  requestedBy: varchar("requested_by").notNull().references(() => users.id),
+  requestMessage: text("request_message"), // User's message explaining why they want this ad
+  adminMessage: text("admin_message"), // Admin's feedback message
+  status: varchar("status").default("pending"), // pending, approved, rejected
+  reviewedBy: varchar("reviewed_by").references(() => users.id), // Admin who reviewed
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_ad_requests_listing_id").on(table.listingId),
+  index("idx_ad_requests_status").on(table.status),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   listings: many(listings),
@@ -273,6 +295,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   writtenReviews: many(reviews, { relationName: "reviewer" }),
   receivedReviews: many(reviews, { relationName: "seller" }),
   reviewVotes: many(reviewVotes),
+  adRequests: many(adRequests, { relationName: "requester" }),
+  reviewedAdRequests: many(adRequests, { relationName: "reviewer" }),
+  approvedListings: many(listings, { relationName: "approvedBy" }),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -298,6 +323,12 @@ export const listingsRelations = relations(listings, ({ one, many }) => ({
   appointments: many(appointments),
   priceNegotiations: many(priceNegotiations),
   reviews: many(reviews),
+  adRequests: many(adRequests),
+  adApprover: one(users, {
+    fields: [listings.adApprovedBy],
+    references: [users.id],
+    relationName: "approvedBy",
+  }),
 }));
 
 export const userLikesRelations = relations(userLikes, ({ one }) => ({
@@ -464,6 +495,24 @@ export const reviewVotesRelations = relations(reviewVotes, ({ one }) => ({
   }),
 }));
 
+// Ad requests relations
+export const adRequestsRelations = relations(adRequests, ({ one }) => ({
+  listing: one(listings, {
+    fields: [adRequests.listingId],
+    references: [listings.id],
+  }),
+  requester: one(users, {
+    fields: [adRequests.requestedBy],
+    references: [users.id],
+    relationName: "requester",
+  }),
+  reviewer: one(users, {
+    fields: [adRequests.reviewedBy],
+    references: [users.id],
+    relationName: "reviewer",
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -551,6 +600,13 @@ export const insertReviewVoteSchema = createInsertSchema(reviewVotes).omit({
   createdAt: true,
 });
 
+export const insertAdRequestSchema = createInsertSchema(adRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reviewedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -580,3 +636,5 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 export type InsertReviewVote = z.infer<typeof insertReviewVoteSchema>;
 export type ReviewVote = typeof reviewVotes.$inferSelect;
+export type InsertAdRequest = z.infer<typeof insertAdRequestSchema>;
+export type AdRequest = typeof adRequests.$inferSelect;

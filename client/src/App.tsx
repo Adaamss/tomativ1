@@ -19,6 +19,12 @@ import CreateListing from "@/pages/create-listing";
 import ProductDetail from "@/pages/product-detail";
 import NotFound from "@/pages/not-found";
 
+// Admin pages
+import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminUsers from "@/pages/admin/Users";
+import AdminListings from "@/pages/admin/Listings";
+import AdminAdRequests from "@/pages/admin/AdRequests";
+
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -38,6 +44,14 @@ function Router() {
       <Route path="/messages" component={Messages} />
       <Route path="/profile" component={Profile} />
       <Route path="/create-listing" component={CreateListing} />
+      
+      {/* Admin routes */}
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/users" component={AdminUsers} />
+      <Route path="/admin/listings" component={AdminListings} />
+      <Route path="/admin/ad-requests" component={AdminAdRequests} />
+      
       <Route component={NotFound} />
     </Switch>
   );

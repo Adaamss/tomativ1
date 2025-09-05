@@ -9,6 +9,7 @@ import {
   supportMessages,
   reviews,
   reviewVotes,
+  adRequests,
   type User,
   type UpsertUser,
   type Category,
@@ -29,6 +30,8 @@ import {
   type InsertReview,
   type ReviewVote,
   type InsertReviewVote,
+  type AdRequest,
+  type InsertAdRequest,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
@@ -90,6 +93,23 @@ export interface IStorage {
   voteReview(userId: string, reviewId: string, voteType: 'helpful' | 'not_helpful' | 'report'): Promise<ReviewVote>;
   getUserVoteForReview(userId: string, reviewId: string): Promise<ReviewVote | undefined>;
   getReviewVoteCounts(reviewId: string): Promise<{ helpful: number; not_helpful: number; report: number }>;
+
+  // Admin operations
+  getAllUsers(): Promise<User[]>;
+  updateUserRole(userId: string, role: string): Promise<void>;
+  getAllListingsForAdmin(): Promise<Listing[]>;
+  updateListingStatus(listingId: string, isActive: number): Promise<void>;
+  createAdRequest(adRequestData: InsertAdRequest): Promise<AdRequest>;
+  getAllAdRequests(): Promise<AdRequest[]>;
+  updateAdRequestStatus(requestId: string, status: string, adminMessage?: string, reviewedBy?: string): Promise<void>;
+  approveAdRequest(listingId: string, approvedBy: string): Promise<void>;
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    totalListings: number;
+    totalActiveListings: number;
+    totalAds: number;
+    pendingAdRequests: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -544,6 +564,115 @@ export class DatabaseStorage implements IStorage {
     });
 
     return counts;
+  }
+
+  // Admin operations
+  async getAllUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt));
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  async getAllListingsForAdmin(): Promise<Listing[]> {
+    return await db
+      .select()
+      .from(listings)
+      .orderBy(desc(listings.createdAt));
+  }
+
+  async updateListingStatus(listingId: string, isActive: number): Promise<void> {
+    await db
+      .update(listings)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(listings.id, listingId));
+  }
+
+  async createAdRequest(adRequestData: InsertAdRequest): Promise<AdRequest> {
+    const [adRequest] = await db
+      .insert(adRequests)
+      .values(adRequestData)
+      .returning();
+    return adRequest;
+  }
+
+  async getAllAdRequests(): Promise<AdRequest[]> {
+    return await db
+      .select()
+      .from(adRequests)
+      .orderBy(desc(adRequests.createdAt));
+  }
+
+  async updateAdRequestStatus(requestId: string, status: string, adminMessage?: string, reviewedBy?: string): Promise<void> {
+    await db
+      .update(adRequests)
+      .set({ 
+        status, 
+        adminMessage, 
+        reviewedBy, 
+        reviewedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(adRequests.id, requestId));
+  }
+
+  async approveAdRequest(listingId: string, approvedBy: string): Promise<void> {
+    await db
+      .update(listings)
+      .set({ 
+        isAd: 1, 
+        adStatus: "approved",
+        adApprovedAt: new Date(),
+        adApprovedBy: approvedBy,
+        updatedAt: new Date() 
+      })
+      .where(eq(listings.id, listingId));
+  }
+
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    totalListings: number;
+    totalActiveListings: number;
+    totalAds: number;
+    pendingAdRequests: number;
+  }> {
+    const [totalUsersResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(users);
+    
+    const [totalListingsResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(listings);
+    
+    const [totalActiveListingsResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(listings)
+      .where(eq(listings.isActive, 1));
+    
+    const [totalAdsResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(listings)
+      .where(eq(listings.isAd, 1));
+    
+    const [pendingAdRequestsResult] = await db
+      .select({ count: sql<number>`COUNT(*)::int` })
+      .from(adRequests)
+      .where(eq(adRequests.status, "pending"));
+
+    return {
+      totalUsers: totalUsersResult?.count || 0,
+      totalListings: totalListingsResult?.count || 0,
+      totalActiveListings: totalActiveListingsResult?.count || 0,
+      totalAds: totalAdsResult?.count || 0,
+      pendingAdRequests: pendingAdRequestsResult?.count || 0,
+    };
   }
 }
 

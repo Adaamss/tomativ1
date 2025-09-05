@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { authenticateToken, generateToken, hashPassword, comparePassword, type AuthenticatedRequest } from "./simpleAuth";
-import { insertListingSchema, insertUserSchema, insertSupportTicketSchema, insertSupportMessageSchema, insertReviewSchema } from "@shared/schema";
+import { insertListingSchema, insertUserSchema, insertSupportTicketSchema, insertSupportMessageSchema, insertReviewSchema, insertAdRequestSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -11,6 +11,19 @@ import {
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import cookieParser from "cookie-parser";
+
+// Middleware pour vérifier le rôle admin
+const requireAdmin = async (req: AuthenticatedRequest, res: any, next: any) => {
+  try {
+    const user = await storage.getUser(req.user!.id);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to verify admin status" });
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Add cookie parser middleware
@@ -559,6 +572,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching review votes:", error);
       res.status(500).json({ message: "Failed to fetch review votes" });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.put('/api/admin/users/:userId/role', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userId } = req.params;
+      const { role } = req.body;
+      
+      if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      await storage.updateUserRole(userId, role);
+      res.json({ message: "User role updated successfully" });
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  app.get('/api/admin/listings', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const listings = await storage.getAllListingsForAdmin();
+      res.json(listings);
+    } catch (error) {
+      console.error("Error fetching admin listings:", error);
+      res.status(500).json({ message: "Failed to fetch listings" });
+    }
+  });
+
+  app.put('/api/admin/listings/:listingId/status', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { listingId } = req.params;
+      const { isActive } = req.body;
+      
+      await storage.updateListingStatus(listingId, isActive);
+      res.json({ message: "Listing status updated successfully" });
+    } catch (error) {
+      console.error("Error updating listing status:", error);
+      res.status(500).json({ message: "Failed to update listing status" });
+    }
+  });
+
+  app.get('/api/admin/ad-requests', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const adRequests = await storage.getAllAdRequests();
+      res.json(adRequests);
+    } catch (error) {
+      console.error("Error fetching ad requests:", error);
+      res.status(500).json({ message: "Failed to fetch ad requests" });
+    }
+  });
+
+  app.put('/api/admin/ad-requests/:requestId', authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { requestId } = req.params;
+      const { status, adminMessage } = req.body;
+      const reviewedBy = req.user!.id;
+      
+      await storage.updateAdRequestStatus(requestId, status, adminMessage, reviewedBy);
+      
+      // If approved, also update the listing
+      if (status === 'approved') {
+        // Get the ad request to find the listing ID
+        const adRequests = await storage.getAllAdRequests();
+        const adRequest = adRequests.find(r => r.id === requestId);
+        if (adRequest) {
+          await storage.approveAdRequest(adRequest.listingId, reviewedBy);
+        }
+      }
+      
+      res.json({ message: "Ad request updated successfully" });
+    } catch (error) {
+      console.error("Error updating ad request:", error);
+      res.status(500).json({ message: "Failed to update ad request" });
+    }
+  });
+
+  // Route pour les utilisateurs pour demander une publicité
+  app.post('/api/ad-requests', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const requestedBy = req.user!.id;
+      const { listingId, requestMessage } = req.body;
+      
+      const adRequestData = insertAdRequestSchema.parse({
+        listingId,
+        requestedBy,
+        requestMessage
+      });
+      
+      const adRequest = await storage.createAdRequest(adRequestData);
+      res.status(201).json(adRequest);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request data", errors: error.errors });
+      }
+      console.error("Error creating ad request:", error);
+      res.status(500).json({ message: "Failed to create ad request" });
     }
   });
 
