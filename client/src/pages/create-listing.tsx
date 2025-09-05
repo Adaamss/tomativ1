@@ -198,8 +198,8 @@ export default function CreateListing() {
         currency: "TND",
         categoryId: data.categoryId,
         location: data.location,
-        latitude: selectedLocation.lat,
-        longitude: selectedLocation.lng,
+        latitude: selectedLocation.lat.toString(),
+        longitude: selectedLocation.lng.toString(),
         condition: data.condition || undefined,
         images: uploadedImages.length > 0 ? uploadedImages : undefined,
       };
