@@ -8,6 +8,7 @@ import type { Listing } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { useLikes } from "@/hooks/useLikes";
 import StarRating from "./StarRating";
+import OptimizedImage from "./OptimizedImage";
 
 interface ProductCardProps {
   listing: Listing;
@@ -63,13 +64,14 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
       onClick={onClick}
       data-testid={`card-product-${listing.id}`}
     >
-      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative overflow-hidden">
+      <div className="aspect-video relative overflow-hidden">
         {mainImage ? (
-          <img 
+          <OptimizedImage
             src={mainImage} 
             alt={listing.title}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             data-testid={`img-product-${listing.id}`}
+            lazy={true}
           />
         ) : (
           <div className="flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 w-full h-full">

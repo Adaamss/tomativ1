@@ -26,10 +26,12 @@ export default function Home() {
   }>({ isOpen: false, listing: null, sellerId: '' });
   const [showSupportChat, setShowSupportChat] = useState(false);
 
-  const { data: listings = [], isLoading: listingsLoading } = useQuery<Listing[]>({
+  const { data: listingsResponse, isLoading: listingsLoading } = useQuery<{listings: Listing[], pagination: any}>({
     queryKey: ['/api/listings'],
     retry: false,
   });
+
+  const listings = listingsResponse?.listings || [];
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['/api/categories'],
@@ -129,7 +131,7 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">Soyez le premier à publier une annonce !</p>
               </div>
             ) : (
-              (viewAllProducts ? listings : listings.slice(0, 6)).map((listing) => (
+              (viewAllProducts ? listings : (listings || []).slice(0, 6)).map((listing) => (
                 <ProductCard 
                   key={listing.id} 
                   listing={listing}

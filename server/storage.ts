@@ -35,6 +35,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
+import memoize from "memoizee";
 
 // Interface for storage operations
 export interface IStorage {
@@ -113,6 +114,16 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Cache setup for frequently accessed data
+  private getCategoriesCache = memoize(this._getCategories.bind(this), {
+    maxAge: 5 * 60 * 1000, // 5 minutes
+  });
+
+  private getListingsCache = memoize(this._getListings.bind(this), {
+    maxAge: 2 * 60 * 1000, // 2 minutes
+    max: 100, // Maximum number of cache entries
+  });
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -165,9 +176,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id));
   }
 
-  // Category operations
-  async getCategories(): Promise<Category[]> {
+  // Category operations - Cached version
+  private async _getCategories(): Promise<Category[]> {
     return await db.select().from(categories);
+  }
+
+  async getCategories(): Promise<Category[]> {
+    return this.getCategoriesCache();
   }
 
   async createCategory(categoryData: InsertCategory): Promise<Category> {
@@ -186,8 +201,8 @@ export class DatabaseStorage implements IStorage {
     return category;
   }
 
-  // Listing operations
-  async getListings(limit = 20, offset = 0): Promise<Listing[]> {
+  // Listing operations - Optimized with caching but return full objects for now
+  private async _getListings(limit = 15, offset = 0): Promise<Listing[]> {
     return await db
       .select()
       .from(listings)
@@ -195,6 +210,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(listings.createdAt))
       .limit(limit)
       .offset(offset);
+  }
+
+  async getListings(limit = 15, offset = 0): Promise<Listing[]> {
+    return this.getListingsCache(limit, offset);
   }
 
   async getListingById(id: string): Promise<Listing | undefined> {

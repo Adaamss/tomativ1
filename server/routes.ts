@@ -206,9 +206,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Listing routes
   app.get('/api/listings', async (req, res) => {
     try {
-      const { category, search, page = 1, limit = 20 } = req.query;
-      const listings = await storage.getListings();
-      res.json(listings);
+      const { category, search, page = 1, limit = 15 } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = Math.min(parseInt(limit as string) || 15, 50); // Max 50 per request
+      const offset = (pageNum - 1) * limitNum;
+      
+      const listings = await storage.getListings(limitNum, offset);
+      
+      // Add cache headers for better client-side caching
+      res.set({
+        'Cache-Control': 'public, max-age=120, s-maxage=300', // 2min client, 5min CDN
+        'ETag': `"listings-${offset}-${limitNum}"`,
+      });
+      
+      res.json({
+        listings,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          hasMore: listings.length === limitNum
+        }
+      });
     } catch (error) {
       console.error("Error fetching listings:", error);
       res.status(500).json({ message: "Failed to fetch listings" });
