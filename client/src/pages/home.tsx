@@ -52,19 +52,6 @@ export default function Home() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-primary hover:text-primary" 
-                onClick={() => {
-                  queryClient.invalidateQueries({ queryKey: ['/api/listings'] });
-                  queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
-                }}
-                data-testid="button-refresh"
-              >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Actualiser
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
                 className="text-muted-foreground hover:text-foreground" 
                 onClick={() => setShowFilters(!showFilters)}
                 data-testid="button-filters"
