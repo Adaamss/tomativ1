@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertListingSchema, insertSupportTicketSchema, insertSupportMessageSchema, insertReviewSchema } from "@shared/schema";
+import { authenticateToken, generateToken, hashPassword, comparePassword, type AuthenticatedRequest } from "./simpleAuth";
+import { insertListingSchema, insertUserSchema, insertSupportTicketSchema, insertSupportMessageSchema, insertReviewSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -16,18 +16,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add cookie parser middleware
   app.use(cookieParser());
 
-  // Setup Replit authentication
-  await setupAuth(app);
-
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // Simple auth routes
+  app.post('/api/auth/register', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const { email, password, firstName, lastName } = req.body;
+
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ message: "Tous les champs sont requis" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ message: "Un compte existe déjà avec cette adresse email" });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+      });
+
+      // Generate token
+      const token = generateToken(user.id);
+
+      // Set cookie and return user
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json({ user: userWithoutPassword, token });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Erreur du serveur" });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email et mot de passe requis" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.password) {
+        return res.status(401).json({ message: "Identifiants incorrects" });
+      }
+
+      // Check password
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Identifiants incorrects" });
+      }
+
+      // Generate token
+      const token = generateToken(user.id);
+
+      // Set cookie and return user
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword, token });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Erreur du serveur" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ message: "Déconnexion réussie" });
+  });
+
+  app.get('/api/auth/user', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
+      }
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      res.status(500).json({ message: "Erreur lors de la récupération de l'utilisateur" });
     }
   });
 
@@ -132,9 +217,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/listings', isAuthenticated, async (req: any, res) => {
+  app.post('/api/listings', authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const listingData = insertListingSchema.parse({
         ...req.body,
         userId
@@ -151,9 +236,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/listings/:id', isAuthenticated, async (req: any, res) => {
+  app.put('/api/listings/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const listing = await storage.getListingById(req.params.id);
       
       if (!listing) {
@@ -180,9 +265,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete listing would be implemented here
 
   // Like routes
-  app.get('/api/listings/:id/like', isAuthenticated, async (req: any, res) => {
+  app.get('/api/listings/:id/like', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const liked = await storage.isUserLikedListing(userId, req.params.id);
       res.json({ liked, likeCount: 0 }); // Like count would be calculated here
     } catch (error) {
@@ -191,9 +276,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/listings/:id/like', isAuthenticated, async (req: any, res) => {
+  app.post('/api/listings/:id/like', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const result = await storage.toggleUserLike(userId, req.params.id);
       res.json({ liked: result.liked });
     } catch (error) {
@@ -203,9 +288,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message routes
-  app.get('/api/messages/:userId/:listingId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/messages/:userId/:listingId', authenticateToken, async (req: any, res) => {
     try {
-      const currentUserId = req.user.claims.sub;
+      const currentUserId = req.user!.id;
       const { userId, listingId } = req.params;
       
       // Get conversation between users for this listing
@@ -222,9 +307,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/messages', authenticateToken, async (req: any, res) => {
     try {
-      const senderId = req.user.claims.sub;
+      const senderId = req.user!.id;
       const { receiverId, listingId, content } = req.body;
 
       if (!receiverId || !content) {
@@ -245,9 +330,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/conversations', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const conversations = await storage.getConversationsByUser(userId);
       res.json(conversations);
     } catch (error) {
@@ -257,9 +342,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Support routes
-  app.post('/api/support/tickets', isAuthenticated, async (req: any, res) => {
+  app.post('/api/support/tickets', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const ticketData = insertSupportTicketSchema.parse({
         ...req.body,
         userId
@@ -276,9 +361,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/support/tickets', isAuthenticated, async (req: any, res) => {
+  app.get('/api/support/tickets', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const tickets = await storage.getSupportTickets();
       res.json(tickets.filter(t => t.userId === userId));
     } catch (error) {
@@ -287,9 +372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/support/tickets/:ticketId/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/support/tickets/:ticketId/messages', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const { ticketId } = req.params;
       
       const messageData = insertSupportMessageSchema.parse({
@@ -320,9 +405,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/listings/:id/reviews', isAuthenticated, async (req: any, res) => {
+  app.post('/api/listings/:id/reviews', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const listingId = req.params.id;
       
       // Validate that the listing exists
@@ -374,9 +459,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/reviews/:reviewId/vote', isAuthenticated, async (req: any, res) => {
+  app.post('/api/reviews/:reviewId/vote', authenticateToken, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user!.id;
       const { voteType } = req.body;
       
       if (!['helpful', 'not_helpful', 'report'].includes(voteType)) {
