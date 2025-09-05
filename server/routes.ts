@@ -16,7 +16,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add cookie parser middleware
   app.use(cookieParser());
 
-  // Simple auth routes
+  // Remove conflicting /api/login route that might interfere
+  // Simple auth routes  
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;

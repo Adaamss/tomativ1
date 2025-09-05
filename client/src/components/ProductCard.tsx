@@ -36,7 +36,7 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
       toggleLike();
     } else {
       // Redirect to login if not authenticated
-      window.location.href = '/api/login';
+      window.location.href = '/login';
     }
   };
 

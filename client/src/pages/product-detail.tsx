@@ -251,14 +251,14 @@ export default function ProductDetail() {
                     variant="outline" 
                     size="sm"
                     className="flex-1 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors"
-                    onClick={() => window.location.href = '/api/login'}
+                    onClick={() => window.location.href = '/login'}
                     data-testid="button-login-phone"
                   >
                     <Phone className="w-4 h-4 mr-2" />
                     Appeler
                   </Button>
                   <Button
-                    onClick={() => window.location.href = '/api/login'}
+                    onClick={() => window.location.href = '/login'}
                     className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md transition-all"
                     size="sm"
                     data-testid="button-login-chat"
@@ -436,7 +436,7 @@ export default function ProductDetail() {
                       Connectez-vous pour partager votre expérience avec ce vendeur
                     </p>
                     <Button
-                      onClick={() => window.location.href = '/api/login'}
+                      onClick={() => window.location.href = '/login'}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
                       data-testid="button-login-review"
                     >

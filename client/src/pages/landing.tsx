@@ -76,7 +76,7 @@ export default function Landing() {
           </Card>
           
           <Button 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/login'}
             className="bg-primary hover:bg-red-600 text-white px-8 py-3 text-lg"
             data-testid="button-login"
           >
