@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Calendar, User, Car, Phone, Video, MoreVertical, Check, CheckCheck } from "lucide-react";
+import { Send, Calendar, User, Car, Check, CheckCheck } from "lucide-react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -212,17 +212,6 @@ export default function ChatModal({
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground">
-                <Phone className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground">
-                <Video className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </div>
           </div>
         </DialogHeader>
 
