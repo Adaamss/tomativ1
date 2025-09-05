@@ -883,18 +883,27 @@ export default function CreateListing() {
                     onClick={() => {
                       console.log("=== BUTTON CLICKED ===");
                       console.log("Current step:", step);
+                      console.log("Selected category slug:", selectedCategorySlug);
+                      
                       const data = form.getValues();
                       console.log("Form data:", data);
+                      console.log("CategoryId from form:", data.categoryId);
+                      console.log("CategoryId exists:", !!data.categoryId);
                       
                       if (step === 1) {
-                        if (data.categoryId) {
-                          console.log("Step 1 OK, going to step 2");
+                        console.log("Processing step 1...");
+                        if (data.categoryId && data.categoryId.trim() !== "") {
+                          console.log("✅ Step 1 OK - Category found:", data.categoryId);
+                          console.log("Moving to step 2...");
                           setStep(2);
+                          console.log("Step updated to 2");
                         } else {
-                          console.log("Step 1 failed - no category");
+                          console.log("❌ Step 1 failed - no category or empty");
+                          console.log("categoryId value:", JSON.stringify(data.categoryId));
                           form.setError("categoryId", { message: "Veuillez sélectionner une catégorie" });
                         }
                       } else if (step === 2) {
+                        console.log("Processing step 2...");
                         // Validation selon la catégorie
                         const isValid = validateStep2(data);
                         if (isValid) {
@@ -904,6 +913,7 @@ export default function CreateListing() {
                           console.log("Step 2 failed - validation errors");
                         }
                       } else if (step === 3) {
+                        console.log("Processing step 3...");
                         // Validation finale
                         const isValid = validateStep3(data);
                         if (isValid) {
