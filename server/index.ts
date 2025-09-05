@@ -2,6 +2,42 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Environment validation for production deployment
+function validateEnvironment() {
+  const requiredVars = [];
+  const warnings = [];
+  
+  // Check JWT_SECRET - critical for authentication
+  if (!process.env.JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      requiredVars.push('JWT_SECRET');
+    } else {
+      warnings.push('JWT_SECRET not set, using fallback (not recommended for production)');
+    }
+  }
+  
+  // Check database connection
+  if (!process.env.DATABASE_URL) {
+    if (process.env.NODE_ENV === 'production') {
+      requiredVars.push('DATABASE_URL');
+    } else {
+      warnings.push('DATABASE_URL not set, database operations may fail');
+    }
+  }
+  
+  // Log warnings
+  if (warnings.length > 0) {
+    log('Environment warnings:');
+    warnings.forEach(warning => log(`  - ${warning}`));
+  }
+  
+  // Fail for missing required vars in production
+  if (requiredVars.length > 0) {
+    const missingVars = requiredVars.join(', ');
+    throw new Error(`Missing required environment variables: ${missingVars}. Please configure these in your deployment settings.`);
+  }
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -36,36 +72,64 @@ app.use((req, res, next) => {
   next();
 });
 
+// Graceful startup with error handling
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    // Validate environment variables before starting
+    log('Validating environment configuration...');
+    validateEnvironment();
+    log('Environment validation passed');
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Register routes and initialize server
+    log('Initializing server and registering routes...');
+    const server = await registerRoutes(app);
 
-    res.status(status).json({ message });
-    throw err;
-  });
+    // Global error handler
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+      res.status(status).json({ message });
+      // Don't throw error in production to prevent crashes
+      if (process.env.NODE_ENV !== 'production') {
+        throw err;
+      } else {
+        console.error('Application error:', err);
+      }
+    });
+
+    // Setup development or production serving
+    if (app.get("env") === "development") {
+      log('Setting up Vite development server...');
+      await setupVite(app, server);
+    } else {
+      log('Setting up static file serving for production...');
+      serveStatic(app);
+    }
+
+    // Start the server
+    const port = parseInt(process.env.PORT || '5000', 10);
+    log(`Starting server on port ${port}...`);
+    
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`✅ Server successfully started and serving on port ${port}`);
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to start application:', error);
+    console.error('Please check your environment configuration and try again.');
+    
+    // Graceful shutdown
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Application will exit due to critical startup error.');
+      process.exit(1);
+    } else {
+      // In development, don't exit so developer can fix the issue
+      console.error('Fix the above error and restart the application.');
+    }
   }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
 })();
