@@ -608,12 +608,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'open'
       });
 
-      // Create welcome message from bot
+      // Create welcome message from bot - Arabic & French
       await storage.createSupportMessage({
         ticketId: ticket.id,
         senderId: null,
         senderType: 'bot',
-        content: `👋 Bonjour ! Je suis Chattomati, votre assistant support. J'ai bien reçu votre demande "${subject}". Un de nos agents va prendre en charge votre ticket sous peu. En attendant, n'hésitez pas à me poser vos questions !`,
+        content: `🇹🇳 أهلاً وسهلاً في تومتي! 
+السلام عليكم ورحمة الله وبركاته
+
+👋 Bonjour et bienvenue sur Tomati !
+
+🤖 أنا شاتومتي، مساعدك الذكي باللغتين العربية والفرنسية
+Je suis Chattomati, votre assistant intelligent bilingue
+
+✅ تم استلام طلبك: "${subject}"
+Votre demande a été reçue: "${subject}"
+
+🚀 أقدر أساعدك فوراً بـ:
+Je peux vous aider immédiatement avec:
+
+🏠 العقارات والسيارات - Immobilier et automobiles
+💼 فرص العمل - Opportunités d'emploi  
+🛍️ البيع والشراء - Achat et vente
+📱 المشاكل التقنية - Support technique
+
+اكتب رسالتك وأنا هنا لمساعدتك! 
+Écrivez votre message et je suis là pour vous aider !`,
         messageType: 'text'
       });
 
@@ -657,12 +677,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageType: 'text'
       });
 
+      // Auto-reply with intelligent response (Arabic & French)
+      if (senderType === 'user' || !senderType) {
+        const autoResponse = generateIntelligentResponse(content);
+        if (autoResponse) {
+          setTimeout(async () => {
+            try {
+              await storage.createSupportMessage({
+                ticketId: req.params.id,
+                senderId: null,
+                senderType: 'bot',
+                content: autoResponse,
+                messageType: 'text'
+              });
+            } catch (error) {
+              console.error("Error sending auto-response:", error);
+            }
+          }, 1500); // Delay for natural conversation flow
+        }
+      }
+
       res.status(201).json(message);
     } catch (error) {
       console.error("Error creating support message:", error);
       res.status(500).json({ message: "Failed to create support message" });
     }
   });
+
+  // Intelligent response generator for Arabic & French
+  function generateIntelligentResponse(userMessage: string): string | null {
+    const msg = userMessage.toLowerCase();
+    
+    // Arabic greetings
+    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('أهلا')) {
+      return `🇹🇳 وعليكم السلام ورحمة الله وبركاته! أهلاً وسهلاً بك
+      
+✨ كيف يمكنني مساعدتك اليوم؟
+🏠 تبحث عن عقار؟ 
+🚗 تريد تبيع أو تشتري سيارة؟
+💼 تدور على شغل؟
+
+أنا هنا لمساعدتك في كل شيء!`;
+    }
+    
+    // French greetings
+    if (msg.includes('bonjour') || msg.includes('salut') || msg.includes('bonsoir')) {
+      return `👋 Bonjour ! Ravi de vous parler !
+
+🎯 Comment puis-je vous aider aujourd'hui ?
+🏡 Vous cherchez un logement ?
+🚙 Vous voulez vendre/acheter une voiture ?
+💼 Vous recherchez un emploi ?
+
+Je suis là pour vous accompagner !`;
+    }
+    
+    // Car related (Arabic)
+    if (msg.includes('سيارة') || msg.includes('عربية') || msg.includes('موتور')) {
+      return `🚗 مرحباً بك في قسم السيارات!
+
+✅ عندنا أحسن العروض:
+🔥 سيارات مستعملة بأسعار ممتازة
+💎 سيارات جديدة من أشهر الماركات
+🛠️ خدمة صيانة وقطع غيار
+📱 تقدر تنشر إعلانك مجاناً
+
+شنوا تحب بالضبط؟`;
+    }
+    
+    // Car related (French)
+    if (msg.includes('voiture') || msg.includes('auto') || msg.includes('véhicule')) {
+      return `🚗 Bienvenue dans notre section automobile !
+
+✨ Nous avons les meilleures offres :
+🔥 Voitures d'occasion à prix exceptionnels
+💎 Véhicules neufs des meilleures marques
+🛠️ Service de maintenance et pièces détachées
+📱 Publiez votre annonce gratuitement
+
+Que recherchez-vous exactement ?`;
+    }
+    
+    // Real estate (Arabic) 
+    if (msg.includes('بيت') || msg.includes('دار') || msg.includes('عقار') || msg.includes('شقة')) {
+      return `🏠 أهلاً بك في قسم العقارات!
+
+🌟 عروض مميزة:
+🏡 بيوت وفيلات للبيع والكراء
+🏢 شقق مفروشة وغير مفروشة
+🏬 محلات تجارية ومكاتب
+📍 في أحسن المناطق بتونس
+
+وين تحب تسكن؟`;
+    }
+    
+    // Real estate (French)
+    if (msg.includes('maison') || msg.includes('appartement') || msg.includes('immobilier') || msg.includes('logement')) {
+      return `🏠 Bienvenue dans notre section immobilière !
+
+🌟 Offres exceptionnelles :
+🏡 Maisons et villas à vendre/louer
+🏢 Appartements meublés et non meublés
+🏬 Locaux commerciaux et bureaux
+📍 Dans les meilleurs quartiers de Tunisie
+
+Où souhaitez-vous habiter ?`;
+    }
+    
+    // Jobs (Arabic)
+    if (msg.includes('شغل') || msg.includes('عمل') || msg.includes('وظيفة') || msg.includes('خدمة')) {
+      return `💼 مرحباً بك في قسم الوظائف!
+
+🚀 فرص عمل ممتازة:
+👨‍💻 وظائف في التكنولوجيا
+🏢 وظائف إدارية ومحاسبة
+🛠️ أعمال حرفية ومهنية
+🎓 فرص للخريجين الجدد
+
+شنو نوع الشغل اللي تدور عليه؟`;
+    }
+    
+    // Jobs (French)  
+    if (msg.includes('emploi') || msg.includes('travail') || msg.includes('job') || msg.includes('poste')) {
+      return `💼 Bienvenue dans notre section emploi !
+
+🚀 Opportunités exceptionnelles :
+👨‍💻 Emplois dans la technologie
+🏢 Postes administratifs et comptabilité
+🛠️ Métiers artisanaux et professionnels
+🎓 Opportunités pour jeunes diplômés
+
+Quel type d'emploi recherchez-vous ?`;
+    }
+    
+    // Technical issues (Arabic)
+    if (msg.includes('مشكلة') || msg.includes('خطأ') || msg.includes('تقني') || msg.includes('لا يعمل')) {
+      return `🔧 لا تقلق، أنا هنا لحل مشكلتك!
+
+⚡ دعني أساعدك:
+1️⃣ وضّحلي المشكلة بالتفصيل
+2️⃣ جرب تحديث الصفحة
+3️⃣ امسح الكاش والكوكيز
+4️⃣ جرب متصفح آخر
+
+إذا المشكلة باقية، اكتبلي رقمك وأتصل بك فوراً!`;
+    }
+    
+    // Technical issues (French)
+    if (msg.includes('problème') || msg.includes('erreur') || msg.includes('technique') || msg.includes('marche pas')) {
+      return `🔧 Pas de souci, je suis là pour résoudre votre problème !
+
+⚡ Laissez-moi vous aider :
+1️⃣ Décrivez-moi le problème en détail
+2️⃣ Essayez de rafraîchir la page
+3️⃣ Videz le cache et les cookies
+4️⃣ Testez avec un autre navigateur
+
+Si le problème persiste, donnez-moi votre numéro et je vous appelle immédiatement !`;
+    }
+    
+    // Prices (Arabic)
+    if (msg.includes('سعر') || msg.includes('ثمن') || msg.includes('فلوس') || msg.includes('مال')) {
+      return `💰 أسعارنا هي الأحسن في السوق!
+
+💎 خدماتنا:
+✅ نشر الإعلانات مجاني تماماً
+🎯 خدمات مميزة بأسعار رمزية
+📱 دعم فني 24/7 مجاني
+🚀 ترويج متقدم للإعلانات
+
+عايز تعرف سعر شنو بالضبط؟`;
+    }
+    
+    // Prices (French)  
+    if (msg.includes('prix') || msg.includes('coût') || msg.includes('tarif') || msg.includes('gratuit')) {
+      return `💰 Nos prix sont les meilleurs du marché !
+
+💎 Nos services :
+✅ Publication d'annonces totalement gratuite
+🎯 Services premium à prix symboliques
+📱 Support technique 24/7 gratuit  
+🚀 Promotion avancée d'annonces
+
+Quel prix souhaitez-vous connaître exactement ?`;
+    }
+    
+    // Thanks (Arabic)
+    if (msg.includes('شكرا') || msg.includes('مرسي') || msg.includes('يعطيك') || msg.includes('بارك الله')) {
+      return `🌟 العفو حبيبي! دي خدمتنا
+
+🇹🇳 احنا هنا عشانكم دايماً
+💪 أي حاجة تانية تحتاجها؟
+📱 متنساش تنزل التطبيق عالموبايل
+⭐ وننتظر تقييمك الحلو
+
+تومتي - السوق الإلكتروني الأول في تونس!`;
+    }
+    
+    // Thanks (French)
+    if (msg.includes('merci') || msg.includes('remercie') || msg.includes('parfait') || msg.includes('super')) {
+      return `🌟 Je vous en prie ! C'est un plaisir de vous aider
+
+🇹🇳 Nous sommes toujours là pour vous
+💪 Avez-vous besoin d'autre chose ?
+📱 N'oubliez pas de télécharger notre app mobile
+⭐ Votre avis nous interesse beaucoup
+
+Tomati - La marketplace N°1 en Tunisie !`;
+    }
+    
+    return null; // No specific response, let human agent handle
+  }
 
   const httpServer = createServer(app);
 

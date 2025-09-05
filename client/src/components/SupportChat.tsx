@@ -52,7 +52,10 @@ export function SupportChat({ onClose }: SupportChatProps) {
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      if (!currentTicket) throw new Error('No ticket');
+      if (!currentTicket?.id) {
+        console.error('No ticket ID available');
+        throw new Error('Ticket non disponible');
+      }
       return await apiRequest('POST', `/api/support/tickets/${currentTicket.id}/messages`, {
         content,
         senderType: 'user'
@@ -81,8 +84,10 @@ export function SupportChat({ onClose }: SupportChatProps) {
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim() && !sendMessageMutation.isPending) {
+    if (newMessage.trim() && !sendMessageMutation.isPending && currentTicket?.id) {
       sendMessageMutation.mutate(newMessage.trim());
+    } else if (!currentTicket?.id) {
+      console.error('Cannot send message: No ticket available');
     }
   };
 
@@ -127,22 +132,22 @@ export function SupportChat({ onClose }: SupportChatProps) {
     {
       icon: "💬",
       text: "J'ai une question sur une annonce",
-      message: "Bonjour, j'ai une question concernant une annonce sur votre site. Pouvez-vous m'aider ?"
+      message: "مرحباً، عندي سؤال حول إعلان في موقعكم. ممكن تساعدوني؟\nBonjour, j'ai une question concernant une annonce sur votre site. Pouvez-vous m'aider ?"
     },
     {
-      icon: "🔧",
+      icon: "🔧", 
       text: "J'ai un problème technique",
-      message: "Je rencontre un problème technique sur le site. Pouvez-vous m'assister ?"
+      message: "عندي مشكلة تقنية في الموقع. ممكن تساعدوني؟\nJe rencontre un problème technique sur le site. Pouvez-vous m'assister ?"
     },
     {
       icon: "📞",
       text: "Demander un appel",
-      message: "J'aimerais être contacté par téléphone. Pouvez-vous organiser un appel ?"
+      message: "أريد أن أتكلم معكم بالتليفون. ممكن تنظموا مكالمة؟\nJ'aimerais être contacté par téléphone. Pouvez-vous organiser un appel ?"
     },
     {
       icon: "💰",
-      text: "Question sur les prix",
-      message: "J'ai une question concernant les prix ou la facturation."
+      text: "Question sur les prix", 
+      message: "عندي سؤال حول الأسعار والفوترة\nJ'ai une question concernant les prix ou la facturation."
     }
   ];
 
