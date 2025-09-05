@@ -246,6 +246,10 @@ export class DatabaseStorage implements IStorage {
       .insert(listings)
       .values(listingData)
       .returning();
+    
+    // Clear the listings cache so new listing appears immediately
+    this.getListingsCache.clear();
+    
     return listing;
   }
 
