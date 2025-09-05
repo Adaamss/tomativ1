@@ -20,7 +20,8 @@ import ReviewCard from "@/components/ReviewCard";
 import StarRating from "@/components/StarRating";
 import ChatModal from "@/components/ChatModal";
 
-export default function ProductDetail({ listingId }: { listingId: string }) {
+export default function ProductDetail({ id }: { id: string }) {
+  const listingId = id;
   const [, setLocation] = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
