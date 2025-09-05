@@ -53,12 +53,12 @@ export const categories = pgTable("categories", {
 
 export const listings = pgTable("listings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: varchar("title").notNull(),
+  title: varchar("title"),
   description: text("description"),
   price: decimal("price", { precision: 10, scale: 2 }),
   currency: varchar("currency").default("TND"),
-  categoryId: varchar("category_id").notNull().references(() => categories.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  categoryId: varchar("category_id").references(() => categories.id),
+  userId: varchar("user_id").references(() => users.id),
   location: varchar("location"),
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),

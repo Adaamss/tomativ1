@@ -37,38 +37,38 @@ import type { UploadResult } from "@uppy/core";
 
 // Schémas par étape
 const step1Schema = z.object({
-  categoryId: z.string().min(1, "La catégorie est requise"),
+  categoryId: z.string().optional(),
 });
 
 const step2CarSchema = z.object({
-  categoryId: z.string().min(1, "La catégorie est requise"),
-  brand: z.string().min(1, "La marque est requise"),
-  model: z.string().min(1, "Le modèle est requis"),
-  year: z.string().min(1, "L'année est requise"),
-  mileage: z.string().min(1, "Le kilométrage est requis"),
-  fuelType: z.string().min(1, "Le carburant est requis"),
-  transmission: z.string().min(1, "La transmission est requise"),
+  categoryId: z.string().optional(),
+  brand: z.string().optional(),
+  model: z.string().optional(),
+  year: z.string().optional(),
+  mileage: z.string().optional(),
+  fuelType: z.string().optional(),
+  transmission: z.string().optional(),
 });
 
 const step2RealEstateSchema = z.object({
-  categoryId: z.string().min(1, "La catégorie est requise"),
-  propertyType: z.string().min(1, "Le type de bien est requis"),
-  surface: z.string().min(1, "La surface est requise"),
+  categoryId: z.string().optional(),
+  propertyType: z.string().optional(),
+  surface: z.string().optional(),
 });
 
 const step2JobSchema = z.object({
-  categoryId: z.string().min(1, "La catégorie est requise"),
-  jobType: z.string().min(1, "Le type de contrat est requis"),
-  experience: z.string().min(1, "L'expérience est requise"),
-  sector: z.string().min(1, "Le secteur est requis"),
+  categoryId: z.string().optional(),
+  jobType: z.string().optional(),
+  experience: z.string().optional(),
+  sector: z.string().optional(),
 });
 
 const step3Schema = z.object({
-  categoryId: z.string().min(1, "La catégorie est requise"),
-  title: z.string().min(1, "Le titre est requis"),
+  categoryId: z.string().optional(),
+  title: z.string().optional(),
   description: z.string().optional(),
-  price: z.string().min(1, "Le prix est requis"),
-  location: z.string().min(1, "La localisation est requise"),
+  price: z.string().optional(),
+  location: z.string().optional(),
   condition: z.string().optional(),
 });
 
@@ -457,7 +457,7 @@ export default function CreateListing() {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Sélectionnez une catégorie" />
+                                <SelectValue placeholder="Sélectionnez une catégorie (optionnel)" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
