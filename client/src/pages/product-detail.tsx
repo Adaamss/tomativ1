@@ -221,8 +221,10 @@ export default function ProductDetail() {
                     variant="outline" 
                     size="sm"
                     className="flex-1 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                    data-testid="button-phone"
                   >
-                    <Phone className="w-4 h-4" />
+                    <Phone className="w-4 h-4 mr-2" />
+                    Appeler
                   </Button>
                   <Button
                     onClick={() =>
@@ -234,9 +236,45 @@ export default function ProductDetail() {
                     }
                     className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md transition-all"
                     size="sm"
+                    data-testid="button-chat"
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Contacter
                   </Button>
+                </div>
+              )}
+              
+              {/* Show login prompt for non-authenticated users */}
+              {!isAuthenticated && user?.id !== listing.userId && (
+                <div className="flex gap-3 mt-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                    onClick={() => window.location.href = '/api/login'}
+                    data-testid="button-login-phone"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Appeler
+                  </Button>
+                  <Button
+                    onClick={() => window.location.href = '/api/login'}
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-md transition-all"
+                    size="sm"
+                    data-testid="button-login-chat"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Contacter
+                  </Button>
+                </div>
+              )}
+              
+              {/* Show message for non-authenticated users */}
+              {!isAuthenticated && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 text-center">
+                    <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -381,6 +419,30 @@ export default function ProductDetail() {
                       queryClient.invalidateQueries({ queryKey: [`/api/sellers/${listing.userId}/rating`] });
                     }}
                   />
+                </div>
+              )}
+
+              {/* Login prompt for reviews - Only show if user is not authenticated and not the owner */}
+              {!isAuthenticated && (
+                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Star className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-blue-900 mb-2">
+                      Donnez votre avis !
+                    </h4>
+                    <p className="text-blue-700 mb-4">
+                      Connectez-vous pour partager votre expérience avec ce vendeur
+                    </p>
+                    <Button
+                      onClick={() => window.location.href = '/api/login'}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                      data-testid="button-login-review"
+                    >
+                      Se connecter pour évaluer
+                    </Button>
+                  </div>
                 </div>
               )}
 
