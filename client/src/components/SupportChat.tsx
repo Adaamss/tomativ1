@@ -2,13 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, Bot, User, CheckCircle, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MessageCircle, Send, Bot, User, CheckCircle, Clock, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import type { SupportTicket, SupportMessage } from "@shared/schema";
 
 interface SupportChatProps {
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 export function SupportChat({ onClose }: SupportChatProps) {
@@ -140,37 +146,49 @@ export function SupportChat({ onClose }: SupportChatProps) {
     }
   ];
 
-  if (createTicketMutation.isPending) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-          <p className="text-gray-600">Connexion à Chattomati...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-[500px]">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
-            <Bot className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">Chattomati</h3>
-            <div className="flex items-center text-sm text-green-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
-              En ligne
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg w-[90vw] h-[80vh] max-h-[600px] flex flex-col p-0 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 shadow-2xl border-0 rounded-xl">
+        {createTicketMutation.isPending ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+              <p className="text-gray-600">Connexion à Chattomati...</p>
             </div>
           </div>
-        </div>
-        <div className="text-xs text-gray-500">
-          Ticket #{currentTicket?.id?.slice(-8)}
-        </div>
-      </div>
+        ) : (
+          <>
+            {/* Header Popup */}
+            <DialogHeader className="relative p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3 shadow-sm">
+                    <Bot className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg font-semibold text-gray-900">Chattomati</DialogTitle>
+                    <div className="flex items-center text-sm text-green-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                      En ligne
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Bouton de fermeture */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={onClose}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="text-xs text-gray-500 mt-2">
+                Ticket #{currentTicket?.id?.slice(-8)}
+              </div>
+            </DialogHeader>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
@@ -268,29 +286,35 @@ export function SupportChat({ onClose }: SupportChatProps) {
         </div>
       )}
 
-      {/* Message Input */}
-      <div className="p-4 border-t bg-white">
-        <div className="flex space-x-2">
-          <Input 
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Tapez votre message..."
-            className="flex-1"
-            disabled={sendMessageMutation.isPending}
-          />
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sendMessageMutation.isPending}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Appuyez sur Entrée pour envoyer • Support 24/7 disponible
-        </p>
-      </div>
-    </div>
+            {/* Message Input */}
+            <div className="p-4 border-t bg-white rounded-b-xl">
+              <div className="flex space-x-3">
+                <Input 
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Tapez votre message..."
+                  className="flex-1 h-12 rounded-full border-2 border-gray-200 focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors shadow-sm"
+                  disabled={sendMessageMutation.isPending}
+                />
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || sendMessageMutation.isPending}
+                  size="icon"
+                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-center mt-3">
+                <p className="text-xs text-gray-500">
+                  Support sécurisé • Réponse instantanée
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
