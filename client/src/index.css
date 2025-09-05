@@ -5,7 +5,7 @@
 
 :root {
   --background: hsl(0 0% 100%);
-  --foreground: hsl(222.2 90% 1%);
+  --foreground: hsl(222.2 100% 0%);
   --card: hsl(0 0% 100%);
   --card-foreground: hsl(222.2 84% 4.9%);
   --popover: hsl(0 0% 100%);
@@ -121,7 +121,20 @@
   
   p, span, div {
     color: hsl(var(--foreground));
-    font-weight: 500;
+    font-weight: 600;
+  }
+  
+  /* Amélioration spécifique pour le texte des cartes */
+  .card-text, .product-card h3, .product-card p {
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  
+  /* Titres plus lisibles */
+  h1, h2, h3 {
+    color: #000000 !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
 
   h1, h2, h3, h4, h5, h6 {

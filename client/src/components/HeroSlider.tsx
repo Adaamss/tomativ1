@@ -160,14 +160,14 @@ export default function HeroSlider({ onOpenChat }: HeroSliderProps) {
                     {/* Contenu texte */}
                     <div className="space-y-6 text-center md:text-left">
                       <div className="space-y-2">
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-black leading-tight drop-shadow-sm">
                           {slide.title}
                         </h1>
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-black leading-tight drop-shadow-sm">
                           {slide.subtitle}
                         </h2>
                       </div>
-                      <p className="text-lg md:text-xl text-gray-600 max-w-md mx-auto md:mx-0">
+                      <p className="text-lg md:text-xl text-gray-900 font-semibold max-w-md mx-auto md:mx-0 drop-shadow-sm">
                         {slide.description}
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">

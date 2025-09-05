@@ -39,10 +39,10 @@ export default function ListingCard({ listing }: ListingCardProps) {
       </div>
       
       <div className="p-4">
-        <h4 className="font-medium text-foreground mb-1" data-testid={`listing-title-${listing.id}`}>
+        <h4 className="font-bold text-black mb-1" data-testid={`listing-title-${listing.id}`}>
           {listing.title}
         </h4>
-        <p className="text-lg font-semibold text-primary mb-2" data-testid={`listing-price-${listing.id}`}>
+        <p className="text-lg font-bold text-primary mb-2" data-testid={`listing-price-${listing.id}`}>
           {displayPrice}
         </p>
         
