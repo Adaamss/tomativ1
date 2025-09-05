@@ -317,6 +317,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Receiver and content are required" });
       }
 
+      // Check if conversation exists between these users for this listing
+      let conversation = await storage.getConversation(senderId, receiverId, listingId);
+      
+      // If no conversation exists, create one
+      if (!conversation) {
+        conversation = await storage.createConversation({
+          user1Id: senderId,
+          user2Id: receiverId,
+          listingId: listingId || null,
+        });
+      }
+
+      // Create the message
       const message = await storage.createMessage({
         senderId,
         receiverId,
@@ -339,6 +352,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching conversations:", error);
       res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  // Quick message endpoints for chat functionality
+  app.post('/api/appointments', authenticateToken, async (req: any, res) => {
+    try {
+      const senderId = req.user!.id;
+      const { receiverId, listingId, content, appointmentDate } = req.body;
+
+      // Create or get conversation
+      let conversation = await storage.getConversation(senderId, receiverId, listingId);
+      if (!conversation) {
+        conversation = await storage.createConversation({
+          user1Id: senderId,
+          user2Id: receiverId,
+          listingId: listingId || null,
+        });
+      }
+
+      // Create appointment message
+      const message = await storage.createMessage({
+        senderId,
+        receiverId,
+        listingId: listingId || null,
+        content: content || `Rendez-vous proposé pour ${appointmentDate || 'bientôt'}`,
+      });
+
+      res.json(message);
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      res.status(500).json({ message: "Failed to create appointment" });
+    }
+  });
+
+  app.post('/api/negotiations', authenticateToken, async (req: any, res) => {
+    try {
+      const senderId = req.user!.id;
+      const { receiverId, listingId, content, proposedPrice } = req.body;
+
+      // Create or get conversation
+      let conversation = await storage.getConversation(senderId, receiverId, listingId);
+      if (!conversation) {
+        conversation = await storage.createConversation({
+          user1Id: senderId,
+          user2Id: receiverId,
+          listingId: listingId || null,
+        });
+      }
+
+      // Create negotiation message
+      const message = await storage.createMessage({
+        senderId,
+        receiverId,
+        listingId: listingId || null,
+        content: content || `Offre de prix: ${proposedPrice} TND`,
+      });
+
+      res.json(message);
+    } catch (error) {
+      console.error("Error creating negotiation:", error);
+      res.status(500).json({ message: "Failed to create negotiation" });
     }
   });
 
