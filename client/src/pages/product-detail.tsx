@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,9 @@ import ReviewCard from "@/components/ReviewCard";
 import StarRating from "@/components/StarRating";
 import ChatModal from "@/components/ChatModal";
 
-export default function ProductDetail({ id }: { id: string }) {
-  const listingId = id;
+export default function ProductDetail() {
+  const params = useParams();
+  const listingId = params.id;
   const [, setLocation] = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
