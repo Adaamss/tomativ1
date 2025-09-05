@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Calendar, User, Car, Check, CheckCheck } from "lucide-react";
+import { Send, Calendar, User, Car, Check, CheckCheck, X } from "lucide-react";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -175,9 +175,9 @@ export default function ChatModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md h-[600px] flex flex-col p-0">
-        {/* Header Professionnel */}
-        <DialogHeader className="p-4 pb-3 border-b border-border bg-gradient-to-r from-primary/5 to-primary/10">
+      <DialogContent className="max-w-lg w-[90vw] h-[80vh] max-h-[600px] flex flex-col p-0 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 shadow-2xl border-0 rounded-xl">
+        {/* Header Popup Professionnel */}
+        <DialogHeader className="relative p-4 pb-3 border-b border-border bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative">
@@ -191,7 +191,7 @@ export default function ChatModal({
               </div>
               <div className="flex-1">
                 <DialogTitle className="text-lg font-semibold text-foreground">
-                  Vendeur Professionnel
+                  Conversation avec le vendeur
                 </DialogTitle>
                 <div className="flex items-center space-x-2 text-sm">
                   <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-gray-400"}`} />
@@ -212,6 +212,15 @@ export default function ChatModal({
               </div>
             </div>
             
+            {/* Bouton de fermeture du popup */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose}
+              className="absolute top-2 right-2 w-8 h-8 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-4 h-4" />
+            </Button>
           </div>
         </DialogHeader>
 
@@ -278,7 +287,7 @@ export default function ChatModal({
                     </p>
                     {message.senderId === (user as any)?.id && (
                       <div className="flex items-center">
-                        {message.readAt ? (
+                        {(message as any).isRead ? (
                           <CheckCheck className="w-3 h-3 text-blue-300" />
                         ) : (
                           <Check className="w-3 h-3 text-white/50" />
@@ -349,16 +358,16 @@ export default function ChatModal({
           </div>
         </div>
 
-        {/* Zone de Saisie Professionnelle */}
-        <div className="p-4 bg-white border-t border-border">
+        {/* Zone de Saisie Popup */}
+        <div className="p-4 bg-white border-t border-border rounded-b-xl">
           <div className="flex items-end space-x-3">
             <div className="flex-1 relative">
               <Input
-                placeholder="Écrivez votre message professionnel..."
+                placeholder="Tapez votre message..."
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="pr-12 h-12 rounded-full border-2 border-gray-200 focus:border-primary bg-gray-50 focus:bg-white transition-colors"
+                className="pr-12 h-12 rounded-full border-2 border-gray-200 focus:border-primary bg-gray-50 focus:bg-white transition-colors shadow-sm"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                 {messageInput.length}/500
@@ -374,8 +383,8 @@ export default function ChatModal({
             </Button>
           </div>
           
-          {/* Indicateur de connexion */}
-          <div className="flex items-center justify-center mt-2">
+          {/* Indicateur de connexion simplifié */}
+          <div className="flex items-center justify-center mt-3">
             <div className={`flex items-center space-x-2 text-xs ${
               isConnected ? "text-green-600" : "text-red-500"
             }`}>
@@ -383,7 +392,7 @@ export default function ChatModal({
                 isConnected ? "bg-green-500" : "bg-red-500"
               }`} />
               <span className="font-medium">
-                {isConnected ? "Connecté • Messages envoyés instantanément" : "Reconnexion en cours..."}
+                {isConnected ? "Conversation sécurisée" : "Reconnexion..."}
               </span>
             </div>
           </div>
