@@ -118,7 +118,7 @@ export default function Home() {
           </div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {listingsLoading ? (
               // Loading skeleton
               Array.from({ length: 3 }).map((_, i) => (
