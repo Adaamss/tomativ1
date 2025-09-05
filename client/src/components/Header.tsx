@@ -60,21 +60,14 @@ export default function Header() {
             
             <button 
               onClick={() => setLocation('/')}
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
+              className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
               data-testid="logo-home-link"
             >
-              <div className="w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center">
-                <img 
-                  src={tomatiLogo} 
-                  alt="Tomati Logo" 
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground" data-testid="text-app-title">
-                  Tomati
-                </h1>
-              </div>
+              <img 
+                src={tomatiLogo} 
+                alt="Tomati" 
+                className="h-10 w-auto object-contain"
+              />
             </button>
           </div>
           
