@@ -76,7 +76,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-gray-800 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
-            <p>&copy; 2024 Tomati. Tous droits réservés.</p>
+            <p>&copy; 2025 Tomati. Tous droits réservés.</p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <a href="#" className="hover:text-white transition-colors">Politique de confidentialité</a>
               <a href="#" className="hover:text-white transition-colors">Conditions d'utilisation</a>
