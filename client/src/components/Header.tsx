@@ -66,7 +66,8 @@ export default function Header() {
               <img 
                 src={tomatiLogo} 
                 alt="Tomati" 
-                className="h-10 w-auto object-contain"
+                className="h-30 w-auto object-contain"
+                style={{ height: '120px' }}
               />
             </button>
           </div>
