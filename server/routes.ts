@@ -281,15 +281,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/listings', authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user!.id;
+      console.log('=== Creating listing ===');
+      console.log('User ID:', userId);
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      
       const listingData = insertListingSchema.parse({
         ...req.body,
         userId
       });
 
+      console.log('Parsed listing data:', JSON.stringify(listingData, null, 2));
       const listing = await storage.createListing(listingData);
       res.status(201).json(listing);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("=== Validation errors ===");
+        console.error("Errors:", JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ message: "Invalid listing data", errors: error.errors });
       }
       console.error("Error creating listing:", error);
