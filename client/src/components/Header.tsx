@@ -20,7 +20,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
-import tomatiLogo from "@assets/497601036_122096320736877515_5702241569772347584_n_1755873871709-DyNZ1W_Y_1756365033779.jpg";
+import tomatiLogo from "@assets/tomati-logo.png";
 
 export default function Header() {
   const { isAuthenticated } = useAuth();
@@ -58,18 +58,24 @@ export default function Header() {
               <Menu className="w-6 h-6 text-gray-700" />
             </Button>
             
-            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center">
-              <img 
-                src={tomatiLogo} 
-                alt="Tomati Logo" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-foreground" data-testid="text-app-title">
-                Tomati
-              </h1>
-            </div>
+            <button 
+              onClick={() => setLocation('/')}
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
+              data-testid="logo-home-link"
+            >
+              <div className="w-14 h-14 rounded-lg overflow-hidden flex items-center justify-center">
+                <img 
+                  src={tomatiLogo} 
+                  alt="Tomati Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground" data-testid="text-app-title">
+                  Tomati
+                </h1>
+              </div>
+            </button>
           </div>
           
           <div className="flex items-center space-x-3">
