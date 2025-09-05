@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ChatModal from "@/components/ChatModal";
 import HeroSlider from "@/components/HeroSlider";
+import { SupportChat } from "@/components/SupportChat";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import type { Listing, Category } from "@shared/schema";
@@ -23,6 +24,7 @@ export default function Home() {
     listing: Listing | null;
     sellerId: string;
   }>({ isOpen: false, listing: null, sellerId: '' });
+  const [showSupportChat, setShowSupportChat] = useState(false);
 
   const { data: listings = [], isLoading: listingsLoading } = useQuery<Listing[]>({
     queryKey: ['/api/listings'],
@@ -40,7 +42,7 @@ export default function Home() {
       
       <main className="pt-16 pb-20">
         {/* Hero Slider */}
-        <HeroSlider />
+        <HeroSlider onOpenChat={() => setShowSupportChat(true)} />
         
         {/* Products Header */}
         <div className="px-4 py-4 bg-white border-b border-border">
@@ -171,6 +173,11 @@ export default function Home() {
           listing={chatModal.listing}
           sellerId={chatModal.sellerId}
         />
+      )}
+
+      {/* Support Chat */}
+      {showSupportChat && (
+        <SupportChat onClose={() => setShowSupportChat(false)} />
       )}
 
     </div>

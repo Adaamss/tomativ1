@@ -14,7 +14,11 @@ interface SlideData {
   illustration: React.ReactNode;
 }
 
-export default function HeroSlider() {
+interface HeroSliderProps {
+  onOpenChat?: () => void;
+}
+
+export default function HeroSlider({ onOpenChat }: HeroSliderProps) {
   const [, navigate] = useLocation();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -25,7 +29,7 @@ export default function HeroSlider() {
       subtitle: "nouveau quartier",
       description: "Achetez et vendez en toute confiance",
       ctaText: "Commencer",
-      ctaAction: () => navigate('/create-listing'),
+      ctaAction: () => onOpenChat?.(),
       backgroundColor: "bg-gradient-to-br from-orange-100 to-yellow-100",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center">
@@ -65,7 +69,7 @@ export default function HeroSlider() {
       subtitle: "rapidement",
       description: "Trouvez des acheteurs sérieux près de chez vous",
       ctaText: "Vendre maintenant",
-      ctaAction: () => navigate('/create-listing'),
+      ctaAction: () => onOpenChat?.(),
       backgroundColor: "bg-gradient-to-br from-blue-100 to-indigo-100",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center">
@@ -84,7 +88,7 @@ export default function HeroSlider() {
       subtitle: "maison idéale",
       description: "Parcourez les meilleures offres immobilières",
       ctaText: "Explorer",
-      ctaAction: () => navigate('/'),
+      ctaAction: () => onOpenChat?.(),
       backgroundColor: "bg-gradient-to-br from-green-100 to-teal-100",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center">
@@ -103,7 +107,7 @@ export default function HeroSlider() {
       subtitle: "d'emploi",
       description: "Découvrez les postes qui vous correspondent",
       ctaText: "Voir les offres",
-      ctaAction: () => navigate('/'),
+      ctaAction: () => onOpenChat?.(),
       backgroundColor: "bg-gradient-to-br from-purple-100 to-pink-100",
       illustration: (
         <div className="relative w-full h-full flex items-center justify-center">
@@ -176,7 +180,7 @@ export default function HeroSlider() {
                         </Button>
                         <Button 
                           variant="outline"
-                          onClick={() => navigate('/')}
+                          onClick={() => onOpenChat?.()}
                           className="border-gray-400 text-gray-700 hover:bg-gray-50 px-8 py-3 text-lg rounded-full"
                           data-testid="explore-button"
                         >
