@@ -220,6 +220,18 @@ export default function ProductDetail() {
               </div>
             )}
 
+            {/* Stats directly under image */}
+            <div className="flex items-center space-x-4 text-sm text-gray-500 py-2">
+              <div className="flex items-center">
+                <Eye className="w-4 h-4 mr-1" />
+                <span>{listing.views || 41} vues</span>
+              </div>
+              <div className="flex items-center">
+                <Heart className="w-4 h-4 mr-1" />
+                <span>{listing.likes || 0} favoris</span>
+              </div>
+            </div>
+
             {/* Seller Information - Under Image */}
             <Card className="border-none shadow-sm">
               <CardContent className="p-6">
@@ -398,18 +410,6 @@ export default function ProductDetail() {
                 </p>
               </div>
             )}
-
-            {/* Stats */}
-            <div className="flex items-center space-x-4 text-sm text-gray-500 pt-4 border-t">
-              <div className="flex items-center">
-                <Eye className="w-4 h-4 mr-1" />
-                <span>{listing.views || 0} vues</span>
-              </div>
-              <div className="flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
-                <span>{listing.likes || 0} favoris</span>
-              </div>
-            </div>
           </div>
         </div>
       </main>
