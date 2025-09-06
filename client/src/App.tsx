@@ -47,6 +47,7 @@ function Router() {
       <Route path="/messages" component={Messages} />
       <Route path="/profile" component={Profile} />
       <Route path="/create-listing" component={CreateListing} />
+      <Route path="/add-listing" component={AddListing} />
       
       {/* Admin routes */}
       <Route path="/admin" component={AdminDashboard} />
