@@ -126,13 +126,25 @@ export default function AddListing() {
   };
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log('handleUploadComplete called with:', result);
+    
     if (result.successful && result.successful.length > 0) {
       const newImageUrls = result.successful.map((file) => file.uploadURL).filter(Boolean) as string[];
+      console.log('New image URLs:', newImageUrls);
       setUploadedImages(prev => [...prev, ...newImageUrls]);
       
       toast({
         title: "Images uploadées !",
         description: `${result.successful.length} image(s) ajoutée(s) avec succès.`,
+      });
+    }
+    
+    if (result.failed && result.failed.length > 0) {
+      console.error('Failed uploads:', result.failed);
+      toast({
+        title: "Erreur d'upload",
+        description: `${result.failed.length} image(s) n'ont pas pu être uploadées.`,
+        variant: "destructive",
       });
     }
   };

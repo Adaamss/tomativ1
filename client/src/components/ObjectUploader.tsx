@@ -64,6 +64,7 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
+        allowedFileTypes: ['image/*'],
       },
       autoProceed: false,
     })
@@ -72,8 +73,16 @@ export function ObjectUploader({
         getUploadParameters: onGetUploadParameters,
       })
       .on("complete", (result) => {
+        console.log('Upload complete:', result);
         onComplete?.(result);
         setShowModal(false);
+      })
+      .on("upload-error", (file, error) => {
+        console.error('Upload error:', error);
+        console.error('File:', file);
+      })
+      .on("upload-success", (file, response) => {
+        console.log('Upload success:', file?.name, response);
       })
   );
 
