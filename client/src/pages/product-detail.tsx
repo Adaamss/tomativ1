@@ -491,38 +491,36 @@ export default function ProductDetail() {
                     <p className="text-gray-600 mt-2">Chargement des avis...</p>
                   </div>
                 ) : reviews.length > 0 ? (
-                    <>
-                      <div className="text-sm text-gray-600 mb-4">
-                        {reviews.length} avis pour ce vendeur
-                      </div>
-                      {reviews.map((review) => (
-                        <ReviewCard
-                          key={review.id}
-                          review={review}
-                          currentUserId={user?.id}
-                          onVote={handleVoteReview}
-                          className="mb-4"
-                        />
-                      ))}
-                    </>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="bg-gray-50 rounded-lg p-6">
-                        <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h4 className="text-lg font-medium text-gray-900 mb-2">
-                          Aucun avis pour le moment
-                        </h4>
-                        <p className="text-gray-600">
-                          Soyez le premier à donner votre avis sur ce vendeur !
-                        </p>
-                      </div>
+                  <>
+                    <div className="text-sm text-gray-600 mb-4">
+                      {reviews.length} avis pour ce vendeur
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
+                    {reviews.map((review) => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        currentUserId={user?.id}
+                        onVote={handleVoteReview}
+                        className="mb-4"
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">
+                        Aucun avis pour le moment
+                      </h4>
+                      <p className="text-gray-600">
+                        Soyez le premier à donner votre avis sur ce vendeur !
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
 
