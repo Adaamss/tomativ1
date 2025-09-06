@@ -224,7 +224,7 @@ export default function ProductDetail() {
             <Card className="border-none shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
@@ -234,14 +234,6 @@ export default function ProductDetail() {
                     <p className="text-sm text-gray-500">
                       Membre depuis quelque temps
                     </p>
-                    {sellerRating && sellerRating.count > 0 && (
-                      <div className="flex items-center mt-1">
-                        <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-xs">
-                          <span className="text-yellow-600 font-bold mr-1">⭐ {sellerRating.average.toFixed(1)}</span>
-                          <span className="text-gray-600">({sellerRating.count} avis)</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -256,16 +248,14 @@ export default function ProductDetail() {
                           sellerId: listing.userId || "",
                         })
                       }
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm font-medium rounded-lg"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
                       Message
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="w-full border-gray-300 hover:border-gray-400 py-2 text-sm font-medium"
+                      className="w-full border-gray-300 hover:border-gray-400 py-3 text-sm font-medium rounded-lg"
                     >
-                      <Phone className="w-4 h-4 mr-2" />
                       Appeler
                     </Button>
                   </div>
@@ -276,22 +266,20 @@ export default function ProductDetail() {
                   <div className="space-y-2">
                     <Button
                       onClick={() => window.location.href = '/login'}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm font-medium rounded-lg"
                     >
-                      <MessageCircle className="w-4 h-4 mr-2" />
                       Message
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="w-full border-gray-300 py-2 text-sm font-medium"
+                      className="w-full border-gray-300 py-3 text-sm font-medium rounded-lg"
                       onClick={() => window.location.href = '/login'}
                     >
-                      <Phone className="w-4 h-4 mr-2" />
                       Appeler
                     </Button>
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-xs text-blue-800 text-center">
-                        <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
+                    <div className="p-4 bg-gray-50 rounded-lg mt-3">
+                      <p className="text-sm text-gray-600 text-center">
+                        Connectez-vous pour contacter le vendeur
                       </p>
                     </div>
                   </div>
