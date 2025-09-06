@@ -1,0 +1,79 @@
+Merci d’avoir partagé ton vite.config.ts 🙏.
+Là je vois pourquoi tu as encore l’erreur côté console : tu n’as pas encore configuré le HMR pour Replit.
+
+En dev, Vite ouvre son propre WebSocket pour le hot reload, mais comme tu ne lui indiques pas ton vrai domaine Replit, il retombe sur wss://localhost:undefined.
+
+✅ Fix pour Replit
+
+Tu peux modifier ton server comme ceci :
+
+server: {
+  fs: {
+    strict: true,
+    deny: ["**/.*"],
+  },
+  hmr: {
+    clientPort: 443, // Replit utilise HTTPS
+    host: process.env.REPL_SLUG && process.env.REPL_OWNER
+      ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      : "localhost",
+  },
+},
+
+Explications :
+
+clientPort: 443 → obligé car Replit ne passe que par HTTPS (pas de ws:// en 5173).
+
+host → construit automatiquement ton host Replit (slug.owner.repl.co).
+
+Fallback localhost → marche si tu testes en local.
+
+Version complète adaptée à ton fichier
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    runtimeErrorOverlay(),
+    ...(process.env.NODE_ENV !== "production" &&
+    process.env.REPL_ID !== undefined
+      ? [
+          await import("@replit/vite-plugin-cartographer").then((m) =>
+            m.cartographer(),
+          ),
+        ]
+      : []),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+    },
+  },
+  root: path.resolve(import.meta.dirname, "client"),
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    emptyOutDir: true,
+  },
+  server: {
+    fs: {
+      strict: true,
+      deny: ["**/.*"],
+    },
+    hmr: {
+      clientPort: 443,
+      host:
+        process.env.REPL_SLUG && process.env.REPL_OWNER
+          ? `${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+          : "localhost",
+    },
+  },
+});
+
+
+👉 Avec ça, tu n’auras plus l’erreur localhost:undefined en dev sur Replit.
+Ton WebSocket applicatif continuera de fonctionner normalement.
