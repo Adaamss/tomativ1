@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Heart, Eye, Clock, Phone, MessageCircle, 
-  MapPin, User, Star
+  MapPin, User, Star, Edit
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -328,6 +328,18 @@ export default function ProductDetail() {
                 <span>publié il y a quelques heures</span>
               </div>
             </div>
+
+            {/* Edit Button - Only for owners */}
+            {user && listing.userId === user.id && (
+              <Button
+                onClick={() => setLocation(`/edit-listing/${listingId}`)}
+                className="w-full mb-4"
+                variant="outline"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Modifier cette annonce
+              </Button>
+            )}
 
             {/* Like Button */}
             <button

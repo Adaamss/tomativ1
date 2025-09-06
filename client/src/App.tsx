@@ -17,6 +17,7 @@ import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import CreateListing from "@/pages/create-listing";
 import AddListing from "@/pages/add-listing";
+import EditListing from "@/pages/edit-listing";
 import ProductDetail from "@/pages/product-detail";
 import NotFound from "@/pages/not-found";
 
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/create-listing" component={CreateListing} />
       <Route path="/add-listing" component={AddListing} />
+      <Route path="/edit-listing/:id" component={EditListing} />
       
       {/* Admin routes */}
       <Route path="/admin" component={AdminDashboard} />
