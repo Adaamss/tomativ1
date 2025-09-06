@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, LogIn, Home, MapPin, MessageCircle, User, Search, ChevronDown, HelpCircle, Plus } from "lucide-react";
+import { Menu, LogIn, Home, MapPin, MessageCircle, User, Search, ChevronDown, HelpCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -73,18 +73,6 @@ export default function Header() {
           </div>
           
           <div className="flex items-center space-x-3">
-            {isAuthenticated && (
-              <Button 
-                onClick={() => setLocation('/add-listing')}
-                size="sm"
-                style={{ backgroundColor: '#f14247' }}
-                className="hover:opacity-90 transition-opacity"
-                data-testid="button-add-listing"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Vendre
-              </Button>
-            )}
             {isAuthenticated ? (
               <Button 
                 variant="ghost" 
