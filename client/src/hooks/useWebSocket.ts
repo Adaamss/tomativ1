@@ -31,8 +31,12 @@ export function useWebSocket(): UseWebSocketReturn {
 
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      // Pour Replit, utiliser le hostname et le port correct
+      const hostname = window.location.hostname;
+      const port = window.location.port || '5000';
+      const wsUrl = `${protocol}//${hostname}:${port}/ws`;
       
+      console.log('Connecting to WebSocket:', wsUrl);
       ws.current = new WebSocket(wsUrl);
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
