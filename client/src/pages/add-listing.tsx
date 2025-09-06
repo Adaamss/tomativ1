@@ -129,8 +129,23 @@ export default function AddListing() {
     console.log('handleUploadComplete called with:', result);
     
     if (result.successful && result.successful.length > 0) {
-      const newImageUrls = result.successful.map((file) => file.uploadURL).filter(Boolean) as string[];
-      console.log('New image URLs:', newImageUrls);
+      // Pour chaque fichier uploadé avec succès, on normalise l'URL
+      const newImageUrls = result.successful
+        .map((file: any) => {
+          const uploadURL = file.uploadURL;
+          if (uploadURL && uploadURL.includes('storage.googleapis.com')) {
+            // Extraire le chemin de l'objet et créer l'URL locale
+            const url = new URL(uploadURL);
+            const pathParts = url.pathname.split('/');
+            const bucketName = pathParts[1];
+            const objectPath = pathParts.slice(2).join('/');
+            return `/objects/uploads/${objectPath.split('/').pop()}`;
+          }
+          return uploadURL;
+        })
+        .filter(Boolean) as string[];
+      
+      console.log('Normalized image URLs:', newImageUrls);
       setUploadedImages(prev => [...prev, ...newImageUrls]);
       
       toast({

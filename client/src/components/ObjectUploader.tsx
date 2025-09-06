@@ -83,6 +83,7 @@ export function ObjectUploader({
       })
       .on("upload-success", (file, response) => {
         console.log('Upload success:', file?.name, response);
+        console.log('Upload URL:', file?.uploadURL);
       })
   );
 
