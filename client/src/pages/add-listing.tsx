@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { useLocation } from "wouter";
 import { Plus, Camera, X, MapPin } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,25 +72,13 @@ export default function AddListing() {
   // Mutation pour créer une annonce
   const createListingMutation = useMutation({
     mutationFn: async (data: ListingFormData) => {
-      const response = await fetch("/api/listings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          price: parseFloat(data.price),
-          year: data.year ? parseInt(data.year) : undefined,
-          mileage: data.mileage ? parseInt(data.mileage) : undefined,
-          images: uploadedImages,
-        }),
+      return await apiRequest("POST", "/api/listings", {
+        ...data,
+        price: parseFloat(data.price),
+        year: data.year ? parseInt(data.year) : undefined,
+        mileage: data.mileage ? parseInt(data.mileage) : undefined,
+        images: uploadedImages,
       });
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la création de l'annonce");
-      }
-
-      return response.json();
     },
     onSuccess: (data) => {
       toast({
@@ -99,6 +89,17 @@ export default function AddListing() {
       setLocation(`/listing/${data.id}`);
     },
     onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Session expirée",
+          description: "Vous êtes déconnecté. Reconnexion...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
       toast({
         title: "Erreur",
         description: "Impossible de créer l'annonce. Veuillez réessayer.",
@@ -110,18 +111,10 @@ export default function AddListing() {
 
   // Gestion de l'upload d'images
   const handleGetUploadParameters = async () => {
-    const response = await fetch("/api/objects/upload", {
-      method: "POST",
-    });
-
-    if (!response.ok) {
-      throw new Error("Erreur lors de la génération de l'URL d'upload");
-    }
-
-    const { uploadURL } = await response.json();
+    const data = await apiRequest("POST", "/api/objects/upload");
     return {
       method: "PUT" as const,
-      url: uploadURL,
+      url: data.uploadURL,
     };
   };
 
