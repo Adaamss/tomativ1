@@ -46,6 +46,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserPassword(id: string, password: string): Promise<void>;
   updateUserResetToken(id: string, token: string | null, expiry: Date | null): Promise<void>;
+  updateUserProfileImage(id: string, profileImageUrl: string): Promise<void>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -173,6 +174,13 @@ export class DatabaseStorage implements IStorage {
         resetTokenExpiry: expiry,
         updatedAt: new Date() 
       })
+      .where(eq(users.id, id));
+  }
+
+  async updateUserProfileImage(id: string, profileImageUrl: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ profileImageUrl, updatedAt: new Date() })
       .where(eq(users.id, id));
   }
 

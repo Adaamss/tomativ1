@@ -227,6 +227,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update profile image
+  app.put('/api/profile-image', authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const { profileImageURL } = req.body;
+
+      if (!profileImageURL) {
+        return res.status(400).json({ message: 'Profile image URL is required' });
+      }
+
+      // Normalize the image URL (convert Google Cloud Storage URLs to /objects/ format)
+      const normalizeImageUrl = (url: string): string => {
+        if (url.includes('storage.googleapis.com')) {
+          const parts = url.split('/');
+          const uploadId = parts[parts.length - 1];
+          return `/objects/uploads/${uploadId}`;
+        }
+        return url;
+      };
+
+      const normalizedImageUrl = normalizeImageUrl(profileImageURL);
+      await storage.updateUserProfileImage(userId, normalizedImageUrl);
+      
+      res.json({ message: 'Profile image updated successfully' });
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+      res.status(500).json({ message: 'Failed to update profile image' });
+    }
+  });
+
   // Category routes
   app.get('/api/categories', async (req, res) => {
     try {

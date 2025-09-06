@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
+import { normalizeImageUrl } from "@/lib/imageUtils";
 import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar, Heart, Eye, Camera } from "lucide-react";
 import type { Listing } from "@shared/schema";
 import ProductCard from "@/components/ProductCard";
@@ -180,7 +181,7 @@ export default function Profile() {
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center relative group">
                 {(user as any).profileImageUrl ? (
                   <img 
-                    src={(user as any).profileImageUrl} 
+                    src={normalizeImageUrl((user as any).profileImageUrl)} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
                     data-testid="img-profile-avatar"
