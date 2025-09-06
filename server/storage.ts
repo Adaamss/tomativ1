@@ -5,6 +5,7 @@ import {
   messages,
   conversations,
   userLikes,
+  appointments,
   priceNegotiations,
   supportTickets,
   supportMessages,
@@ -35,6 +36,8 @@ import {
   type InsertAdRequest,
   type PriceNegotiation,
   type InsertPriceNegotiation,
+  type Appointment,
+  type InsertAppointment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
@@ -98,6 +101,14 @@ export interface IStorage {
   voteReview(userId: string, reviewId: string, voteType: 'helpful' | 'not_helpful' | 'report'): Promise<ReviewVote>;
   getUserVoteForReview(userId: string, reviewId: string): Promise<ReviewVote | undefined>;
   getReviewVoteCounts(reviewId: string): Promise<{ helpful: number; not_helpful: number; report: number }>;
+
+  // Appointment operations
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  getAppointmentsByListing(listingId: string): Promise<Appointment[]>;
+  getAppointmentsByBuyer(buyerId: string): Promise<Appointment[]>;
+  getAppointmentsBySeller(sellerId: string): Promise<Appointment[]>;
+  updateAppointment(id: string, appointment: Partial<InsertAppointment>): Promise<Appointment | undefined>;
+  getAppointmentById(id: string): Promise<Appointment | undefined>;
 
   // Price negotiation operations
   createPriceNegotiation(negotiation: InsertPriceNegotiation): Promise<PriceNegotiation>;
@@ -706,6 +717,56 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(listings.id, listingId));
+  }
+
+  // Appointment operations
+  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
+    const [createdAppointment] = await db
+      .insert(appointments)
+      .values(appointment)
+      .returning();
+    return createdAppointment;
+  }
+
+  async getAppointmentsByListing(listingId: string): Promise<Appointment[]> {
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.listingId, listingId))
+      .orderBy(desc(appointments.appointmentDate));
+  }
+
+  async getAppointmentsByBuyer(buyerId: string): Promise<Appointment[]> {
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.buyerId, buyerId))
+      .orderBy(desc(appointments.appointmentDate));
+  }
+
+  async getAppointmentsBySeller(sellerId: string): Promise<Appointment[]> {
+    return await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.sellerId, sellerId))
+      .orderBy(desc(appointments.appointmentDate));
+  }
+
+  async updateAppointment(id: string, appointment: Partial<InsertAppointment>): Promise<Appointment | undefined> {
+    const [updated] = await db
+      .update(appointments)
+      .set({ ...appointment, updatedAt: new Date() })
+      .where(eq(appointments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAppointmentById(id: string): Promise<Appointment | undefined> {
+    const [appointment] = await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.id, id));
+    return appointment;
   }
 
   // Price negotiation operations

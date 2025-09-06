@@ -458,33 +458,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Quick message endpoints for chat functionality
+  // Appointment routes
   app.post('/api/appointments', authenticateToken, async (req: any, res) => {
     try {
-      const senderId = req.user!.id;
-      const { receiverId, listingId, content, appointmentDate } = req.body;
+      const buyerId = req.user!.id;
+      const { listingId, sellerId, appointmentDate, duration, location, notes } = req.body;
 
-      // Create or get conversation
-      let conversation = await storage.getConversation(senderId, receiverId, listingId);
+      if (!listingId || !sellerId || !appointmentDate) {
+        return res.status(400).json({ message: "Listing ID, seller ID, and appointment date are required" });
+      }
+
+      // Get the listing to verify it exists
+      const listing = await storage.getListingById(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // Create appointment
+      const appointment = await storage.createAppointment({
+        listingId,
+        buyerId,
+        sellerId,
+        appointmentDate: new Date(appointmentDate),
+        duration: duration || 60,
+        location,
+        notes,
+        status: "pending",
+      });
+
+      // Also create a message in the conversation
+      let conversation = await storage.getConversation(buyerId, sellerId, listingId);
       if (!conversation) {
         conversation = await storage.createConversation({
-          user1Id: senderId,
-          user2Id: receiverId,
-          listingId: listingId || null,
+          user1Id: buyerId,
+          user2Id: sellerId,
+          listingId: listingId,
         });
       }
 
-      // Create appointment message
-      const message = await storage.createMessage({
-        senderId,
-        receiverId,
-        listingId: listingId || null,
-        content: content || `Rendez-vous proposé pour ${appointmentDate || 'bientôt'}`,
+      const dateStr = new Date(appointmentDate).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
       });
 
-      res.json(message);
+      await storage.createMessage({
+        senderId: buyerId,
+        receiverId: sellerId,
+        listingId: listingId,
+        content: `📅 Nouvelle demande de rendez-vous pour le ${dateStr}${location ? ` à ${location}` : ''}${notes ? `\n\nNote: ${notes}` : ''}`,
+      });
+
+      res.status(201).json(appointment);
     } catch (error) {
       console.error("Error creating appointment:", error);
       res.status(500).json({ message: "Failed to create appointment" });
+    }
+  });
+
+  app.get('/api/appointments/listing/:listingId', authenticateToken, async (req: any, res) => {
+    try {
+      const appointments = await storage.getAppointmentsByListing(req.params.listingId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
+  app.get('/api/appointments/buyer', authenticateToken, async (req: any, res) => {
+    try {
+      const buyerId = req.user!.id;
+      const appointments = await storage.getAppointmentsByBuyer(buyerId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching buyer appointments:", error);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
+  app.get('/api/appointments/seller', authenticateToken, async (req: any, res) => {
+    try {
+      const sellerId = req.user!.id;
+      const appointments = await storage.getAppointmentsBySeller(sellerId);
+      res.json(appointments);
+    } catch (error) {
+      console.error("Error fetching seller appointments:", error);
+      res.status(500).json({ message: "Failed to fetch appointments" });
+    }
+  });
+
+  app.put('/api/appointments/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+      const { status, notes } = req.body;
+
+      // Get the appointment to verify ownership
+      const appointment = await storage.getAppointmentById(id);
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      // Only seller can update the appointment
+      if (appointment.sellerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this appointment" });
+      }
+
+      const updateData: any = { status };
+      if (notes) updateData.notes = notes;
+
+      const updatedAppointment = await storage.updateAppointment(id, updateData);
+
+      // Send message to buyer about the response
+      let statusText = "";
+      switch (status) {
+        case "confirmed":
+          statusText = "✅ Votre rendez-vous a été confirmé !";
+          break;
+        case "cancelled":
+          statusText = "❌ Votre rendez-vous a été annulé";
+          break;
+        case "completed":
+          statusText = "✅ Rendez-vous terminé";
+          break;
+      }
+
+      await storage.createMessage({
+        senderId: userId,
+        receiverId: appointment.buyerId,
+        listingId: appointment.listingId,
+        content: `${statusText}${notes ? `\n\nMessage: ${notes}` : ''}`,
+      });
+
+      res.json(updatedAppointment);
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      res.status(500).json({ message: "Failed to update appointment" });
     }
   });
 

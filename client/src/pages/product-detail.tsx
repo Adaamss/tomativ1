@@ -21,6 +21,7 @@ import ReviewCard from "@/components/ReviewCard";
 import StarRating from "@/components/StarRating";
 import ChatModal from "@/components/ChatModal";
 import PriceNegotiation from "@/components/PriceNegotiation";
+import AppointmentManager from "@/components/AppointmentManager";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -344,6 +345,9 @@ export default function ProductDetail() {
 
             {/* Price Negotiation Component */}
             <PriceNegotiation listing={listing} />
+
+            {/* Appointment Manager Component */}
+            <AppointmentManager listing={listing} />
 
             {/* Like Button */}
             <button
