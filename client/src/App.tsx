@@ -16,6 +16,7 @@ import Map from "@/pages/map";
 import Messages from "@/pages/messages";
 import Profile from "@/pages/profile";
 import CreateListing from "@/pages/create-listing";
+import AddListing from "@/pages/add-listing";
 import ProductDetail from "@/pages/product-detail";
 import NotFound from "@/pages/not-found";
 
