@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { RefreshCw, Filter } from "lucide-react";
@@ -11,6 +11,7 @@ import HeroSlider from "@/components/HeroSlider";
 import { SupportChat } from "@/components/SupportChat";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useListingFilters } from "@/hooks/useListingFilters";
 import type { Listing, Category } from "@shared/schema";
 
 export default function Home() {
@@ -26,8 +27,11 @@ export default function Home() {
   }>({ isOpen: false, listing: null, sellerId: '' });
   const [showSupportChat, setShowSupportChat] = useState(false);
 
+  // Utiliser le hook de filtres
+  const { filters, updateFilter, clearFilters, getQueryKey } = useListingFilters();
+
   const { data: listingsResponse, isLoading: listingsLoading } = useQuery<{listings: Listing[], pagination: any}>({
-    queryKey: ['/api/listings'],
+    queryKey: getQueryKey(),
     retry: false,
   });
 
@@ -38,9 +42,18 @@ export default function Home() {
     retry: false,
   });
 
+  const handleSearch = useCallback((query: string, city: string) => {
+    updateFilter('search', query);
+    updateFilter('location', city);
+  }, [updateFilter]);
+
+  const handleCategoryFilter = useCallback((categoryId: string) => {
+    updateFilter('category', categoryId);
+  }, [updateFilter]);
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onSearch={handleSearch} />
       
       <main className="pt-16 pb-20">
         {/* Hero Slider */}
@@ -68,16 +81,24 @@ export default function Home() {
         {/* Filters Section */}
         {showFilters && (
           <div className="px-4 py-3 bg-gray-50 border-b border-border">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {/* Filtres par catégorie */}
+              {categories.map((category) => (
+                <Button 
+                  key={category.id}
+                  variant={filters.category === category.id ? "default" : "outline"}
+                  size="sm" 
+                  className="text-xs"
+                  onClick={() => handleCategoryFilter(category.id)}
+                  data-testid={`filter-category-${category.slug}`}
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Filtres de tri */}
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="text-xs">
-                Voitures
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs">
-                Immobilier
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs">
-                Emploi
-              </Button>
               <Button variant="outline" size="sm" className="text-xs">
                 Prix croissant
               </Button>
@@ -87,6 +108,19 @@ export default function Home() {
               <Button variant="outline" size="sm" className="text-xs">
                 Plus récent
               </Button>
+              
+              {/* Bouton pour effacer les filtres */}
+              {(filters.search || filters.category || filters.location) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs text-red-600 hover:text-red-700"
+                  onClick={clearFilters}
+                  data-testid="clear-filters"
+                >
+                  Effacer les filtres
+                </Button>
+              )}
             </div>
           </div>
         )}

@@ -241,17 +241,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Listing routes
   app.get('/api/listings', async (req, res) => {
     try {
-      const { category, search, page = 1, limit = 15 } = req.query;
+      const { category, search, location, page = 1, limit = 15 } = req.query;
       const pageNum = parseInt(page as string) || 1;
       const limitNum = Math.min(parseInt(limit as string) || 15, 50); // Max 50 per request
       const offset = (pageNum - 1) * limitNum;
       
-      const listings = await storage.getListings(limitNum, offset);
+      // Prepare filters object
+      const filters: { category?: string; search?: string; location?: string } = {};
+      if (category && typeof category === 'string') filters.category = category;
+      if (search && typeof search === 'string') filters.search = search;
+      if (location && typeof location === 'string') filters.location = location;
+      
+      const listings = await storage.getListings(limitNum, offset, Object.keys(filters).length > 0 ? filters : undefined);
       
       // Add cache headers for better client-side caching
+      const hasFilters = Object.keys(filters).length > 0;
       res.set({
-        'Cache-Control': 'public, max-age=120, s-maxage=300', // 2min client, 5min CDN
-        'ETag': `"listings-${offset}-${limitNum}"`,
+        'Cache-Control': hasFilters ? 'public, max-age=60' : 'public, max-age=120, s-maxage=300', 
+        'ETag': `"listings-${offset}-${limitNum}-${JSON.stringify(filters)}"`,
       });
       
       res.json({

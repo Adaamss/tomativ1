@@ -19,16 +19,32 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import tomatiLogo from "@assets/tomati-logo.png";
 
-export default function Header() {
+interface HeaderProps {
+  onSearch?: (query: string, city: string) => void;
+}
+
+export default function Header({ onSearch }: HeaderProps) {
   const { isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState("tunis");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSupportChat, setShowSupportChat] = useState(false);
+
+  const handleSearch = useCallback(() => {
+    if (onSearch) {
+      onSearch(searchQuery, selectedCity);
+    }
+  }, [onSearch, searchQuery, selectedCity]);
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  }, [handleSearch]);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -151,6 +167,7 @@ export default function Header() {
                   placeholder="Que recherchez-vous ?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   className="pl-10 bg-white w-full"
                   data-testid="search-input"
                 />
@@ -161,6 +178,7 @@ export default function Header() {
                 variant="outline" 
                 size="sm"
                 className="px-3 flex-shrink-0"
+                onClick={handleSearch}
                 data-testid="search-button"
               >
                 <Search className="w-4 h-4" />

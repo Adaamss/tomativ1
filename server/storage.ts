@@ -53,7 +53,7 @@ export interface IStorage {
   getCategoryBySlug(slug: string): Promise<Category | undefined>;
   
   // Listing operations
-  getListings(limit?: number, offset?: number): Promise<Listing[]>;
+  getListings(limit?: number, offset?: number, filters?: { category?: string; search?: string; location?: string }): Promise<Listing[]>;
   getListingById(id: string): Promise<Listing | undefined>;
   getListingsByCategory(categoryId: string, limit?: number): Promise<Listing[]>;
   getListingsByUser(userId: string): Promise<Listing[]>;
@@ -202,17 +202,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Listing operations - Optimized with caching but return full objects for now
-  private async _getListings(limit = 15, offset = 0): Promise<Listing[]> {
+  private async _getListings(limit = 15, offset = 0, filters?: { category?: string; search?: string; location?: string }): Promise<Listing[]> {
+    const conditions = [eq(listings.isActive, 1)];
+    
+    if (filters) {
+      // Filter by category
+      if (filters.category) {
+        conditions.push(eq(listings.categoryId, filters.category));
+      }
+      
+      // Search in title and description
+      if (filters.search && filters.search.trim()) {
+        const searchTerm = `%${filters.search.trim().toLowerCase()}%`;
+        conditions.push(
+          or(
+            sql`LOWER(${listings.title}) LIKE ${searchTerm}`,
+            sql`LOWER(${listings.description}) LIKE ${searchTerm}`
+          )!
+        );
+      }
+      
+      // Filter by location
+      if (filters.location && filters.location.trim()) {
+        const locationTerm = `%${filters.location.trim().toLowerCase()}%`;
+        conditions.push(sql`LOWER(${listings.location}) LIKE ${locationTerm}`);
+      }
+    }
+    
     return await db
       .select()
       .from(listings)
-      .where(eq(listings.isActive, 1))
+      .where(and(...conditions))
       .orderBy(desc(listings.createdAt))
       .limit(limit)
       .offset(offset);
   }
 
-  async getListings(limit = 15, offset = 0): Promise<Listing[]> {
+  async getListings(limit = 15, offset = 0, filters?: { category?: string; search?: string; location?: string }): Promise<Listing[]> {
+    // Pour les filtres, on ne met pas en cache pour avoir des résultats à jour
+    if (filters && (filters.category || filters.search || filters.location)) {
+      return this._getListings(limit, offset, filters);
+    }
     return this.getListingsCache(limit, offset);
   }
 
