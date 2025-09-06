@@ -160,376 +160,334 @@ export default function ProductDetail() {
         </Button>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Mobile-first responsive layout */}
-        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Single Column Karrot-style Layout */}
+        <div className="space-y-6">
           
-          {/* Left Column: Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Image Gallery */}
-            <Card className="border-none shadow-sm overflow-hidden">
-              <CardContent className="p-0">
-                <div className="aspect-video bg-gray-100 relative">
-                  {mainImage ? (
-                    <img
-                      src={mainImage}
-                      alt={listing.title || "Produit"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                      <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <p className="text-xl font-medium">Pas d'image</p>
-                      <p className="text-sm">Image non disponible pour ce produit</p>
+          {/* Image Gallery */}
+          <Card className="border-none shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="aspect-video bg-gray-100 relative">
+                {mainImage ? (
+                  <img
+                    src={mainImage}
+                    alt={listing.title || "Produit"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                  )}
-                </div>
-                
-                {images.length > 1 && (
-                  <div className="p-4">
-                    <div className="flex gap-3 overflow-x-auto">
-                      {images.map((img, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentImageIndex(idx)}
-                          className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                            idx === currentImageIndex ? "border-primary shadow-lg" : "border-gray-200"
-                          }`}
-                        >
-                          <img
-                            src={img}
-                            alt={`Vue ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </button>
-                      ))}
-                    </div>
+                    <p className="text-xl font-medium">Pas d'image</p>
+                    <p className="text-sm">Image non disponible pour ce produit</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Product Info */}
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                      {listing.title || "Titre non spécifié"}
-                    </h1>
-                    <p className="text-3xl lg:text-4xl font-bold text-red-500">
-                      {listing.price ? `${Number(listing.price).toLocaleString()} TND` : "Prix non spécifié"}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3 ml-4">
-                    <div className="flex items-center px-3 py-1 bg-gray-100 rounded-full">
-                      <Eye className="w-4 h-4 mr-1 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-600">{listing.views || 0}</span>
-                    </div>
-                    <div className="flex items-center px-3 py-1 bg-gray-100 rounded-full">
-                      <Clock className="w-4 h-4 mr-1 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-600">Il y a quelques heures</span>
-                    </div>
+              </div>
+              
+              {images.length > 1 && (
+                <div className="p-4">
+                  <div className="flex gap-3 overflow-x-auto">
+                    {images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                          idx === currentImageIndex ? "border-primary shadow-lg" : "border-gray-200"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Vue ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Product Details */}
-            {(listing.brand || listing.model || listing.year || listing.mileage || listing.fuelType || listing.transmission || listing.condition) && (
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Caractéristiques
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* PRIMARY: Product Information (Karrot Style - Top Priority) */}
+          <Card className="border-none shadow-sm">
+            <CardContent className="p-6">
+              {/* Product Title and Price */}
+              <div className="mb-6">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                  {listing.title || "Titre non spécifié"}
+                </h1>
+                <p className="text-3xl lg:text-4xl font-bold text-red-500 mb-4">
+                  {listing.price ? `${Number(listing.price).toLocaleString()} TND` : "Prix non spécifié"}
+                </p>
+                
+                {/* Stats Row */}
+                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                  <div className="flex items-center">
+                    <Eye className="w-4 h-4 mr-1" />
+                    <span>{listing.views || 0} vues</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>Il y a quelques heures</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Heart className="w-4 h-4 mr-1" />
+                    <span>{listing.likes || 0} favoris</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Description */}
+              {listing.description && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {listing.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Product Details */}
+              {(listing.brand || listing.model || listing.year || listing.mileage || listing.fuelType || listing.transmission || listing.condition) && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Caractéristiques</h3>
+                  <div className="grid grid-cols-2 gap-3">
                     {listing.brand && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">Marque</span>
-                        <p className="font-bold text-gray-900">{listing.brand}</p>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">Marque</span>
+                        <p className="font-medium text-gray-900">{listing.brand}</p>
                       </div>
                     )}
                     {listing.model && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">Modèle</span>
-                        <p className="font-bold text-gray-900">{listing.model}</p>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">Modèle</span>
+                        <p className="font-medium text-gray-900">{listing.model}</p>
                       </div>
                     )}
                     {listing.year && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">Année</span>
-                        <p className="font-bold text-gray-900">{listing.year}</p>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">Année</span>
+                        <p className="font-medium text-gray-900">{listing.year}</p>
                       </div>
                     )}
                     {listing.mileage && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">Kilométrage</span>
-                        <p className="font-bold text-gray-900">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">Kilométrage</span>
+                        <p className="font-medium text-gray-900">
                           {Number(listing.mileage).toLocaleString()} km
                         </p>
                       </div>
                     )}
                     {listing.fuelType && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">Carburant</span>
-                        <p className="font-bold text-gray-900 capitalize">{listing.fuelType}</p>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">Carburant</span>
+                        <p className="font-medium text-gray-900 capitalize">{listing.fuelType}</p>
                       </div>
                     )}
                     {listing.transmission && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">Transmission</span>
-                        <p className="font-bold text-gray-900 capitalize">{listing.transmission}</p>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">Transmission</span>
+                        <p className="font-medium text-gray-900 capitalize">{listing.transmission}</p>
                       </div>
                     )}
                     {listing.condition && (
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <span className="text-sm text-gray-500 block mb-1 font-medium">État</span>
-                        <p className="font-bold text-gray-900 capitalize">{listing.condition}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Location */}
-            {listing.location && (
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-primary" />
-                    Localisation
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-gray-700 font-semibold">{listing.location}</p>
-                    </div>
-                    {listing.latitude && listing.longitude && (
-                      <div className="h-48 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                          <MapPin className="w-8 h-8 mx-auto mb-2" />
-                          <p className="text-sm">Carte non disponible</p>
-                          <p className="text-xs">Position: {listing.latitude}, {listing.longitude}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Description */}
-            {listing.description && (
-              <Card className="border-none shadow-sm">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />
-                    </svg>
-                    Description
-                  </h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                      {listing.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Right Column: Sidebar */}
-          <div className="lg:col-span-1 space-y-6 mt-6 lg:mt-0">
-            
-            {/* Like Button */}
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-4">
-                <button
-                  onClick={toggleLike}
-                  disabled={isToggling}
-                  className={`w-full flex items-center justify-center px-4 py-3 rounded-xl font-semibold transition-all ${
-                    isLiked
-                      ? "bg-red-50 text-red-600 border-2 border-red-200"
-                      : "bg-gray-50 text-gray-600 border-2 border-gray-200 hover:bg-gray-100"
-                  }`}
-                >
-                  <Heart className={`w-5 h-5 mr-2 ${isLiked ? 'fill-current' : ''}`} />
-                  {isLiked ? 'Retiré des favoris' : 'Ajouter aux favoris'} ({listing.likes || 0})
-                </button>
-              </CardContent>
-            </Card>
-
-            {/* Seller Info */}
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2 text-primary" />
-                  Vendeur
-                </h3>
-                
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-red-600 flex items-center justify-center shadow-lg">
-                    <User className="w-8 h-8 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-lg text-gray-900">
-                      {user?.id === listing.userId ? "Vous" : "Vendeur"}
-                    </p>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Membre depuis quelque temps
-                    </p>
-                    {sellerRating && sellerRating.count > 0 && (
-                      <div className="flex items-center">
-                        <StarRating 
-                          rating={sellerRating.average} 
-                          size="sm" 
-                          showValue 
-                          readOnly 
-                        />
-                        <span className="text-sm text-gray-600 ml-2">
-                          ({sellerRating.count} avis)
-                        </span>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <span className="text-xs text-gray-500 block">État</span>
+                        <p className="font-medium text-gray-900 capitalize">{listing.condition}</p>
                       </div>
                     )}
                   </div>
                 </div>
+              )}
 
-                {/* Contact Buttons - Only show if user is authenticated and not the owner */}
-                {isAuthenticated && user && user.id !== listing.userId && (
-                  <div className="flex gap-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex-1 border-gray-300 hover:border-gray-400"
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      Appeler
-                    </Button>
-                    <Button
-                      onClick={() =>
-                        setChatModal({
-                          isOpen: true,
-                          listing,
-                          sellerId: listing.userId || "",
-                        })
-                      }
-                      className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                      size="sm"
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Contacter
-                    </Button>
-                  </div>
-                )}
-
-                {/* Login prompt for non-authenticated users */}
-                {!isAuthenticated && (
-                  <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => window.location.href = '/login'}
-                      >
-                        <Phone className="w-4 h-4 mr-2" />
-                        Appeler
-                      </Button>
-                      <Button
-                        onClick={() => window.location.href = '/login'}
-                        className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                        size="sm"
-                      >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Contacter
-                      </Button>
-                    </div>
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800 text-center">
-                        <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Reviews Section */}
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold flex items-center">
-                    <Star className="w-5 h-5 mr-2 text-yellow-400" />
-                    Avis clients
+              {/* Location */}
+              {listing.location && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <MapPin className="w-5 h-5 mr-2 text-primary" />
+                    Localisation
                   </h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-gray-700 font-medium">{listing.location}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* SECONDARY: Seller Information (Karrot Style - Below Product) */}
+          <Card className="border-none shadow-sm">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Vendeur</h3>
+              
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-red-600 flex items-center justify-center shadow-lg">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg text-gray-900">
+                    {user?.id === listing.userId ? "Vous" : "Vendeur"}
+                  </p>
+                  <p className="text-sm text-gray-500 mb-2">
+                    Membre depuis quelque temps
+                  </p>
                   {sellerRating && sellerRating.count > 0 && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center">
                       <StarRating 
                         rating={sellerRating.average} 
                         size="sm" 
                         showValue 
                         readOnly 
                       />
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 ml-2">
                         ({sellerRating.count} avis)
                       </span>
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Review Form - Only show if user is authenticated and not the owner */}
-                {isAuthenticated && user && user.id !== listing.userId && (
-                  <div className="mb-8">
-                    <ReviewForm
-                      listingId={listing.id}
-                      sellerId={listing.userId || ""}
-                      onSuccess={() => {
-                        queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}/reviews`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/sellers/${listing.userId}/rating`] });
-                      }}
+              {/* Karrot-style Action Buttons - Larger and Unified */}
+              {isAuthenticated && user && user.id !== listing.userId && (
+                <div className="space-y-3">
+                  <Button
+                    onClick={() =>
+                      setChatModal({
+                        isOpen: true,
+                        listing,
+                        sellerId: listing.userId || "",
+                      })
+                    }
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 text-lg font-semibold"
+                    size="lg"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-3" />
+                    Contacter le vendeur
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="w-full border-2 border-gray-300 hover:border-gray-400 py-4 text-lg font-semibold"
+                  >
+                    <Phone className="w-5 h-5 mr-3" />
+                    Appeler
+                  </Button>
+                  <button
+                    onClick={toggleLike}
+                    disabled={isToggling}
+                    className={`w-full flex items-center justify-center py-4 px-6 rounded-lg font-semibold text-lg transition-all ${
+                      isLiked
+                        ? "bg-red-50 text-red-600 border-2 border-red-200"
+                        : "bg-gray-50 text-gray-600 border-2 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Heart className={`w-5 h-5 mr-3 ${isLiked ? 'fill-current' : ''}`} />
+                    {isLiked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  </button>
+                </div>
+              )}
+
+              {/* Login prompt for non-authenticated users */}
+              {!isAuthenticated && (
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => window.location.href = '/login'}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 text-lg font-semibold"
+                    size="lg"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-3" />
+                    Contacter le vendeur
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="w-full border-2 border-gray-300 py-4 text-lg font-semibold"
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    <Phone className="w-5 h-5 mr-3" />
+                    Appeler
+                  </Button>
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 text-center">
+                      <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Reviews Section */}
+          <Card className="border-none shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Star className="w-5 h-5 mr-2 text-yellow-400" />
+                  Avis clients
+                </h3>
+                {sellerRating && sellerRating.count > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <StarRating 
+                      rating={sellerRating.average} 
+                      size="sm" 
+                      showValue 
+                      readOnly 
                     />
+                    <span className="text-sm text-gray-600">
+                      ({sellerRating.count} avis)
+                    </span>
                   </div>
                 )}
+              </div>
 
-                {/* Login prompt for reviews */}
-                {!isAuthenticated && (
-                  <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Star className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <h4 className="text-lg font-semibold text-blue-900 mb-2">
-                        Donnez votre avis !
-                      </h4>
-                      <p className="text-blue-700 mb-4">
-                        Connectez-vous pour partager votre expérience avec ce vendeur
-                      </p>
-                      <Button
-                        onClick={() => window.location.href = '/login'}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-                      >
-                        Se connecter pour évaluer
-                      </Button>
+              {/* Review Form */}
+              {isAuthenticated && user && user.id !== listing.userId && (
+                <div className="mb-8">
+                  <ReviewForm
+                    listingId={listing.id}
+                    sellerId={listing.userId || ""}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}/reviews`] });
+                      queryClient.invalidateQueries({ queryKey: [`/api/sellers/${listing.userId}/rating`] });
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Login prompt for reviews */}
+              {!isAuthenticated && (
+                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Star className="w-8 h-8 text-blue-600" />
                     </div>
+                    <h4 className="text-lg font-semibold text-blue-900 mb-2">
+                      Donnez votre avis !
+                    </h4>
+                    <p className="text-blue-700 mb-4">
+                      Connectez-vous pour partager votre expérience avec ce vendeur
+                    </p>
+                    <Button
+                      onClick={() => window.location.href = '/login'}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                    >
+                      Se connecter pour évaluer
+                    </Button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Reviews List */}
-                <div className="space-y-6">
-                  {reviewsLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="text-gray-600 mt-2">Chargement des avis...</p>
-                    </div>
-                  ) : reviews.length > 0 ? (
+              {/* Reviews List */}
+              <div className="space-y-6">
+                {reviewsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="text-gray-600 mt-2">Chargement des avis...</p>
+                  </div>
+                ) : reviews.length > 0 ? (
                     <>
                       <div className="text-sm text-gray-600 mb-4">
                         {reviews.length} avis pour ce vendeur
@@ -560,7 +518,7 @@ export default function ProductDetail() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+
         </div>
       </main>
 
