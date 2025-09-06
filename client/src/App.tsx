@@ -30,7 +30,9 @@ function Router() {
 
   // Initialize categories on app load
   useEffect(() => {
-    apiRequest("GET", "/api/init").catch(console.error);
+    apiRequest("GET", "/api/init").catch((error) => {
+      console.error("Failed to initialize app:", error);
+    });
   }, []);
 
   return (
