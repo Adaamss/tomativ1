@@ -161,11 +161,11 @@ export default function ProductDetail() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Two-column layout like Facebook Marketplace */}
-        <div className="lg:grid lg:grid-cols-2 lg:gap-8 space-y-6 lg:space-y-0">
+        {/* Fixed layout with image column fixed and content column scrollable */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:h-[calc(100vh-200px)] space-y-6 lg:space-y-0">
           
-          {/* Left Column: Image and Like Button */}
-          <div className="space-y-4">
+          {/* Left Column: Fixed - Image and Seller Info */}
+          <div className="lg:sticky lg:top-0 space-y-6">
             {/* Main Image */}
             <Card className="border-none shadow-sm overflow-hidden">
               <CardContent className="p-0">
@@ -220,7 +220,103 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* Like Button under image */}
+            {/* Seller Information - Under Image */}
+            <Card className="border-none shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                    <User className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-base text-gray-900">
+                      {user?.id === listing.userId ? "Vous" : "Vendeur"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Membre depuis quelque temps
+                    </p>
+                    {sellerRating && sellerRating.count > 0 && (
+                      <div className="flex items-center mt-1">
+                        <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-xs">
+                          <span className="text-yellow-600 font-bold mr-1">⭐ {sellerRating.average.toFixed(1)}</span>
+                          <span className="text-gray-600">({sellerRating.count} avis)</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                {isAuthenticated && user && user.id !== listing.userId && (
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() =>
+                        setChatModal({
+                          isOpen: true,
+                          listing,
+                          sellerId: listing.userId || "",
+                        })
+                      }
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-300 hover:border-gray-400 py-2 text-sm font-medium"
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Appeler
+                    </Button>
+                  </div>
+                )}
+
+                {/* Login prompt for non-authenticated users */}
+                {!isAuthenticated && (
+                  <div className="space-y-2">
+                    <Button
+                      onClick={() => window.location.href = '/login'}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 text-sm font-medium"
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-300 py-2 text-sm font-medium"
+                      onClick={() => window.location.href = '/login'}
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Appeler
+                    </Button>
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-xs text-blue-800 text-center">
+                        <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Scrollable - Product Information */}
+          <div className="lg:overflow-y-auto lg:h-[calc(100vh-200px)] space-y-6 pb-6">
+            {/* Product Title and Price */}
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                {listing.title || "Titre non spécifié"}
+              </h1>
+              <p className="text-3xl font-bold text-green-600 mb-4">
+                {listing.price ? `${Number(listing.price).toLocaleString()} TND` : "Prix non spécifié"}
+              </p>
+              <div className="text-sm text-gray-500 mb-6">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md mr-2">Furniture</span>
+                <span>publié il y a quelques heures</span>
+              </div>
+            </div>
+
+            {/* Like Button */}
             <button
               onClick={toggleLike}
               disabled={isToggling}
@@ -233,32 +329,12 @@ export default function ProductDetail() {
               <Heart className={`w-5 h-5 mr-2 ${isLiked ? 'fill-current' : ''}`} />
               {isLiked ? 'Retiré des favoris' : 'Ajouter aux favoris'} ({listing.likes || 0})
             </button>
-          </div>
-
-          {/* Right Column: Product Information */}
-          <div className="space-y-6">
-            {/* Product Title and Price */}
-            <div>
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
-                    {listing.title || "Titre non spécifié"}
-                  </h1>
-                  <p className="text-3xl font-bold text-green-600 mb-3">
-                    {listing.price ? `${Number(listing.price).toLocaleString()} TND` : "Prix non spécifié"}
-                  </p>
-                  <div className="text-sm text-gray-500 mb-4">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md mr-2">Furniture</span>
-                    <span>publié il y a quelques heures</span>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Product Description */}
             {listing.description && (
               <div>
-                <p className="text-gray-700 leading-relaxed mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                <p className="text-gray-700 leading-relaxed mb-6">
                   {listing.description}
                 </p>
               </div>
@@ -268,46 +344,46 @@ export default function ProductDetail() {
             {(listing.brand || listing.model || listing.year || listing.mileage || listing.fuelType || listing.transmission || listing.condition) && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Détails</h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {listing.brand && (
-                    <div>
-                      <span className="font-medium text-gray-900">Créateur: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">Créateur:</span>
                       <span className="text-gray-700">{listing.brand}</span>
                     </div>
                   )}
                   {listing.model && (
-                    <div>
-                      <span className="font-medium text-gray-900">Modèle: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">Modèle:</span>
                       <span className="text-gray-700">{listing.model}</span>
                     </div>
                   )}
                   {listing.year && (
-                    <div>
-                      <span className="font-medium text-gray-900">Année: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">Année:</span>
                       <span className="text-gray-700">{listing.year}</span>
                     </div>
                   )}
                   {listing.condition && (
-                    <div>
-                      <span className="font-medium text-gray-900">État: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">État:</span>
                       <span className="text-gray-700 capitalize">{listing.condition}</span>
                     </div>
                   )}
                   {listing.mileage && (
-                    <div>
-                      <span className="font-medium text-gray-900">Kilométrage: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">Kilométrage:</span>
                       <span className="text-gray-700">{Number(listing.mileage).toLocaleString()} km</span>
                     </div>
                   )}
                   {listing.fuelType && (
-                    <div>
-                      <span className="font-medium text-gray-900">Carburant: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">Carburant:</span>
                       <span className="text-gray-700 capitalize">{listing.fuelType}</span>
                     </div>
                   )}
                   {listing.transmission && (
-                    <div>
-                      <span className="font-medium text-gray-900">Transmission: </span>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-900">Transmission:</span>
                       <span className="text-gray-700 capitalize">{listing.transmission}</span>
                     </div>
                   )}
@@ -318,6 +394,7 @@ export default function ProductDetail() {
             {/* Location */}
             {listing.location && (
               <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Localisation</h3>
                 <p className="text-blue-600 font-medium">
                   Retrait près de {listing.location}
                 </p>
@@ -335,192 +412,106 @@ export default function ProductDetail() {
                 <span>{listing.likes || 0} favoris</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Seller Information Section - Full Width at Bottom */}
-        <div className="mt-8 space-y-6">
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-lg text-gray-900">
-                    {user?.id === listing.userId ? "Vous" : "Vendeur"}
-                  </p>
-                  <p className="text-sm text-gray-500 mb-1">
-                    Membre depuis quelque temps
-                  </p>
+            {/* Reviews Section */}
+            <Card className="border-none shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <Star className="w-5 h-5 mr-2 text-yellow-400" />
+                    Avis clients
+                  </h3>
                   {sellerRating && sellerRating.count > 0 && (
-                    <div className="flex items-center">
-                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded">
-                        <span className="text-yellow-600 font-bold mr-1">⭐ {sellerRating.average.toFixed(1)}</span>
-                        <span className="text-sm text-gray-600">({sellerRating.count} avis)</span>
+                    <div className="flex items-center space-x-2">
+                      <StarRating 
+                        rating={sellerRating.average} 
+                        size="sm" 
+                        showValue 
+                        readOnly 
+                      />
+                      <span className="text-sm text-gray-600">
+                        ({sellerRating.count} avis)
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Review Form */}
+                {isAuthenticated && user && user.id !== listing.userId && (
+                  <div className="mb-8">
+                    <ReviewForm
+                      listingId={listing.id}
+                      sellerId={listing.userId || ""}
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}/reviews`] });
+                        queryClient.invalidateQueries({ queryKey: [`/api/sellers/${listing.userId}/rating`] });
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Login prompt for reviews */}
+                {!isAuthenticated && (
+                  <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Star className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-blue-900 mb-2">
+                        Donnez votre avis !
+                      </h4>
+                      <p className="text-blue-700 mb-4">
+                        Connectez-vous pour partager votre expérience avec ce vendeur
+                      </p>
+                      <Button
+                        onClick={() => window.location.href = '/login'}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                      >
+                        Se connecter pour évaluer
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviews List */}
+                <div className="space-y-6">
+                  {reviewsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="text-gray-600 mt-2">Chargement des avis...</p>
+                    </div>
+                  ) : reviews.length > 0 ? (
+                    <>
+                      <div className="text-sm text-gray-600 mb-4">
+                        {reviews.length} avis pour ce vendeur
+                      </div>
+                      {reviews.map((review) => (
+                        <ReviewCard
+                          key={review.id}
+                          review={review}
+                          currentUserId={user?.id}
+                          onVote={handleVoteReview}
+                          className="mb-4"
+                        />
+                      ))}
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="bg-gray-50 rounded-lg p-6">
+                        <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h4 className="text-lg font-medium text-gray-900 mb-2">
+                          Aucun avis pour le moment
+                        </h4>
+                        <p className="text-gray-600">
+                          Soyez le premier à donner votre avis sur ce vendeur !
+                        </p>
                       </div>
                     </div>
                   )}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">1 review</p>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              {isAuthenticated && user && user.id !== listing.userId && (
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() =>
-                      setChatModal({
-                        isOpen: true,
-                        listing,
-                        sellerId: listing.userId || "",
-                      })
-                    }
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
-                  >
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Message
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 border-gray-300 hover:border-gray-400 py-3 text-base font-medium"
-                  >
-                    <Phone className="w-5 h-5 mr-2" />
-                    Appeler
-                  </Button>
-                </div>
-              )}
-
-              {/* Login prompt for non-authenticated users */}
-              {!isAuthenticated && (
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => window.location.href = '/login'}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
-                    >
-                      <MessageCircle className="w-5 h-5 mr-2" />
-                      Message
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 border-gray-300 py-3 text-base font-medium"
-                      onClick={() => window.location.href = '/login'}
-                    >
-                      <Phone className="w-5 h-5 mr-2" />
-                      Appeler
-                    </Button>
-                  </div>
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 text-center">
-                      <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Reviews Section */}
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Star className="w-5 h-5 mr-2 text-yellow-400" />
-                  Avis clients
-                </h3>
-                {sellerRating && sellerRating.count > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <StarRating 
-                      rating={sellerRating.average} 
-                      size="sm" 
-                      showValue 
-                      readOnly 
-                    />
-                    <span className="text-sm text-gray-600">
-                      ({sellerRating.count} avis)
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Review Form */}
-              {isAuthenticated && user && user.id !== listing.userId && (
-                <div className="mb-8">
-                  <ReviewForm
-                    listingId={listing.id}
-                    sellerId={listing.userId || ""}
-                    onSuccess={() => {
-                      queryClient.invalidateQueries({ queryKey: [`/api/listings/${listingId}/reviews`] });
-                      queryClient.invalidateQueries({ queryKey: [`/api/sellers/${listing.userId}/rating`] });
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Login prompt for reviews */}
-              {!isAuthenticated && (
-                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
-                  <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Star className="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-blue-900 mb-2">
-                      Donnez votre avis !
-                    </h4>
-                    <p className="text-blue-700 mb-4">
-                      Connectez-vous pour partager votre expérience avec ce vendeur
-                    </p>
-                    <Button
-                      onClick={() => window.location.href = '/login'}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-                    >
-                      Se connecter pour évaluer
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Reviews List */}
-              <div className="space-y-6">
-                {reviewsLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-gray-600 mt-2">Chargement des avis...</p>
-                  </div>
-                ) : reviews.length > 0 ? (
-                  <>
-                    <div className="text-sm text-gray-600 mb-4">
-                      {reviews.length} avis pour ce vendeur
-                    </div>
-                    {reviews.map((review) => (
-                      <ReviewCard
-                        key={review.id}
-                        review={review}
-                        currentUserId={user?.id}
-                        onVote={handleVoteReview}
-                        className="mb-4"
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        Aucun avis pour le moment
-                      </h4>
-                      <p className="text-gray-600">
-                        Soyez le premier à donner votre avis sur ce vendeur !
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 
