@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { normalizeImageUrl } from "@/lib/imageUtils";
 import type { Listing, Review } from "@shared/schema";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -145,8 +146,10 @@ export default function ProductDetail() {
     );
   }
 
-  const images = listing.images && listing.images.length > 0 ? listing.images : [];
-  const mainImage = images[currentImageIndex];
+  const normalizedImages = listing.images && listing.images.length > 0 
+    ? listing.images.map(url => normalizeImageUrl(url)).filter(Boolean)
+    : [];
+  const mainImage = normalizedImages[currentImageIndex];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,9 +199,9 @@ export default function ProductDetail() {
             </Card>
 
             {/* Thumbnail Images */}
-            {images.length > 1 && (
+            {normalizedImages.length > 1 && (
               <div className="flex gap-3 overflow-x-auto">
-                {images.map((img, idx) => (
+                {normalizedImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}

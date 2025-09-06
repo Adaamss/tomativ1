@@ -1,0 +1,134 @@
+This error indicates that your WebSocket connection is failing because the code is trying to use localhost:undefined as the URL, which means the port is not being properly determined. Here are several ways to fix this:
+
+Solution 1: Explicitly Set the WebSocket URL
+Modify your WebSocket setup to use the correct URL format:
+
+javascript
+// Instead of relying on automatic URL detection, explicitly set the URL
+function setupWebSocket() {
+  // Get the current hostname and port
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const hostname = window.location.hostname;
+  const port = window.location.port || (protocol === 'wss:' ? 443 : 80);
+  
+  // Construct the WebSocket URL
+  const wsUrl = `${protocol}//${hostname}:${port}/?token=w-S9hMSqOJ6L`;
+  
+  const socket = new WebSocket(wsUrl);
+  
+  socket.onopen = function() {
+    console.log('WebSocket connection established');
+  };
+  
+  socket.onerror = function(error) {
+    console.error('WebSocket error:', error);
+  };
+  
+  return socket;
+}
+Solution 2: Handle Both Development and Production Environments
+javascript
+function setupWebSocket() {
+  let wsUrl;
+  
+  // Check if we're in development (localhost) or production
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Development - use specific port or default
+    const port = window.location.port || 3000; // Default to port 3000 if undefined
+    wsUrl = `ws://localhost:${port}/?token=w-S9hMSqOJ6L`;
+  } else {
+    // Production - use the current host with wss
+    wsUrl = `wss://${window.location.host}/?token=w-S9hMSqOJ6L`;
+  }
+  
+  const socket = new WebSocket(wsUrl);
+  
+  socket.onopen = function() {
+    console.log('Connected to WebSocket');
+  };
+  
+  socket.onerror = function(error) {
+    console.error('WebSocket connection failed:', error);
+    // Implement fallback logic here
+  };
+  
+  return socket;
+}
+Solution 3: Use Environment Variables (Recommended)
+javascript
+// config.js
+export const config = {
+  websocketUrl: process.env.REACT_APP_WEBSOCKET_URL || 
+               (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + 
+               '//' + window.location.host
+};
+
+// In your WebSocket setup
+import { config } from './config';
+
+function setupWebSocket() {
+  const wsUrl = `${config.websocketUrl}/?token=w-S9hMSqOJ6L`;
+  
+  try {
+    const socket = new WebSocket(wsUrl);
+    
+    socket.addEventListener('open', (event) => {
+      console.log('WebSocket connected:', event);
+    });
+    
+    socket.addEventListener('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+    
+    return socket;
+  } catch (error) {
+    console.error('Failed to create WebSocket:', error);
+    throw error;
+  }
+}
+Solution 4: Add Error Handling and Fallback
+javascript
+async function setupWebSocketWithFallback() {
+  const protocols = [
+    `wss://${window.location.host}/?token=w-S9hMSqOJ6L`,
+    `ws://${window.location.host}/?token=w-S9hMSqOJ6L`,
+    `wss://${window.location.hostname}:8080/?token=w-S9hMSqOJ6L`,
+    `ws://${window.location.hostname}:8080/?token=w-S9hMSqOJ6L`
+  ];
+  
+  for (const url of protocols) {
+    try {
+      const socket = new WebSocket(url);
+      
+      // Wait for connection or timeout
+      await new Promise((resolve, reject) => {
+        socket.onopen = resolve;
+        socket.onerror = reject;
+        
+        // Timeout after 5 seconds
+        setTimeout(() => reject(new Error('Connection timeout')), 5000);
+      });
+      
+      console.log('Connected to:', url);
+      return socket;
+      
+    } catch (error) {
+      console.warn('Failed to connect to:', url, error);
+      continue;
+    }
+  }
+  
+  throw new Error('All WebSocket connection attempts failed');
+}
+Quick Fix for Immediate Testing
+If you just need to test quickly, hardcode the URL temporarily:
+
+javascript
+function setupWebSocket() {
+  // Temporary hardcoded URL - replace with your actual URL
+  const wsUrl = 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/?token=w-S9hMSqOJ6L';
+  
+  const socket = new WebSocket(wsUrl);
+  // ... rest of your WebSocket code
+}
+Choose the solution that best fits your application's needs. Solution 3 with environment variables is generally the most robust approach for production applications.

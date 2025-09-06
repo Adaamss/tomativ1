@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Listing } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 import { useLikes } from "@/hooks/useLikes";
+import { normalizeImageUrl } from "@/lib/imageUtils";
 import StarRating from "./StarRating";
 import OptimizedImage from "./OptimizedImage";
 
@@ -49,14 +50,9 @@ export default function ProductCard({ listing, onClick, onContactSeller }: Produ
     });
   };
 
-  const getMainImage = () => {
-    if (listing.images && listing.images.length > 0) {
-      return listing.images[0];
-    }
-    return null;
-  };
-
-  const mainImage = getMainImage();
+  const mainImage = listing.images && listing.images.length > 0 
+    ? normalizeImageUrl(listing.images[0]) 
+    : null;
 
   return (
     <Card 
