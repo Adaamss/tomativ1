@@ -1,0 +1,58 @@
+[vite] connecting...
+Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/ws
+DOMException {}
+stack: "SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=ZQ9GyEmM4xA7' is invalid.↵ at new t (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218737)↵ at setupWebSocket (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@vite/client:536:19)↵ at fallback (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@vite/client:509:16)↵ at WebSocket.<anonymous> (https://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/@vite/client:555:7)"
+get stack: ƒ ()
+set stack: ƒ ()
+[[Prototype]]: DOMException
+
+WebSocket authenticated for user: 7cd302e3-289d-41c2-bcc4-3389524914eb
+ChatGPT a dit :
+
+Parfait 👍 tu avances déjà bien : maintenant le client essaie deux URL différentes :
+
+✅ Une correcte :
+
+wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/ws
+
+
+❌ Une cassée (qui vient de Vite en dev) :
+
+wss://localhost:undefined/?token=...
+
+Pourquoi ?
+
+vite utilise son propre WebSocket interne pour le hot module reload (HMR).
+Comme il ne connaît pas ton environnement Replit, il tente un fallback localhost:undefined. → d’où l’erreur dans la console.
+
+Mais cette erreur n’impacte pas ton WebSocket à toi.
+On le voit bien :
+
+WebSocket authenticated for user: 7cd302e3-289d-41c2-bcc4-3389524914eb
+
+
+👉 ton WS custom marche et s’est connecté/authentifié.
+
+Ce que tu peux faire
+
+Ignorer l’erreur localhost:undefined → elle vient de Vite HMR.
+En prod (après vite build), elle disparaît.
+
+Si tu veux la virer en dev :
+ajoute un server.hmr dans vite.config.ts :
+
+export default defineConfig({
+  server: {
+    hmr: {
+      clientPort: 443, // ou 80 selon Replit
+      host: "802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev",
+    },
+  },
+});
+
+
+Ça dit à Vite : utilise ce host pour HMR au lieu de localhost.
+
+✅ En résumé :
+Ton WebSocket app fonctionne, tu vois bien la connexion/authentification.
+Le message localhost:undefined = bruit de Vite HMR, pas un vrai bug de ton code.
