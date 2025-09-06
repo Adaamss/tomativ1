@@ -31,10 +31,10 @@ export function useWebSocket(): UseWebSocketReturn {
 
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      // Pour Replit, utiliser le hostname et le port correct
+      // Pour Replit, utiliser le hostname sans port spécifique
       const hostname = window.location.hostname;
-      const port = window.location.port || '5000';
-      const wsUrl = `${protocol}//${hostname}:${port}/ws`;
+      // Sur Replit, ne pas utiliser de port spécifique - utiliser le port par défaut
+      const wsUrl = `${protocol}//${hostname}/ws`;
       
       console.log('Connecting to WebSocket:', wsUrl);
       ws.current = new WebSocket(wsUrl);

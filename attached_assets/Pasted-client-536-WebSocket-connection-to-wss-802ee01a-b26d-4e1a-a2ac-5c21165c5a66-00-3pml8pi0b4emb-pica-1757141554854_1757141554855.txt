@@ -1,0 +1,171 @@
+client:536 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev/?token=ZQ9GyEmM4xA7' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=ZQ9GyEmM4xA7' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-RPCDYKBN.js?v=d69893b2:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+create-listing.tsx:182 Category changed to: 6bf1c1ab-602e-46fe-89be-5e1cae26e97c
+create-listing.tsx:184 Found category: {id: '6bf1c1ab-602e-46fe-89be-5e1cae26e97c', name: 'Immobilier', slug: 'immobilier', icon: 'home', color: 'green', …}
+create-listing.tsx:188 Set category slug to: immobilier
+create-listing.tsx:884 === BUTTON CLICKED ===
+create-listing.tsx:885 Current step: 1
+create-listing.tsx:886 Selected category slug: immobilier
+create-listing.tsx:889 Form data: {categoryId: '6bf1c1ab-602e-46fe-89be-5e1cae26e97c', title: '', description: '', price: '', location: '', …}
+create-listing.tsx:890 CategoryId from form: 6bf1c1ab-602e-46fe-89be-5e1cae26e97c
+create-listing.tsx:891 CategoryId exists: true
+create-listing.tsx:894 Processing step 1...
+create-listing.tsx:896 ✅ Step 1 OK - Category found: 6bf1c1ab-602e-46fe-89be-5e1cae26e97c
+create-listing.tsx:897 Moving to step 2...
+create-listing.tsx:899 Step updated to 2
+create-listing.tsx:884 === BUTTON CLICKED ===
+create-listing.tsx:885 Current step: 2
+create-listing.tsx:886 Selected category slug: immobilier
+create-listing.tsx:889 Form data: {categoryId: '6bf1c1ab-602e-46fe-89be-5e1cae26e97c', title: '', description: '', price: '', location: '', …}
+create-listing.tsx:890 CategoryId from form: 6bf1c1ab-602e-46fe-89be-5e1cae26e97c
+create-listing.tsx:891 CategoryId exists: true
+create-listing.tsx:906 Processing step 2...
+create-listing.tsx:296 Validating step 2 for category: immobilier
+create-listing.tsx:910 Step 2 OK, going to step 3
+ObjectUploader.tsx:85 Upload success: ChatGPT Image 4 sept. 2025, 22_11_05.png {body: {…}, status: 200, uploadURL: 'https://storage.googleapis.com/replit-objstore-159…vate/uploads/fc42f97f-4417-4bd6-9e6b-e4351159a0ba'}
+ObjectUploader.tsx:86 Response uploadURL: https://storage.googleapis.com/replit-objstore-15936914-354c-4382-9aff-bb03843dd63c/.private/uploads/fc42f97f-4417-4bd6-9e6b-e4351159a0ba
+ObjectUploader.tsx:76 Upload complete: {successful: Array(1), failed: Array(0), uploadID: '44Pm0WKhNjI4ph2yL0g2u'}
+create-listing.tsx:884 === BUTTON CLICKED ===
+create-listing.tsx:885 Current step: 3
+create-listing.tsx:886 Selected category slug: immobilier
+create-listing.tsx:889 Form data: {categoryId: '6bf1c1ab-602e-46fe-89be-5e1cae26e97c', title: 'BUUUUU', description: 'GYHUIJOK', price: '343', location: 'Tunis', …}
+create-listing.tsx:890 CategoryId from form: 6bf1c1ab-602e-46fe-89be-5e1cae26e97c
+create-listing.tsx:891 CategoryId exists: true
+create-listing.tsx:916 Processing step 3...
+create-listing.tsx:328 Validating step 3
+create-listing.tsx:920 Step 3 OK, creating listing
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:108
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d69893b2:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d69893b2:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d69893b2:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d69893b2:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d69893b2:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d69893b2:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d69893b2:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=d69893b2:19416
+commitRoot @ chunk-RPCDYKBN.js?v=d69893b2:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d69893b2:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d69893b2:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=d69893b2:18627
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:113 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: WebSocket is closed before the connection is established.
+(anonymous) @ useWebSocket.ts:113
+safelyCallDestroy @ chunk-RPCDYKBN.js?v=d69893b2:16748
+commitHookEffectListUnmount @ chunk-RPCDYKBN.js?v=d69893b2:16875
+commitPassiveUnmountInsideDeletedTreeOnFiber @ chunk-RPCDYKBN.js?v=d69893b2:18283
+commitPassiveUnmountEffectsInsideOfDeletedTree_begin @ chunk-RPCDYKBN.js?v=d69893b2:18245
+commitPassiveUnmountEffects_begin @ chunk-RPCDYKBN.js?v=d69893b2:18181
+commitPassiveUnmountEffects @ chunk-RPCDYKBN.js?v=d69893b2:18169
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d69893b2:19489
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d69893b2:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=d69893b2:19416
+commitRoot @ chunk-RPCDYKBN.js?v=d69893b2:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d69893b2:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d69893b2:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=d69893b2:18627
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:108
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=d69893b2:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=d69893b2:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=d69893b2:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=d69893b2:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=d69893b2:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=d69893b2:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=d69893b2:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=d69893b2:19416
+commitRoot @ chunk-RPCDYKBN.js?v=d69893b2:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=d69893b2:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=d69893b2:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=d69893b2:18627
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85
+useWebSocket.ts:39 Connecting to WebSocket: wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws
+useWebSocket.ts:40 WebSocket connection to 'wss://802ee01a-b26d-4e1a-a2ac-5c21165c5a66-00-3pml8pi0b4emb.picard.replit.dev:5000/ws' failed: 
+(anonymous) @ useWebSocket.ts:40
+(anonymous) @ useWebSocket.ts:79
+useWebSocket.ts:85 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+ws.current.onerror @ useWebSocket.ts:85

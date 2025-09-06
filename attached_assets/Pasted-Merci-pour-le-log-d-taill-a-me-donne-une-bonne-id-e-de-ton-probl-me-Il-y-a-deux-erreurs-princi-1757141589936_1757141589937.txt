@@ -1,0 +1,65 @@
+Merci pour le log détaillé 🙏 Ça me donne une bonne idée de ton problème.
+Il y a deux erreurs principales dans ce que tu montres :
+
+1. URL invalide côté client
+Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=ZQ9GyEmM4xA7' is invalid.
+
+
+👉 Ça veut dire que ton code essaie de créer un WebSocket vers localhost:undefined.
+Donc la variable où tu stockes l’URL du serveur WebSocket n’est pas correctement définie (probablement une env var manquante ou mal passée dans le frontend).
+
+Vérifie dans ton useWebSocket.ts (ou ton setupWebSocket) que tu récupères bien l’URL. Exemple :
+
+const WS_URL = import.meta.env.VITE_WS_URL || "wss://your-domain/ws";
+const ws = new WebSocket(`${WS_URL}?token=${token}`);
+
+
+⚠️ Si VITE_WS_URL n’est pas défini, tu tombes sur localhost:undefined.
+
+2. Port WebSocket non accessible sur Replit
+WebSocket connection to 'wss://...replit.dev:5000/ws' failed
+
+
+👉 Sur Replit, tu ne peux pas exposer un port arbitraire (genre 5000).
+Replit ne laisse accessible que le port par défaut (80/443).
+
+Donc ton backend WebSocket doit :
+
+tourner sur le même serveur que ton API (pas un autre port),
+
+être servi en upgrade HTTP → WS sur /:path (ex: /ws).
+
+Par exemple côté backend (Node.js / Express + ws) :
+
+import express from "express";
+import { WebSocketServer } from "ws";
+import http from "http";
+
+const app = express();
+const server = http.createServer(app);
+
+// Monte le serveur WS sur le même port
+const wss = new WebSocketServer({ server, path: "/ws" });
+
+wss.on("connection", (socket) => {
+  console.log("Client connecté !");
+  socket.send("Bienvenue !");
+});
+
+server.listen(3000, () => {
+  console.log("Serveur sur http://localhost:3000");
+});
+
+
+Et côté frontend :
+
+const ws = new WebSocket("wss://<ton-app>.replit.dev/ws");
+
+
+✅ En résumé pour corriger :
+
+Corrige l’URL (pas de localhost:undefined, mais un vrai wss://...).
+
+N’utilise pas :5000 sur Replit → expose /ws sur le port par défaut de ton API.
+
+Veux-tu que je t’écrive un exemple complet backend (Express + WS) + frontend (React hook) adapté à ton code pour Replit ?
