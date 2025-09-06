@@ -55,12 +55,12 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header onSearch={handleSearch} />
       
-      <main className="pt-16 pb-20">
+      <main className="pt-14 md:pt-16 pb-16 md:pb-20">
         {/* Hero Slider */}
         <HeroSlider onOpenChat={() => setShowSupportChat(true)} />
         
         {/* Products Header */}
-        <div className="px-4 py-4 bg-white border-b border-border">
+        <div className="px-3 md:px-4 py-3 md:py-4 bg-white border-b border-border">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Tous les produits</h2>
             <div className="flex items-center space-x-3">
@@ -80,7 +80,7 @@ export default function Home() {
 
         {/* Filters Section */}
         {showFilters && (
-          <div className="px-4 py-3 bg-gray-50 border-b border-border">
+          <div className="px-3 md:px-4 py-3 bg-gray-50 border-b border-border">
             <div className="flex flex-wrap gap-2 mb-3">
               {/* Filtres par catégorie */}
               {categories.map((category) => (
@@ -126,7 +126,7 @@ export default function Home() {
         )}
 
         {/* Recent Products Section */}
-        <div className="px-4 py-4">
+        <div className="px-3 md:px-4 py-3 md:py-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-foreground">Produits récents</h3>
             <Button 
@@ -141,7 +141,7 @@ export default function Home() {
           </div>
 
           {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {listingsLoading ? (
               // Loading skeleton
               Array.from({ length: 3 }).map((_, i) => (

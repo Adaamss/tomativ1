@@ -61,8 +61,8 @@ export default function Header({ onSearch }: HeaderProps) {
     <>
       <header className="bg-white border-b border-border fixed top-0 left-0 right-0 z-50">
         {/* Header principal */}
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+        <div className="px-3 md:px-4 py-2 md:py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2 md:space-x-3">
             {/* Menu Hamburger près du logo */}
             <Button 
               variant="ghost" 
@@ -82,8 +82,7 @@ export default function Header({ onSearch }: HeaderProps) {
               <img 
                 src={tomatiLogo} 
                 alt="Tomati" 
-                className="h-16 w-auto object-contain"
-                style={{ height: '64px' }}
+                className="h-10 md:h-16 w-auto object-contain"
               />
             </button>
           </div>
@@ -118,15 +117,15 @@ export default function Header({ onSearch }: HeaderProps) {
         </div>
 
         {/* Section localisation et recherche - Full Width */}
-        <div className="w-full py-3 bg-gray-50 border-t border-gray-200">
-          <div className="w-full px-4">
-            <div className="flex items-center space-x-3 w-full">
+        <div className="w-full py-2 md:py-3 bg-gray-50 border-t border-gray-200">
+          <div className="w-full px-3 md:px-4">
+            <div className="flex items-center space-x-2 md:space-x-3 w-full">
               {/* Sélecteur de ville */}
               <div className="flex-shrink-0">
                 <Select value={selectedCity} onValueChange={setSelectedCity}>
-                  <SelectTrigger className="w-48 bg-white" data-testid="city-selector">
+                  <SelectTrigger className="w-32 md:w-48 bg-white text-sm md:text-base" data-testid="city-selector">
                     <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                      <MapPin className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 text-gray-500" />
                       <SelectValue />
                     </div>
                   </SelectTrigger>
@@ -161,14 +160,14 @@ export default function Header({ onSearch }: HeaderProps) {
 
               {/* Barre de recherche - Full Width */}
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Que recherchez-vous ?"
+                  placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="pl-10 bg-white w-full"
+                  className="pl-8 md:pl-10 bg-white w-full text-sm md:text-base"
                   data-testid="search-input"
                 />
               </div>
