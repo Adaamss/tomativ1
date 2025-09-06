@@ -5,6 +5,7 @@ import {
   messages,
   conversations,
   userLikes,
+  priceNegotiations,
   supportTickets,
   supportMessages,
   reviews,
@@ -32,6 +33,8 @@ import {
   type InsertReviewVote,
   type AdRequest,
   type InsertAdRequest,
+  type PriceNegotiation,
+  type InsertPriceNegotiation,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, isNull } from "drizzle-orm";
@@ -95,6 +98,14 @@ export interface IStorage {
   voteReview(userId: string, reviewId: string, voteType: 'helpful' | 'not_helpful' | 'report'): Promise<ReviewVote>;
   getUserVoteForReview(userId: string, reviewId: string): Promise<ReviewVote | undefined>;
   getReviewVoteCounts(reviewId: string): Promise<{ helpful: number; not_helpful: number; report: number }>;
+
+  // Price negotiation operations
+  createPriceNegotiation(negotiation: InsertPriceNegotiation): Promise<PriceNegotiation>;
+  getPriceNegotiationsByListing(listingId: string): Promise<PriceNegotiation[]>;
+  getPriceNegotiationsByBuyer(buyerId: string): Promise<PriceNegotiation[]>;
+  getPriceNegotiationsBySeller(sellerId: string): Promise<PriceNegotiation[]>;
+  updatePriceNegotiation(id: string, negotiation: Partial<InsertPriceNegotiation>): Promise<PriceNegotiation | undefined>;
+  getPriceNegotiationById(id: string): Promise<PriceNegotiation | undefined>;
 
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -695,6 +706,56 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(listings.id, listingId));
+  }
+
+  // Price negotiation operations
+  async createPriceNegotiation(negotiation: InsertPriceNegotiation): Promise<PriceNegotiation> {
+    const [priceNegotiation] = await db
+      .insert(priceNegotiations)
+      .values(negotiation)
+      .returning();
+    return priceNegotiation;
+  }
+
+  async getPriceNegotiationsByListing(listingId: string): Promise<PriceNegotiation[]> {
+    return await db
+      .select()
+      .from(priceNegotiations)
+      .where(eq(priceNegotiations.listingId, listingId))
+      .orderBy(desc(priceNegotiations.createdAt));
+  }
+
+  async getPriceNegotiationsByBuyer(buyerId: string): Promise<PriceNegotiation[]> {
+    return await db
+      .select()
+      .from(priceNegotiations)
+      .where(eq(priceNegotiations.buyerId, buyerId))
+      .orderBy(desc(priceNegotiations.createdAt));
+  }
+
+  async getPriceNegotiationsBySeller(sellerId: string): Promise<PriceNegotiation[]> {
+    return await db
+      .select()
+      .from(priceNegotiations)
+      .where(eq(priceNegotiations.sellerId, sellerId))
+      .orderBy(desc(priceNegotiations.createdAt));
+  }
+
+  async updatePriceNegotiation(id: string, negotiation: Partial<InsertPriceNegotiation>): Promise<PriceNegotiation | undefined> {
+    const [updated] = await db
+      .update(priceNegotiations)
+      .set({ ...negotiation, updatedAt: new Date() })
+      .where(eq(priceNegotiations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getPriceNegotiationById(id: string): Promise<PriceNegotiation | undefined> {
+    const [negotiation] = await db
+      .select()
+      .from(priceNegotiations)
+      .where(eq(priceNegotiations.id, id));
+    return negotiation;
   }
 
   async getAdminStats(): Promise<{

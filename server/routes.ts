@@ -488,33 +488,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Price negotiation routes
   app.post('/api/negotiations', authenticateToken, async (req: any, res) => {
     try {
-      const senderId = req.user!.id;
-      const { receiverId, listingId, content, proposedPrice } = req.body;
+      const buyerId = req.user!.id;
+      const { listingId, sellerId, offeredPrice, message } = req.body;
 
-      // Create or get conversation
-      let conversation = await storage.getConversation(senderId, receiverId, listingId);
+      if (!listingId || !sellerId || !offeredPrice) {
+        return res.status(400).json({ message: "Listing ID, seller ID, and offered price are required" });
+      }
+
+      // Get the listing to get original price
+      const listing = await storage.getListingById(listingId);
+      if (!listing) {
+        return res.status(404).json({ message: "Listing not found" });
+      }
+
+      // Create price negotiation
+      const negotiation = await storage.createPriceNegotiation({
+        listingId,
+        buyerId,
+        sellerId,
+        originalPrice: listing.price.toString(),
+        offeredPrice: offeredPrice.toString(),
+        buyerMessage: message,
+        status: "pending",
+      });
+
+      // Also create a message in the conversation
+      let conversation = await storage.getConversation(buyerId, sellerId, listingId);
       if (!conversation) {
         conversation = await storage.createConversation({
-          user1Id: senderId,
-          user2Id: receiverId,
-          listingId: listingId || null,
+          user1Id: buyerId,
+          user2Id: sellerId,
+          listingId: listingId,
         });
       }
 
-      // Create negotiation message
-      const message = await storage.createMessage({
-        senderId,
-        receiverId,
-        listingId: listingId || null,
-        content: content || `Offre de prix: ${proposedPrice} TND`,
+      await storage.createMessage({
+        senderId: buyerId,
+        receiverId: sellerId,
+        listingId: listingId,
+        content: `💰 Nouvelle offre de prix: ${offeredPrice} TND${message ? `\n\nMessage: ${message}` : ''}`,
       });
 
-      res.json(message);
+      res.status(201).json(negotiation);
     } catch (error) {
       console.error("Error creating negotiation:", error);
       res.status(500).json({ message: "Failed to create negotiation" });
+    }
+  });
+
+  app.get('/api/negotiations/listing/:listingId', authenticateToken, async (req: any, res) => {
+    try {
+      const negotiations = await storage.getPriceNegotiationsByListing(req.params.listingId);
+      res.json(negotiations);
+    } catch (error) {
+      console.error("Error fetching negotiations:", error);
+      res.status(500).json({ message: "Failed to fetch negotiations" });
+    }
+  });
+
+  app.get('/api/negotiations/buyer', authenticateToken, async (req: any, res) => {
+    try {
+      const buyerId = req.user!.id;
+      const negotiations = await storage.getPriceNegotiationsByBuyer(buyerId);
+      res.json(negotiations);
+    } catch (error) {
+      console.error("Error fetching buyer negotiations:", error);
+      res.status(500).json({ message: "Failed to fetch negotiations" });
+    }
+  });
+
+  app.get('/api/negotiations/seller', authenticateToken, async (req: any, res) => {
+    try {
+      const sellerId = req.user!.id;
+      const negotiations = await storage.getPriceNegotiationsBySeller(sellerId);
+      res.json(negotiations);
+    } catch (error) {
+      console.error("Error fetching seller negotiations:", error);
+      res.status(500).json({ message: "Failed to fetch negotiations" });
+    }
+  });
+
+  app.put('/api/negotiations/:id', authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+      const { status, counterPrice, sellerMessage } = req.body;
+
+      // Get the negotiation to verify ownership
+      const negotiation = await storage.getPriceNegotiationById(id);
+      if (!negotiation) {
+        return res.status(404).json({ message: "Negotiation not found" });
+      }
+
+      // Only seller can update the negotiation
+      if (negotiation.sellerId !== userId) {
+        return res.status(403).json({ message: "Not authorized to update this negotiation" });
+      }
+
+      const updateData: any = { status };
+      if (counterPrice) updateData.counterPrice = counterPrice.toString();
+      if (sellerMessage) updateData.sellerMessage = sellerMessage;
+
+      const updatedNegotiation = await storage.updatePriceNegotiation(id, updateData);
+
+      // Send message to buyer about the response
+      let statusText = "";
+      switch (status) {
+        case "accepted":
+          statusText = "✅ Votre offre a été acceptée !";
+          break;
+        case "rejected":
+          statusText = "❌ Votre offre a été refusée";
+          break;
+        case "countered":
+          statusText = `🔄 Contre-offre: ${counterPrice} TND`;
+          break;
+      }
+
+      await storage.createMessage({
+        senderId: userId,
+        receiverId: negotiation.buyerId,
+        listingId: negotiation.listingId,
+        content: `${statusText}${sellerMessage ? `\n\nMessage: ${sellerMessage}` : ''}`,
+      });
+
+      res.json(updatedNegotiation);
+    } catch (error) {
+      console.error("Error updating negotiation:", error);
+      res.status(500).json({ message: "Failed to update negotiation" });
     }
   });
 

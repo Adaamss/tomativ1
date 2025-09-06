@@ -20,6 +20,7 @@ import ReviewForm from "@/components/ReviewForm";
 import ReviewCard from "@/components/ReviewCard";
 import StarRating from "@/components/StarRating";
 import ChatModal from "@/components/ChatModal";
+import PriceNegotiation from "@/components/PriceNegotiation";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -340,6 +341,9 @@ export default function ProductDetail() {
                 Modifier cette annonce
               </Button>
             )}
+
+            {/* Price Negotiation Component */}
+            <PriceNegotiation listing={listing} />
 
             {/* Like Button */}
             <button
