@@ -160,199 +160,216 @@ export default function ProductDetail() {
         </Button>
       </div>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        {/* Single Column Karrot-style Layout */}
-        <div className="space-y-6">
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Two-column layout like Facebook Marketplace */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 space-y-6 lg:space-y-0">
           
-          {/* Image Gallery */}
-          <Card className="border-none shadow-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="aspect-video bg-gray-100 relative">
-                {mainImage ? (
-                  <img
-                    src={mainImage}
-                    alt={listing.title || "Produit"}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                    <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                      </svg>
+          {/* Left Column: Image and Like Button */}
+          <div className="space-y-4">
+            {/* Main Image */}
+            <Card className="border-none shadow-sm overflow-hidden">
+              <CardContent className="p-0">
+                <div className="aspect-square bg-gray-100 relative rounded-lg overflow-hidden">
+                  {mainImage ? (
+                    <img
+                      src={mainImage}
+                      alt={listing.title || "Produit"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/api/placeholder/400/400";
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                      <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <p className="text-xl font-medium">Pas d'image</p>
+                      <p className="text-sm">Image non disponible pour ce produit</p>
                     </div>
-                    <p className="text-xl font-medium">Pas d'image</p>
-                    <p className="text-sm">Image non disponible pour ce produit</p>
-                  </div>
-                )}
-              </div>
-              
-              {images.length > 1 && (
-                <div className="p-4">
-                  <div className="flex gap-3 overflow-x-auto">
-                    {images.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
-                        className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                          idx === currentImageIndex ? "border-primary shadow-lg" : "border-gray-200"
-                        }`}
-                      >
-                        <img
-                          src={img}
-                          alt={`Vue ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* PRIMARY: Product Information (Karrot Style - Top Priority) */}
-          <Card className="border-none shadow-sm">
-            <CardContent className="p-6">
-              {/* Product Title and Price */}
-              <div className="mb-6">
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
-                  {listing.title || "Titre non spécifié"}
-                </h1>
-                <p className="text-3xl lg:text-4xl font-bold text-red-500 mb-4">
-                  {listing.price ? `${Number(listing.price).toLocaleString()} TND` : "Prix non spécifié"}
-                </p>
-                
-                {/* Stats Row */}
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <Eye className="w-4 h-4 mr-1" />
-                    <span>{listing.views || 0} vues</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span>Il y a quelques heures</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Heart className="w-4 h-4 mr-1" />
-                    <span>{listing.likes || 0} favoris</span>
-                  </div>
-                </div>
+            {/* Thumbnail Images */}
+            {images.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto">
+                {images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                      idx === currentImageIndex ? "border-primary shadow-lg" : "border-gray-200"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Vue ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/api/placeholder/80/80";
+                      }}
+                    />
+                  </button>
+                ))}
               </div>
+            )}
 
-              {/* Product Description */}
-              {listing.description && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {listing.description}
+            {/* Like Button under image */}
+            <button
+              onClick={toggleLike}
+              disabled={isToggling}
+              className={`w-full flex items-center justify-center py-3 px-6 rounded-lg font-medium transition-all ${
+                isLiked
+                  ? "bg-red-50 text-red-600 border-2 border-red-200"
+                  : "bg-gray-50 text-gray-600 border-2 border-gray-200 hover:bg-gray-100"
+              }`}
+            >
+              <Heart className={`w-5 h-5 mr-2 ${isLiked ? 'fill-current' : ''}`} />
+              {isLiked ? 'Retiré des favoris' : 'Ajouter aux favoris'} ({listing.likes || 0})
+            </button>
+          </div>
+
+          {/* Right Column: Product Information */}
+          <div className="space-y-6">
+            {/* Product Title and Price */}
+            <div>
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
+                    {listing.title || "Titre non spécifié"}
+                  </h1>
+                  <p className="text-3xl font-bold text-green-600 mb-3">
+                    {listing.price ? `${Number(listing.price).toLocaleString()} TND` : "Prix non spécifié"}
                   </p>
-                </div>
-              )}
-
-              {/* Product Details */}
-              {(listing.brand || listing.model || listing.year || listing.mileage || listing.fuelType || listing.transmission || listing.condition) && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Caractéristiques</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {listing.brand && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">Marque</span>
-                        <p className="font-medium text-gray-900">{listing.brand}</p>
-                      </div>
-                    )}
-                    {listing.model && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">Modèle</span>
-                        <p className="font-medium text-gray-900">{listing.model}</p>
-                      </div>
-                    )}
-                    {listing.year && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">Année</span>
-                        <p className="font-medium text-gray-900">{listing.year}</p>
-                      </div>
-                    )}
-                    {listing.mileage && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">Kilométrage</span>
-                        <p className="font-medium text-gray-900">
-                          {Number(listing.mileage).toLocaleString()} km
-                        </p>
-                      </div>
-                    )}
-                    {listing.fuelType && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">Carburant</span>
-                        <p className="font-medium text-gray-900 capitalize">{listing.fuelType}</p>
-                      </div>
-                    )}
-                    {listing.transmission && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">Transmission</span>
-                        <p className="font-medium text-gray-900 capitalize">{listing.transmission}</p>
-                      </div>
-                    )}
-                    {listing.condition && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <span className="text-xs text-gray-500 block">État</span>
-                        <p className="font-medium text-gray-900 capitalize">{listing.condition}</p>
-                      </div>
-                    )}
+                  <div className="text-sm text-gray-500 mb-4">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md mr-2">Furniture</span>
+                    <span>publié il y a quelques heures</span>
                   </div>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* Location */}
-              {listing.location && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-primary" />
-                    Localisation
-                  </h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700 font-medium">{listing.location}</p>
-                  </div>
+            {/* Product Description */}
+            {listing.description && (
+              <div>
+                <p className="text-gray-700 leading-relaxed mb-4">
+                  {listing.description}
+                </p>
+              </div>
+            )}
+
+            {/* Product Details */}
+            {(listing.brand || listing.model || listing.year || listing.mileage || listing.fuelType || listing.transmission || listing.condition) && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Détails</h3>
+                <div className="space-y-2">
+                  {listing.brand && (
+                    <div>
+                      <span className="font-medium text-gray-900">Créateur: </span>
+                      <span className="text-gray-700">{listing.brand}</span>
+                    </div>
+                  )}
+                  {listing.model && (
+                    <div>
+                      <span className="font-medium text-gray-900">Modèle: </span>
+                      <span className="text-gray-700">{listing.model}</span>
+                    </div>
+                  )}
+                  {listing.year && (
+                    <div>
+                      <span className="font-medium text-gray-900">Année: </span>
+                      <span className="text-gray-700">{listing.year}</span>
+                    </div>
+                  )}
+                  {listing.condition && (
+                    <div>
+                      <span className="font-medium text-gray-900">État: </span>
+                      <span className="text-gray-700 capitalize">{listing.condition}</span>
+                    </div>
+                  )}
+                  {listing.mileage && (
+                    <div>
+                      <span className="font-medium text-gray-900">Kilométrage: </span>
+                      <span className="text-gray-700">{Number(listing.mileage).toLocaleString()} km</span>
+                    </div>
+                  )}
+                  {listing.fuelType && (
+                    <div>
+                      <span className="font-medium text-gray-900">Carburant: </span>
+                      <span className="text-gray-700 capitalize">{listing.fuelType}</span>
+                    </div>
+                  )}
+                  {listing.transmission && (
+                    <div>
+                      <span className="font-medium text-gray-900">Transmission: </span>
+                      <span className="text-gray-700 capitalize">{listing.transmission}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
 
-          {/* SECONDARY: Seller Information (Karrot Style - Below Product) */}
+            {/* Location */}
+            {listing.location && (
+              <div>
+                <p className="text-blue-600 font-medium">
+                  Retrait près de {listing.location}
+                </p>
+              </div>
+            )}
+
+            {/* Stats */}
+            <div className="flex items-center space-x-4 text-sm text-gray-500 pt-4 border-t">
+              <div className="flex items-center">
+                <Eye className="w-4 h-4 mr-1" />
+                <span>{listing.views || 0} vues</span>
+              </div>
+              <div className="flex items-center">
+                <Heart className="w-4 h-4 mr-1" />
+                <span>{listing.likes || 0} favoris</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Seller Information Section - Full Width at Bottom */}
+        <div className="mt-8 space-y-6">
           <Card className="border-none shadow-sm">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Vendeur</h3>
-              
               <div className="flex items-center space-x-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-red-600 flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-lg text-gray-900">
                     {user?.id === listing.userId ? "Vous" : "Vendeur"}
                   </p>
-                  <p className="text-sm text-gray-500 mb-2">
+                  <p className="text-sm text-gray-500 mb-1">
                     Membre depuis quelque temps
                   </p>
                   {sellerRating && sellerRating.count > 0 && (
                     <div className="flex items-center">
-                      <StarRating 
-                        rating={sellerRating.average} 
-                        size="sm" 
-                        showValue 
-                        readOnly 
-                      />
-                      <span className="text-sm text-gray-600 ml-2">
-                        ({sellerRating.count} avis)
-                      </span>
+                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded">
+                        <span className="text-yellow-600 font-bold mr-1">⭐ {sellerRating.average.toFixed(1)}</span>
+                        <span className="text-sm text-gray-600">({sellerRating.count} avis)</span>
+                      </div>
                     </div>
                   )}
                 </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">1 review</p>
+                </div>
               </div>
 
-              {/* Karrot-style Action Buttons - Larger and Unified */}
+              {/* Action Buttons */}
               {isAuthenticated && user && user.id !== listing.userId && (
-                <div className="space-y-3">
+                <div className="flex gap-3">
                   <Button
                     onClick={() =>
                       setChatModal({
@@ -361,56 +378,42 @@ export default function ProductDetail() {
                         sellerId: listing.userId || "",
                       })
                     }
-                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 text-lg font-semibold"
-                    size="lg"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
                   >
-                    <MessageCircle className="w-5 h-5 mr-3" />
-                    Contacter le vendeur
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    Message
                   </Button>
                   <Button 
                     variant="outline" 
-                    size="lg"
-                    className="w-full border-2 border-gray-300 hover:border-gray-400 py-4 text-lg font-semibold"
+                    className="flex-1 border-gray-300 hover:border-gray-400 py-3 text-base font-medium"
                   >
-                    <Phone className="w-5 h-5 mr-3" />
+                    <Phone className="w-5 h-5 mr-2" />
                     Appeler
                   </Button>
-                  <button
-                    onClick={toggleLike}
-                    disabled={isToggling}
-                    className={`w-full flex items-center justify-center py-4 px-6 rounded-lg font-semibold text-lg transition-all ${
-                      isLiked
-                        ? "bg-red-50 text-red-600 border-2 border-red-200"
-                        : "bg-gray-50 text-gray-600 border-2 border-gray-200 hover:bg-gray-100"
-                    }`}
-                  >
-                    <Heart className={`w-5 h-5 mr-3 ${isLiked ? 'fill-current' : ''}`} />
-                    {isLiked ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                  </button>
                 </div>
               )}
 
               {/* Login prompt for non-authenticated users */}
               {!isAuthenticated && (
                 <div className="space-y-3">
-                  <Button
-                    onClick={() => window.location.href = '/login'}
-                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-4 text-lg font-semibold"
-                    size="lg"
-                  >
-                    <MessageCircle className="w-5 h-5 mr-3" />
-                    Contacter le vendeur
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="w-full border-2 border-gray-300 py-4 text-lg font-semibold"
-                    onClick={() => window.location.href = '/login'}
-                  >
-                    <Phone className="w-5 h-5 mr-3" />
-                    Appeler
-                  </Button>
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => window.location.href = '/login'}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium"
+                    >
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      Message
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 border-gray-300 py-3 text-base font-medium"
+                      onClick={() => window.location.href = '/login'}
+                    >
+                      <Phone className="w-5 h-5 mr-2" />
+                      Appeler
+                    </Button>
+                  </div>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-800 text-center">
                       <span className="font-medium">Connectez-vous</span> pour contacter le vendeur
                     </p>
@@ -518,6 +521,7 @@ export default function ProductDetail() {
                 </div>
               </CardContent>
             </Card>
+          </div>
 
         </div>
       </main>
