@@ -25,6 +25,7 @@ import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminUsers from "@/pages/admin/Users";
 import AdminListings from "@/pages/admin/Listings";
+import AdminReports from "@/pages/admin/Reports";
 import AdminAdRequests from "@/pages/admin/AdRequests";
 
 function Router() {
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/listings" component={AdminListings} />
+      <Route path="/admin/reports" component={AdminReports} />
       <Route path="/admin/ad-requests" component={AdminAdRequests} />
       
       <Route component={NotFound} />

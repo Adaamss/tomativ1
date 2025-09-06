@@ -39,6 +39,12 @@ export default function AdminNavigation() {
       testId: "nav-listings"
     },
     {
+      path: "/admin/reports",
+      icon: Shield,
+      label: "Signalements",
+      testId: "nav-reports"
+    },
+    {
       path: "/admin/ad-requests",
       icon: AlertCircle,
       label: "Demandes Pub",

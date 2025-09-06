@@ -220,6 +220,27 @@ export const supportAgents = pgTable("support_agents", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Reports table for content moderation
+export const reports = pgTable("reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type").notNull(), // listing, user, review, message
+  targetId: varchar("target_id").notNull(),
+  reporterId: varchar("reporter_id").notNull().references(() => users.id),
+  reason: varchar("reason").notNull(), // spam, harassment, inappropriate, fraud, misleading, etc.
+  description: text("description").notNull(),
+  status: varchar("status").default("pending"), // pending, investigating, resolved, dismissed
+  adminNotes: text("admin_notes"),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_reports_type").on(table.type),
+  index("idx_reports_target_id").on(table.targetId),
+  index("idx_reports_reporter_id").on(table.reporterId),
+  index("idx_reports_status").on(table.status),
+]);
+
 // Reviews and ratings table
 export const reviews = pgTable("reviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -607,6 +628,13 @@ export const insertAdRequestSchema = createInsertSchema(adRequests).omit({
   reviewedAt: true,
 });
 
+export const insertReportSchema = createInsertSchema(reports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reviewedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -638,3 +666,5 @@ export type InsertReviewVote = z.infer<typeof insertReviewVoteSchema>;
 export type ReviewVote = typeof reviewVotes.$inferSelect;
 export type InsertAdRequest = z.infer<typeof insertAdRequestSchema>;
 export type AdRequest = typeof adRequests.$inferSelect;
+export type InsertReport = z.infer<typeof insertReportSchema>;
+export type Report = typeof reports.$inferSelect;
