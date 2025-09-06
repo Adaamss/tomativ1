@@ -50,7 +50,8 @@ export function useListingFilters() {
   // Construire la query key pour TanStack Query
   const getQueryKey = useCallback(() => {
     const params = getQueryParams();
-    return ['/api/listings', params];
+    const hasParams = Object.keys(params).length > 0;
+    return hasParams ? ['/api/listings', params] : ['/api/listings'];
   }, [getQueryParams]);
   
   return {
