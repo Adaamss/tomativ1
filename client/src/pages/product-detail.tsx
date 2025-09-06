@@ -289,7 +289,10 @@ export default function ProductDetail() {
           </div>
 
           {/* Right Column: Product Information */}
-          <div className="space-y-6 pb-6">
+          <div className="space-y-6 pb-6 lg:pt-8">
+            {/* Spacing at top */}
+            <div className="hidden lg:block h-8"></div>
+            
             {/* Product Title and Price */}
             <div>
               {listing.title && (
