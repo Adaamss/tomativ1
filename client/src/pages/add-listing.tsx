@@ -129,17 +129,20 @@ export default function AddListing() {
     console.log('handleUploadComplete called with:', result);
     
     if (result.successful && result.successful.length > 0) {
-      // Pour chaque fichier uploadé avec succès, on normalise l'URL
+      // Pour chaque fichier uploadé avec succès, on récupère l'URL et la normalise
       const newImageUrls = result.successful
         .map((file: any) => {
-          const uploadURL = file.uploadURL;
-          if (uploadURL && uploadURL.includes('storage.googleapis.com')) {
-            // Extraire le chemin de l'objet et créer l'URL locale
+          // Essayer plusieurs sources pour l'URL
+          const uploadURL = file.uploadURL || file.response?.uploadURL || file.source;
+          console.log('Processing file:', file.name, 'URL:', uploadURL);
+          
+          if (uploadURL && typeof uploadURL === 'string' && uploadURL.includes('storage.googleapis.com')) {
+            // Extraire l'identifiant unique à partir de l'URL
             const url = new URL(uploadURL);
             const pathParts = url.pathname.split('/');
-            const bucketName = pathParts[1];
-            const objectPath = pathParts.slice(2).join('/');
-            return `/objects/uploads/${objectPath.split('/').pop()}`;
+            // Le dernier segment avant les paramètres est l'ID de l'objet
+            const objectId = pathParts[pathParts.length - 1];
+            return `/objects/uploads/${objectId}`;
           }
           return uploadURL;
         })
