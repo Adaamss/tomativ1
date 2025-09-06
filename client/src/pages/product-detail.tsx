@@ -22,6 +22,7 @@ import StarRating from "@/components/StarRating";
 import ChatModal from "@/components/ChatModal";
 import PriceNegotiation from "@/components/PriceNegotiation";
 import AppointmentManager from "@/components/AppointmentManager";
+import ReviewsSection from "@/components/ReviewsSection";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -433,6 +434,11 @@ export default function ProductDetail() {
                 </p>
               </div>
             )}
+
+            {/* Reviews Section */}
+            <div className="mt-12">
+              <ReviewsSection listing={listing} />
+            </div>
           </div>
         </div>
       </main>
