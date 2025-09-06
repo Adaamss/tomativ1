@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import tomatiLogoBlack from "@assets/image_1757188560157.png";
 
 export default function Footer() {
   return (
@@ -8,9 +9,11 @@ export default function Footer() {
           {/* Logo et description */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f14247' }}>
-                <span className="text-white font-bold text-lg">🍅</span>
-              </div>
+              <img 
+                src={tomatiLogoBlack} 
+                alt="Tomati" 
+                className="w-8 h-8"
+              />
               <h3 className="text-xl font-bold">Tomati</h3>
             </div>
             <p className="text-gray-600 text-sm">
