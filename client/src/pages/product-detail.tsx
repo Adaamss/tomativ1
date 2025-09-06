@@ -160,12 +160,12 @@ export default function ProductDetail() {
         </Button>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 min-h-[calc(100vh-200px)]">
         {/* Fixed layout with image column fixed and content column scrollable */}
-        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:h-[calc(100vh-200px)] space-y-6 lg:space-y-0">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 space-y-6 lg:space-y-0">
           
           {/* Left Column: Fixed - Image and Seller Info */}
-          <div className="lg:sticky lg:top-0 space-y-6">
+          <div className="lg:sticky lg:top-6 lg:self-start space-y-6">
             {/* Main Image */}
             <Card className="border-none shadow-sm overflow-hidden">
               <CardContent className="p-0">
@@ -288,8 +288,8 @@ export default function ProductDetail() {
             </Card>
           </div>
 
-          {/* Right Column: Scrollable - Product Information */}
-          <div className="lg:overflow-y-auto lg:h-[calc(100vh-200px)] space-y-6 pb-6">
+          {/* Right Column: Product Information */}
+          <div className="space-y-6 pb-6">
             {/* Product Title and Price */}
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
