@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { normalizeImageUrl } from "@/lib/imageUtils";
-import { ArrowLeft, Mail, User, Check, Car, MessageSquare, MapPin, Save, Edit, Plus, Calendar, Heart, Eye, Camera } from "lucide-react";
+import { ArrowLeft, Mail, User, Check, Car, Heart, Edit, Save, Plus, Camera } from "lucide-react";
 import type { Listing } from "@shared/schema";
 import ProductCard from "@/components/ProductCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,14 +40,12 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  // Fetch user's listings
   const { data: userListings = [] } = useQuery<Listing[]>({
-    queryKey: [`/api/listings/user/${(user as any)?.id}`],
+    queryKey: [`/api/listings/user/${user?.id}`],
     enabled: !!user,
   });
 
-  // Fetch user's liked listings
-  const { data: likedListings = [] } = useUserLikes((user as any)?.id || '') as { data: Listing[] };
+  const { data: likedListings = [] } = useUserLikes(user?.id || '') as { data: Listing[] };
 
   // Profile update mutation
   const updateProfileMutation = useMutation({
@@ -77,6 +75,7 @@ export default function Profile() {
     updateProfileMutation.mutate(data);
   };
 
+  // Dynamic upload parameters for ObjectUploader
   const handleGetUploadParameters = async () => {
     const response = await apiRequest('POST', '/api/objects/upload');
     const { uploadURL } = await response.json();
@@ -87,41 +86,61 @@ export default function Profile() {
   };
 
   const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      const profileImageURL = uploadedFile.uploadURL;
-      
-      try {
-        // Update profile with new image
-        await apiRequest('PUT', '/api/profile-image', { profileImageURL });
-        
-        // Invalidate auth query to refresh user data
-        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-        
-        toast({
-          title: "Photo mise à jour",
-          description: "Votre photo de profil a été changée avec succès.",
-        });
-      } catch (error) {
-        console.error("Error updating profile image:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour la photo de profil.",
-          variant: "destructive",
-        });
+    try {
+      console.log("[Profile] upload complete result:", result);
+
+      if (!result || !result.successful || result.successful.length === 0) {
+        console.warn("[Profile] No successful uploads found");
+        return;
       }
+
+      const uploaded = result.successful[0];
+      console.log("[Profile] successful file object:", uploaded);
+
+      const uploadURL =
+        (uploaded as any).uploadURL ??
+        (uploaded as any).response?.body?.uploadURL ??
+        (uploaded as any).response?.uploadURL ??
+        null;
+
+      console.log("[Profile] extracted uploadURL:", uploadURL);
+
+      if (!uploadURL) {
+        console.error("[Profile] No uploadURL found in result — aborting.");
+        return;
+      }
+
+      const payload = { profileImageURL: uploadURL }; // server currently accepts this key
+      console.log("[Profile] Sending PUT /api/profile-image with payload:", payload);
+
+      await apiRequest("PUT", "/api/profile-image", payload);
+
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
+      toast({
+        title: "Photo mise à jour",
+        description: "Votre photo de profil a été changée avec succès.",
+      });
+    } catch (err) {
+      console.error("Error updating profile image:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la photo de profil.",
+        variant: "destructive",
+      });
     }
   };
+
+
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: (user as any)?.displayName || "",
-      bio: (user as any)?.bio || "",
+      displayName: user?.displayName || "",
+      bio: user?.bio || "",
     },
   });
 
-  // Redirect to home if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
@@ -129,78 +148,58 @@ export default function Profile() {
         description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 500);
-      return;
+      setTimeout(() => window.location.href = "/login", 500);
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-20 pb-20">
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        </main>
-        <BottomNavigation />
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="pt-20 pb-20 flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </main>
+      <BottomNavigation />
+    </div>
+  );
 
-  if (!isAuthenticated || !user) {
-    return null;
-  }
+  if (!isAuthenticated || !user) return null;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
       <main className="pt-20 pb-20">
         <div className="bg-white">
           {/* Profile Header */}
           <div className="px-4 py-6 border-b border-border">
             <div className="flex items-center space-x-3 mb-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setLocation('/')}
-                data-testid="button-back"
-              >
+              <Button variant="ghost" size="icon" onClick={() => setLocation('/')}>
                 <ArrowLeft className="w-5 h-5 text-muted-foreground" />
               </Button>
-              <h2 className="text-xl font-semibold text-foreground" data-testid="text-profile-title">
-                Mon Profil
-              </h2>
+              <h2 className="text-xl font-semibold text-foreground">Mon Profil</h2>
             </div>
-            
-            {/* User Profile Card */}
+
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center relative group">
-                {(user as any).profileImageUrl ? (
-                  <img 
-                    src={normalizeImageUrl((user as any).profileImageUrl)} 
-                    alt="Profile" 
+                {user.profileImageUrl ? (
+                  <img
+                    src={normalizeImageUrl(user.profileImageUrl)}
+                    alt="Profile"
                     className="w-full h-full rounded-full object-cover"
-                    data-testid="img-profile-avatar"
                   />
                 ) : (
-                  <span className="text-white text-xl font-bold" data-testid="text-profile-initial">
-                    {(user as any).firstName?.charAt(0) || (user as any).email?.charAt(0) || 'U'}
+                  <span className="text-white text-xl font-bold">
+                    {user.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                   </span>
                 )}
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
                 </div>
-                
-                {/* Photo Upload Button */}
+
                 <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <ObjectUploader
                     maxNumberOfFiles={1}
-                    maxFileSize={5242880} // 5MB
-                    onGetUploadParameters={handleGetUploadParameters}
+                    maxFileSize={5242880}
+                    getUploadParameters={handleGetUploadParameters}
                     onComplete={handleUploadComplete}
                     buttonClassName="bg-transparent hover:bg-transparent p-2"
                   >
@@ -208,223 +207,78 @@ export default function Profile() {
                   </ObjectUploader>
                 </div>
               </div>
+
               <div className="flex-1">
-                <h3 className="text-lg font-medium text-foreground" data-testid="text-username">
-                  {(user as any).displayName || `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim() || 'Utilisateur'}
+                <h3 className="text-lg font-medium text-foreground">
+                  {user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur'}
                 </h3>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                    En ligne
-                  </span>
-                  <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        data-testid="button-edit-profile"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Modifier
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Modifier le profil</DialogTitle>
-                      </DialogHeader>
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleProfileSubmit)} className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="displayName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nom d'affichage</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Votre nom" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="bio"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Bio</FormLabel>
-                                <FormControl>
-                                  <Textarea 
-                                    placeholder="Parlez-nous de vous..."
-                                    rows={3}
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="flex justify-end space-x-2">
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              onClick={() => setEditModalOpen(false)}
-                            >
-                              Annuler
-                            </Button>
-                            <Button type="submit" className="bg-primary hover:bg-red-600">
-                              <Save className="w-4 h-4 mr-2" />
-                              Enregistrer
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-            </div>
-            
-            {/* User Details */}
-            <div className="mt-4 space-y-3">
-              <div>
-                <p className="text-sm font-medium text-foreground">Nom d'affichage</p>
-                <p className="text-sm text-muted-foreground" data-testid="text-display-name">
-                  {(user as any).displayName || 'Non renseigné'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Biographie</p>
-                <p className="text-sm text-muted-foreground" data-testid="text-bio">
-                  {(user as any).bio || 'Aucune biographie'}
-                </p>
               </div>
             </div>
           </div>
-          
-          {/* Profile Sections */}
+
+          {/* Tabs */}
           <div className="p-4">
-            <Tabs defaultValue="account" className="w-full">
+            <Tabs defaultValue="account">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="account">Compte</TabsTrigger>
                 <TabsTrigger value="products">Mes Produits</TabsTrigger>
                 <TabsTrigger value="favorites">Mes Favoris</TabsTrigger>
               </TabsList>
 
-              {/* Account Information Tab */}
+              {/* Account Tab */}
               <TabsContent value="account" className="mt-4">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-foreground mb-4 flex items-center">
-                    <User className="w-5 h-5 mr-2" />
-                    Informations du compte
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
-                      <Mail className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Email</p>
-                        <p className="text-sm text-muted-foreground" data-testid="text-email">
-                          {(user as any).email || 'Non renseigné'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
-                      <User className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Membre depuis</p>
-                        <p className="text-sm text-muted-foreground" data-testid="text-member-since">
-                          {(user as any).createdAt ? new Date((user as any).createdAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                        </p>
-                      </div>
+                  <div className="flex items-center space-x-3 p-3 bg-secondary rounded-lg">
+                    <Mail className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Email</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
+                </div>
+              </TabsContent>
 
-                  {/* Logout Button */}
-                  <div className="mt-6 pt-6 border-t border-border">
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => window.location.href = '/api/logout'}
-                      data-testid="button-logout"
-                    >
-                      Se déconnecter
+              {/* Products Tab */}
+              <TabsContent value="products" className="mt-4">
+                {userListings.length > 0 ? (
+                  <div className="grid gap-4">
+                    {userListings.map((listing) => (
+                      <ProductCard
+                        key={listing.id}
+                        listing={listing}
+                        onClick={() => setLocation(`/product/${listing.id}`)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Vous n'avez publié aucun produit</p>
+                    <Button onClick={() => setLocation('/create-listing')} className="mt-4">
+                      <Plus className="w-4 h-4 mr-2" /> Publier une annonce
                     </Button>
                   </div>
-                </div>
+                )}
               </TabsContent>
 
-              {/* User Products Tab */}
-              <TabsContent value="products" className="mt-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-foreground flex items-center">
-                      <Car className="w-5 h-5 mr-2" />
-                      Mes Produits
-                    </h3>
-                    <Badge variant="secondary" data-testid="badge-product-count">
-                      {userListings.length} produit{userListings.length > 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                  
-                  {userListings.length > 0 ? (
-                    <div className="grid gap-4">
-                      {userListings.map((listing) => (
-                        <ProductCard
-                          key={listing.id}
-                          listing={listing}
-                          onClick={() => setLocation(`/product/${listing.id}`)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Vous n'avez publié aucun produit</p>
-                      <Button 
-                        className="mt-4" 
-                        onClick={() => setLocation('/create-listing')}
-                        data-testid="button-create-listing"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Publier une annonce
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-
-              {/* User Favorites Tab */}
+              {/* Favorites Tab */}
               <TabsContent value="favorites" className="mt-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-foreground flex items-center">
-                      <Heart className="w-5 h-5 mr-2" />
-                      Mes Favoris
-                    </h3>
-                    <Badge variant="secondary" data-testid="badge-favorite-count">
-                      {likedListings.length} favori{likedListings.length > 1 ? 's' : ''}
-                    </Badge>
+                {likedListings.length > 0 ? (
+                  <div className="grid gap-4">
+                    {likedListings.map((listing) => (
+                      <ProductCard
+                        key={listing.id}
+                        listing={listing}
+                        onClick={() => setLocation(`/product/${listing.id}`)}
+                      />
+                    ))}
                   </div>
-                  
-                  {likedListings.length > 0 ? (
-                    <div className="grid gap-4">
-                      {likedListings.map((listing) => (
-                        <ProductCard
-                          key={listing.id}
-                          listing={listing}
-                          onClick={() => setLocation(`/product/${listing.id}`)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Heart className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Vous n'avez aucun produit en favori</p>
-                      <p className="text-sm mt-2">Appuyez sur ❤️ sur les produits qui vous intéressent</p>
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Heart className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Vous n'avez aucun produit en favori</p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

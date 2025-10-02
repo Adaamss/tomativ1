@@ -71,7 +71,10 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
   // Récupération des rendez-vous pour cette annonce
   const { data: appointments = [], isLoading: appointmentsLoading } = useQuery<Appointment[]>({
     queryKey: ["/api/appointments/listing", listing.id],
-    queryFn: () => apiRequest("GET", `/api/appointments/listing/${listing.id}`),
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/appointments/listing/${listing.id}`);
+      return res.json();
+    },
     enabled: !!listing.id && !!user,
   });
 
@@ -218,8 +221,8 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
     }
   };
 
-  const formatDateTime = (dateStr: string) => {
-    const date = new Date(dateStr);
+  const formatDateTime = (dateInput: string | Date) => {
+    const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
     return date.toLocaleDateString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
@@ -243,9 +246,9 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
       {!isOwner && (
         <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
           <DialogTrigger asChild>
-            <Button 
-              className="w-full" 
-              variant="outline" 
+            <Button
+              className="w-full"
+              variant="outline"
               disabled={hasPendingAppointment}
               data-testid="schedule-appointment-button"
             >
@@ -263,7 +266,7 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
                 Proposez un créneau pour rencontrer le vendeur
               </DialogDescription>
             </DialogHeader>
-            
+
             <Form {...appointmentForm}>
               <form onSubmit={appointmentForm.handleSubmit(onSubmitAppointment)} className="space-y-6">
                 {/* Informations sur le produit */}
@@ -393,16 +396,16 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
                 />
 
                 <div className="flex gap-2 justify-end pt-4 border-t">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setIsScheduleModalOpen(false)}
                     data-testid="cancel-appointment"
                   >
                     Annuler
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={createAppointmentMutation.isPending}
                     data-testid="schedule-appointment"
                   >
@@ -433,7 +436,7 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
                       <span className="font-medium">
                         {formatDateTime(appointment.appointmentDate)}
                       </span>
-                      {getStatusBadge(appointment.status)}
+                      {getStatusBadge(appointment.status ?? "")}
                     </div>
                     <p className="text-sm text-gray-600">
                       Durée : {appointment.duration} minutes
@@ -446,7 +449,7 @@ export default function AppointmentManager({ listing }: AppointmentManagerProps)
                     )}
                   </div>
                   <span className="text-xs text-gray-500">
-                    {new Date(appointment.createdAt).toLocaleDateString()}
+                    {appointment.createdAt ? new Date(appointment.createdAt).toLocaleDateString() : ""}
                   </span>
                 </div>
 

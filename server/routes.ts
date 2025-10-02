@@ -1,10 +1,14 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
+import type { Request } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { authenticateToken, generateToken, hashPassword, comparePassword } from "./simpleAuth";
-import type { Request } from "express";
 import type { User } from "@shared/schema";
+import fs from "fs";
+import path from "path";
+import multer from "multer";
+import cookieParser from "cookie-parser";
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
@@ -16,7 +20,6 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import cookieParser from "cookie-parser";
 
 // Middleware pour vérifier le rôle admin
 const requireAdmin = async (req: AuthenticatedRequest, res: any, next: any) => {
@@ -35,7 +38,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add cookie parser middleware
   app.use(cookieParser());
 
-  // Object Storage routes - Serve uploaded images
+  // --- Local uploads setup (multer + static serve) ---
+  const privateDirEnv = process.env.PRIVATE_OBJECT_DIR || "./server/uploads";
+  const uploadDir = path.isAbsolute(privateDirEnv)
+    ? privateDirEnv
+    : path.join(process.cwd(), privateDirEnv);
+
+  // Ensure upload dir exists
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log("Created upload directory:", uploadDir);
+  }
+
+  // Serve uploads as static files at /uploads
+  app.use('/uploads', express.static(uploadDir));
+
+  // Multer storage configuration for local file uploads
+  const storageMulter = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => {
+      const safeName = `${Date.now()}-${file.originalname.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9._-]/g, '')}`;
+      cb(null, safeName);
+    }
+  });
+  const upload = multer({ storage: storageMulter });
+
+  // Object Storage routes - Serve uploaded images (existing GCS-backed handler kept)
   app.get("/objects/:objectPath(*)", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
@@ -52,20 +80,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object upload endpoint
-  app.post("/api/objects/upload", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
+  // Object upload endpoint (local) - accepts multipart/form-data field "file"
+  app.post('/api/objects/upload', upload.single('file'), async (req: any, res) => {
     try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      // Build public URL for the uploaded file
+      const publicUrl = `/uploads/${req.file.filename}`;
+
+      return res.json({
+        uploadURL: publicUrl,
+        fileName: req.file.filename,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+      });
     } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
+      console.error('Error in local upload handler:', error);
+      return res.status(500).json({ error: 'Failed to upload file' });
     }
   });
 
-  // Remove conflicting /api/login route that might interfere
-  // Simple auth routes  
+  // Simple auth routes
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;
@@ -178,14 +215,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           color: "blue"
         });
         await storage.createCategory({
-          name: "Immobilier", 
+          name: "Immobilier",
           slug: "immobilier",
           icon: "home",
           color: "green"
         });
         await storage.createCategory({
           name: "Emploi",
-          slug: "emploi", 
+          slug: "emploi",
           icon: "briefcase",
           color: "purple"
         });
@@ -210,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Return only public information
       const publicUser = {
         id: user.id,
@@ -219,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: user.profileImageUrl,
         createdAt: user.createdAt,
       };
-      
+
       res.json(publicUser);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -230,14 +267,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update profile image
   app.put('/api/profile-image', authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user!.id;
-      const { profileImageURL } = req.body;
+      console.log("[routes] PUT /api/profile-image body:", req.body);
 
-      if (!profileImageURL) {
+      const userId = req.user!.id;
+      const { profileImageURL, profileImageUrl } = req.body || {};
+      const providedUrl = profileImageURL ?? profileImageUrl;
+
+      if (!providedUrl) {
+        console.warn("[routes] Missing profileImageURL/profileImageUrl in request body");
         return res.status(400).json({ message: 'Profile image URL is required' });
       }
 
-      // Normalize the image URL (convert Google Cloud Storage URLs to /objects/ format)
       const normalizeImageUrl = (url: string): string => {
         if (url.includes('storage.googleapis.com')) {
           const parts = url.split('/');
@@ -247,15 +287,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return url;
       };
 
-      const normalizedImageUrl = normalizeImageUrl(profileImageURL);
+      const normalizedImageUrl = normalizeImageUrl(providedUrl);
       await storage.updateUserProfileImage(userId, normalizedImageUrl);
-      
+
       res.json({ message: 'Profile image updated successfully' });
     } catch (error) {
       console.error('Error updating profile image:', error);
       res.status(500).json({ message: 'Failed to update profile image' });
     }
   });
+
+
 
   // Category routes
   app.get('/api/categories', async (req, res) => {
@@ -275,22 +317,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pageNum = parseInt(page as string) || 1;
       const limitNum = Math.min(parseInt(limit as string) || 15, 50); // Max 50 per request
       const offset = (pageNum - 1) * limitNum;
-      
+
       // Prepare filters object
       const filters: { category?: string; search?: string; location?: string } = {};
       if (category && typeof category === 'string') filters.category = category;
       if (search && typeof search === 'string') filters.search = search;
       if (location && typeof location === 'string') filters.location = location;
-      
+
       const listings = await storage.getListings(limitNum, offset, Object.keys(filters).length > 0 ? filters : undefined);
-      
+
       // Add cache headers for better client-side caching
       const hasFilters = Object.keys(filters).length > 0;
       res.set({
-        'Cache-Control': hasFilters ? 'public, max-age=60' : 'public, max-age=120, s-maxage=300', 
+        'Cache-Control': hasFilters ? 'public, max-age=60' : 'public, max-age=120, s-maxage=300',
         'ETag': `"listings-${offset}-${limitNum}-${JSON.stringify(filters)}"`,
       });
-      
+
       res.json({
         listings,
         pagination: {
@@ -313,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // View count increment would be handled here in a real app
-      
+
       res.json(listing);
     } catch (error) {
       console.error("Error fetching listing:", error);
@@ -343,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const listing = await storage.getListingById(req.params.id);
-      
+
       if (!listing) {
         return res.status(404).json({ message: "Listing not found" });
       }
@@ -352,18 +394,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to update this listing" });
       }
 
+      console.log("[PUT] Incoming update payload:", req.body);
+
       const updateData = insertListingSchema.partial().parse(req.body);
+      // ✅ keep images manually if provided
+      if (req.body.images) {
+        updateData.images = req.body.images;
+      }
+
       const updatedListing = await storage.updateListing(req.params.id, updateData);
-      
+
+      console.log("[PUT] Updated listing saved:", updatedListing);
+
       res.json(updatedListing);
     } catch (error) {
+      console.error("Error updating listing:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid listing data", errors: error.errors });
       }
-      console.error("Error updating listing:", error);
       res.status(500).json({ message: "Failed to update listing" });
     }
   });
+
 
   // Delete listing would be implemented here
 
@@ -395,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const currentUserId = req.user!.id;
       const { userId, listingId } = req.params;
-      
+
       // Get conversation between users for this listing
       const conversation = await storage.getConversation(currentUserId, userId, listingId);
       if (conversation) {
@@ -421,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if conversation exists between these users for this listing
       let conversation = await storage.getConversation(senderId, receiverId, listingId);
-      
+
       // If no conversation exists, create one
       if (!conversation) {
         conversation = await storage.createConversation({
@@ -432,6 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create the message
+
       const message = await storage.createMessage({
         senderId,
         receiverId,
@@ -447,6 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/conversations', authenticateToken, async (req: any, res) => {
+
     try {
       const userId = req.user!.id;
       const conversations = await storage.getConversationsByUser(userId);
@@ -461,6 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Appointment routes
   app.post('/api/appointments', authenticateToken, async (req: any, res) => {
     try {
+
       const buyerId = req.user!.id;
       const { listingId, sellerId, appointmentDate, duration, location, notes } = req.body;
 
@@ -770,7 +825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { ticketId } = req.params;
-      
+
       const messageData = insertSupportMessageSchema.parse({
         ...req.body,
         ticketId,
@@ -803,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const listingId = req.params.id;
-      
+
       // Validate that the listing exists
       const listing = await storage.getListingById(listingId);
       if (!listing) {
@@ -857,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { voteType } = req.body;
-      
+
       if (!['helpful', 'not_helpful', 'report'].includes(voteType)) {
         return res.status(400).json({ message: "Invalid vote type" });
       }
@@ -906,11 +961,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const { role } = req.body;
-      
+
       if (!['user', 'admin'].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
-      
+
       await storage.updateUserRole(userId, role);
       res.json({ message: "User role updated successfully" });
     } catch (error) {
@@ -933,7 +988,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { listingId } = req.params;
       const { isActive } = req.body;
-      
+
       await storage.updateListingStatus(listingId, isActive);
       res.json({ message: "Listing status updated successfully" });
     } catch (error) {
@@ -957,9 +1012,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { requestId } = req.params;
       const { status, adminMessage } = req.body;
       const reviewedBy = req.user!.id;
-      
+
       await storage.updateAdRequestStatus(requestId, status, adminMessage, reviewedBy);
-      
+
       // If approved, also update the listing
       if (status === 'approved') {
         // Get the ad request to find the listing ID
@@ -969,7 +1024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.approveAdRequest(adRequest.listingId, reviewedBy);
         }
       }
-      
+
       res.json({ message: "Ad request updated successfully" });
     } catch (error) {
       console.error("Error updating ad request:", error);
@@ -982,13 +1037,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const requestedBy = req.user!.id;
       const { listingId, requestMessage } = req.body;
-      
+
       const adRequestData = insertAdRequestSchema.parse({
         listingId,
         requestedBy,
         requestMessage
       });
-      
+
       const adRequest = await storage.createAdRequest(adRequestData);
       res.status(201).json(adRequest);
     } catch (error) {
@@ -1014,7 +1069,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('message', async (message) => {
       try {
         const data = JSON.parse(message.toString());
-        
+
         if (data.type === 'auth') {
           userId = data.userId;
           if (userId) {
@@ -1031,7 +1086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           const message = await storage.createMessage(messageData);
-          
+
           // Send to recipient if connected
           const recipientWs = userConnections.get(data.receiverId);
           if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {

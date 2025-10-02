@@ -36,21 +36,21 @@ export default function ReviewCard({
   className
 }: ReviewCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const isOwnReview = currentUserId === review.reviewerId;
-  const reviewerName = review.isAnonymous 
-    ? "Utilisateur anonyme" 
-    : review.reviewer?.firstName 
+  const reviewerName = review.isAnonymous
+    ? "Utilisateur anonyme"
+    : review.reviewer?.firstName
       ? `${review.reviewer.firstName} ${review.reviewer.lastName?.charAt(0)}.`
       : "Utilisateur";
 
-  const reviewerInitials = review.isAnonymous 
-    ? "A" 
+  const reviewerInitials = review.isAnonymous
+    ? "A"
     : review.reviewer?.firstName?.charAt(0) || "U";
 
-  const timeAgo = formatDistanceToNow(new Date(review.createdAt!), { 
+  const timeAgo = formatDistanceToNow(new Date(review.createdAt!), {
     addSuffix: true,
-    locale: fr 
+    locale: fr
   });
 
   const handleVote = (voteType: 'helpful' | 'not_helpful' | 'report') => {
@@ -60,8 +60,8 @@ export default function ReviewCard({
   };
 
   const shouldTruncate = review.comment && review.comment.length > 200;
-  const displayComment = shouldTruncate && !isExpanded 
-    ? review.comment.substring(0, 200) + "..."
+  const displayComment = shouldTruncate && !isExpanded
+    ? review.comment?.substring(0, 200) + "..." // the? addition the file used to be corruppt at this line
     : review.comment;
 
   return (
@@ -75,7 +75,7 @@ export default function ReviewCard({
                 {reviewerInitials}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <h4 className="font-medium text-gray-900" data-testid="reviewer-name">
@@ -87,12 +87,12 @@ export default function ReviewCard({
                   </span>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-2 mt-1">
-                <StarRating 
-                  rating={review.rating} 
-                  size="sm" 
-                  readOnly 
+                <StarRating
+                  rating={review.rating}
+                  size="sm"
+                  readOnly
                   data-testid="review-rating"
                 />
                 <span className="text-sm text-gray-500">
@@ -102,9 +102,9 @@ export default function ReviewCard({
             </div>
           </div>
 
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 w-8 p-0"
             data-testid="review-menu"
           >
@@ -119,11 +119,11 @@ export default function ReviewCard({
             {review.title}
           </h5>
         )}
-        
+
         {review.comment && (
           <div className="text-gray-700 text-sm leading-relaxed mb-4">
             <p data-testid="review-comment">{displayComment}</p>
-            
+
             {shouldTruncate && (
               <Button
                 variant="link"
@@ -142,7 +142,7 @@ export default function ReviewCard({
         {currentUserId && !isOwnReview && (
           <div className="flex items-center space-x-4 pt-3 border-t border-gray-100">
             <span className="text-sm text-gray-500">Cette évaluation vous a-t-elle été utile ?</span>
-            
+
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
@@ -160,7 +160,7 @@ export default function ReviewCard({
                   <span className="text-xs">({voteCounts.helpful})</span>
                 )}
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -177,7 +177,7 @@ export default function ReviewCard({
                   <span className="text-xs">({voteCounts.not_helpful})</span>
                 )}
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"

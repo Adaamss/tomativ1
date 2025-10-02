@@ -265,24 +265,20 @@ export default function CreateListing() {
     return { method: "PUT" as const, url: data.uploadURL };
   };
 
-  const handleUploadComplete = async (
-    result: UploadResult<Record<string, unknown>, Record<string, unknown>>,
-  ) => {
-    const newImages: string[] = [];
-    if (result.successful) {
-      for (const file of result.successful) {
-        newImages.push(file.uploadURL || "");
-      }
-    }
+  const handleUploadComplete = (result: UploadResult<any, any>) => {
+    const newImages = Array.isArray(result.successful)
+      ? result.successful.map((file) => file.response?.body?.uploadURL || "")
+      : [];
     setUploadedImages((prev) => [...prev, ...newImages]);
   };
 
+
   const validateStep1 = (data: ListingFormData) => {
     console.log("Validating step 1 with categoryId:", data.categoryId);
-    
+
     // Effacer les erreurs précédentes
     form.clearErrors();
-    
+
     if (!data.categoryId) {
       console.log("Step 1 validation failed: no categoryId");
       form.setError("categoryId", { message: "La catégorie est requise" });
@@ -294,10 +290,10 @@ export default function CreateListing() {
 
   const validateStep2 = (data: ListingFormData) => {
     console.log("Validating step 2 for category:", selectedCategorySlug);
-    
+
     // Effacer les erreurs précédentes
     form.clearErrors();
-    
+
     if (selectedCategorySlug === "voiture") {
       let hasError = false;
       if (!data.brand) { form.setError("brand", { message: "La marque est requise" }); hasError = true; }
@@ -319,22 +315,22 @@ export default function CreateListing() {
       if (!data.sector) { form.setError("sector", { message: "Le secteur est requis" }); hasError = true; }
       return !hasError;
     }
-    
+
     // Pour les autres catégories, pas de validation step 2
     return true;
   };
 
   const validateStep3 = (data: ListingFormData) => {
     console.log("Validating step 3");
-    
+
     // Effacer les erreurs précédentes
     form.clearErrors();
-    
+
     let hasError = false;
     if (!data.title) { form.setError("title", { message: "Le titre est requis" }); hasError = true; }
     if (!data.location) { form.setError("location", { message: "La localisation est requise" }); hasError = true; }
     if (!data.price) { form.setError("price", { message: "Le prix est requis" }); hasError = true; }
-    
+
     return !hasError;
   };
 
@@ -343,7 +339,7 @@ export default function CreateListing() {
     console.log("Submitting step", step, "with data:", data);
     console.log("Selected category slug:", selectedCategorySlug);
     console.log("Form errors:", form.formState.errors);
-    
+
     if (step === 1) {
       console.log("Processing step 1");
       if (validateStep1(data)) {
@@ -405,38 +401,35 @@ export default function CreateListing() {
             <div className="mb-8">
               <div className="flex items-center justify-center space-x-8">
                 <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                    }`}>
                     1
                   </div>
                   <span className="ml-2 text-sm font-medium text-foreground">Catégorie</span>
                 </div>
-                
+
                 <div className={`w-8 h-1 ${step >= 2 ? 'bg-primary' : 'bg-secondary'}`} />
-                
+
                 <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                    }`}>
                     2
                   </div>
                   <span className="ml-2 text-sm font-medium text-foreground">Détails</span>
                 </div>
-                
+
                 <div className={`w-8 h-1 ${step >= 3 ? 'bg-primary' : 'bg-secondary'}`} />
-                
+
                 <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                    }`}>
                     3
                   </div>
                   <span className="ml-2 text-sm font-medium text-foreground">Publication</span>
                 </div>
               </div>
             </div>
-            
+
             <Form {...form}>
               <div className="space-y-6">
                 {/* STEP 1 */}
@@ -491,7 +484,7 @@ export default function CreateListing() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="model"
@@ -520,7 +513,7 @@ export default function CreateListing() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="mileage"
@@ -560,7 +553,7 @@ export default function CreateListing() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="transmission"
@@ -642,7 +635,7 @@ export default function CreateListing() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="bedrooms"
@@ -656,7 +649,7 @@ export default function CreateListing() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="bathrooms"
@@ -884,12 +877,12 @@ export default function CreateListing() {
                       console.log("=== BUTTON CLICKED ===");
                       console.log("Current step:", step);
                       console.log("Selected category slug:", selectedCategorySlug);
-                      
+
                       const data = form.getValues();
                       console.log("Form data:", data);
                       console.log("CategoryId from form:", data.categoryId);
                       console.log("CategoryId exists:", !!data.categoryId);
-                      
+
                       if (step === 1) {
                         console.log("Processing step 1...");
                         if (data.categoryId && data.categoryId.trim() !== "") {

@@ -76,10 +76,10 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
-    
+
     req.user = user;
     next();
-    
+
   } catch (error) {
     console.error('Authentication middleware error:', error);
     // Don't expose internal errors to client

@@ -40,7 +40,7 @@ export class ObjectNotFoundError extends Error {
 
 // The object storage service is used to interact with the object storage service.
 export class ObjectStorageService {
-  constructor() {}
+  constructor() { }
 
   // Gets the public object search paths.
   getPublicObjectSearchPaths(): Array<string> {
@@ -56,7 +56,7 @@ export class ObjectStorageService {
     if (paths.length === 0) {
       throw new Error(
         "PUBLIC_OBJECT_SEARCH_PATHS not set. Create a bucket in 'Object Storage' " +
-          "tool and set PUBLIC_OBJECT_SEARCH_PATHS env var (comma-separated paths)."
+        "tool and set PUBLIC_OBJECT_SEARCH_PATHS env var (comma-separated paths)."
       );
     }
     return paths;
@@ -68,7 +68,7 @@ export class ObjectStorageService {
     if (!dir) {
       throw new Error(
         "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
-          "tool and set PRIVATE_OBJECT_DIR env var."
+        "tool and set PRIVATE_OBJECT_DIR env var."
       );
     }
     return dir;
@@ -106,9 +106,8 @@ export class ObjectStorageService {
       res.set({
         "Content-Type": metadata.contentType || "application/octet-stream",
         "Content-Length": metadata.size,
-        "Cache-Control": `${
-          isPublic ? "public" : "private"
-        }, max-age=${cacheTtlSec}`,
+        "Cache-Control": `${isPublic ? "public" : "private"
+          }, max-age=${cacheTtlSec}`,
       });
 
       // Stream the file to the response
@@ -131,27 +130,38 @@ export class ObjectStorageService {
   }
 
   // Gets the upload URL for an object entity.
-  async getObjectEntityUploadURL(): Promise<string> {
-    const privateObjectDir = this.getPrivateObjectDir();
-    if (!privateObjectDir) {
-      throw new Error(
-        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
-          "tool and set PRIVATE_OBJECT_DIR env var."
-      );
-    }
+  // async getObjectEntityUploadURL(): Promise<string> {
+  //   const privateObjectDir = this.getPrivateObjectDir();
+  //   if (!privateObjectDir) {
+  //     throw new Error(
+  //       "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
+  //         "tool and set PRIVATE_OBJECT_DIR env var."
+  //     );
+  //   }
 
-    const objectId = randomUUID();
-    const fullPath = `${privateObjectDir}/uploads/${objectId}`;
+  //   const objectId = randomUUID();
+  //   const fullPath = `${privateObjectDir}/uploads/${objectId}`;
 
-    const { bucketName, objectName } = parseObjectPath(fullPath);
+  //   const { bucketName, objectName } = parseObjectPath(fullPath);
 
-    // Sign URL for PUT method with TTL
-    return signObjectURL({
-      bucketName,
-      objectName,
-      method: "PUT",
-      ttlSec: 900,
-    });
+  //   // Sign URL for PUT method with TTL
+  //   return signObjectURL({
+  //     bucketName,
+  //     objectName,
+  //     method: "PUT",
+  //     ttlSec: 900,
+  //   });
+  // }
+  async getObjectEntityUploadURL() {
+    const privateDir = this.getPrivateObjectDir(); // will be ./server/uploads
+    const fileName = `file-${Date.now()}.png`; // temp name
+    const filePath = `${privateDir}/${fileName}`;
+
+    // Return a simple object mimicking S3 response
+    return {
+      uploadURL: filePath,  // this will be used by Uppy
+      fileName,
+    };
   }
 
   // Gets the object entity file from the object path.
@@ -187,20 +197,20 @@ export class ObjectStorageService {
     if (!rawPath.startsWith("https://storage.googleapis.com/")) {
       return rawPath;
     }
-  
+
     // Extract the path from the URL by removing query parameters and domain
     const url = new URL(rawPath);
     const rawObjectPath = url.pathname;
-  
+
     let objectEntityDir = this.getPrivateObjectDir();
     if (!objectEntityDir.endsWith("/")) {
       objectEntityDir = `${objectEntityDir}/`;
     }
-  
+
     if (!rawObjectPath.startsWith(objectEntityDir)) {
       return rawObjectPath;
     }
-  
+
     // Extract the entity ID from the path
     const entityId = rawObjectPath.slice(objectEntityDir.length);
     return `/objects/${entityId}`;
@@ -290,7 +300,7 @@ async function signObjectURL({
   if (!response.ok) {
     throw new Error(
       `Failed to sign object URL, errorcode: ${response.status}, ` +
-        `make sure you're running on Replit`
+      `make sure you're running on Replit`
     );
   }
 
